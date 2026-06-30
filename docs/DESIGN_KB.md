@@ -343,7 +343,7 @@ All docs are under the OATHYARD repo root. Paths are relative to repo root.
 - `docs/decisions/0004-audio-runtime-target.md` — audio runtime boundary
 - `docs/decisions/0005-cross-platform-verification.md` — cross-platform verification
 - `docs/decisions/0007-high-fidelity-production-target.md` — production visual target, baseline evidence, acceptance gates
-- `docs/decisions/0008-hifi-wo-01-renderer-backend-adr.md` — raw OpenGL spike (superseded)
+- `docs/decisions/0008-hifi-wo-01-renderer-backend-adr.md` — superseded renderer backend spike
 - `docs/decisions/0009-production-renderer-selection.md` — Bevy/wgpu V1 selection
 
 ### Roadmap
