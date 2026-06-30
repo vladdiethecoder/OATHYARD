@@ -1,0 +1,147 @@
+{
+  "catalog_pages": [
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_01_blades.png",
+      "intended_slots": 48,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_01_blades",
+      "prompt_summary": "OATHYARD original dark-fantasy judicial-duel weapon catalog sheet, PAGE 1: bladed weapons only. Giant 8 by 6 grid, 48 unique melee weapons, isolated orthographic/three-quarter product renders, no text/logos, cold steel/black iron/muted brass/worn leather/ash wood, silhouette readability first.",
+      "relative_file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_01_blades.png",
+      "sha256": "ea7ff798b2d40cdde6ebc27453e348fcc33c4e1fed76898858dc165e53ab66f6",
+      "size": [
+        1448,
+        1086
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_02_polearms_axes_blunt.png",
+      "intended_slots": 48,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_02_polearms_axes_blunt",
+      "prompt_summary": "OATHYARD original dark-fantasy judicial-duel weapon catalog sheet, PAGE 2: polearms, axes, and blunt weapons. Giant 8 by 6 grid, 48 unique weapons, distinct reach/mass/hook/point/blunt/edge profiles, no text/logos.",
+      "relative_file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_02_polearms_axes_blunt.png",
+      "sha256": "c5b691714da450114bb82ffd4c2c6afd4e6ce84d06f099733d8d83983cd84d42",
+      "size": [
+        1448,
+        1086
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_03_shields_flexible_offhand.png",
+      "intended_slots": 48,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_03_shields_flexible_offhand",
+      "prompt_summary": "OATHYARD original dark-fantasy judicial-duel weapon catalog sheet, PAGE 3: shields, flexible weapons, gauntlets, and defensive/offhand implements. Giant 8 by 6 grid, 48 unique equipment-weapons, grip/strap/socket/chain/hinge mechanics, no text/logos.",
+      "relative_file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_03_shields_flexible_offhand.png",
+      "sha256": "b10fda557537f81b5f62f1ce3950a011dc94c251b1a998cc1a2cf383585b499d",
+      "size": [
+        1448,
+        1086
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_04_ballistic_arcane_hybrid.png",
+      "intended_slots": 48,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_04_ballistic_arcane_hybrid",
+      "prompt_summary": "OATHYARD original dark-fantasy judicial-duel weapon catalog sheet, PAGE 4: rare ballistic, arcane, ritual, and hybrid control weapons. Giant 8 by 6 grid, 48 unique physically plausible duel implements, no text/logos.",
+      "relative_file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/pages/page_04_ballistic_arcane_hybrid.png",
+      "sha256": "f15b20fca2055aef87345a3e279c7d764c232f748a128c7d283e856b8f64d203",
+      "size": [
+        1448,
+        1086
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    }
+  ],
+  "created_utc": "2026-06-30T18:44:51Z",
+  "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
+  "intended_total_slots": 192,
+  "overview_contact_sheet": {
+    "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/codex_weapon_catalog_overview.png",
+    "sha256": "09ce38d125acbcbcbfdfa44452e6da3c24040ab38b2f00a83cebeeb8fdb954b6",
+    "size": [
+      1574,
+      1262
+    ]
+  },
+  "run_id": "codex_weapon_catalog_20260630T184451Z",
+  "schema": "oathyard.codex_weapon_catalog.v1",
+  "source_context": [
+    "docs/design/GAME_CANON.md",
+    "assets_src/reference/concepts/weapon_diversity_concept_spec.json"
+  ],
+  "truth_boundary": {
+    "classification": "offline_research_authoring",
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  },
+  "usage_notes": [
+    "Concept catalog only. Extract/crop individual weapon concepts before Rodin/3D generation.",
+    "Do not treat model-generated sheets as production assets or acceptance evidence.",
+    "Vision audit required before selecting candidates for Rodin or game import."
+  ],
+  "visual_audit": {
+    "approx_visible_slots_total": 230,
+    "json": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/audit/visual_audit.json",
+    "markdown": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/audit/visual_audit.md",
+    "page_verdicts": {
+      "page_01_blades": "pass_with_notes",
+      "page_02_polearms_axes_blunt": "pass_with_blockers_for_uniqueness",
+      "page_03_shields_flexible_offhand": "pass_with_minor_uniqueness_notes",
+      "page_04_ballistic_arcane_hybrid": "pass_with_reservations"
+    }
+  }
+}

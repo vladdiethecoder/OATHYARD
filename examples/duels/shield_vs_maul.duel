@@ -1,0 +1,10 @@
+# OATHYARD heavy deterministic duel.
+scenario shield_vs_maul
+fighter 0 gate round_shield heavy_plate
+fighter 1 bruiser iron_maul bruiser_padded_plate
+turn 0 0 brace center torso
+turn 0 1 bash forward torso
+turn 1 0 bash forward torso
+turn 1 1 recover back torso
+turn 2 0 parry right weapon_arm
+turn 2 1 hook_bind forward weapon_arm

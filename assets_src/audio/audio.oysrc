@@ -1,0 +1,17 @@
+schema=oathyard.audio_source.v1
+provenance=repo_owned_procedural_spec
+
+sound blade_contact source=procedural_sine_noise material=steel_edge caption="blade contact"
+sound blunt_contact source=procedural_sine_noise material=wood_stone caption="blunt impact"
+sound mail_contact source=procedural_sine_noise material=riveted_mail caption="mail rings"
+sound plate_contact source=procedural_sine_noise material=tempered_plate caption="plate deflection"
+sound flesh_contact source=procedural_sine_noise material=flesh caption="body impact"
+sound ui_commit_reveal source=procedural_sine_noise material=ui caption="commit reveal"
+sound arena_ambience source=procedural_sine_noise material=arena_air caption="low arena ambience"
+sound footwork_step source=procedural_sine_noise material=chalk_dust caption="footwork dust"
+sound weapon_air_cut source=procedural_sine_noise material=air_shear caption="weapon trail"
+sound spark_scatter source=procedural_sine_noise material=steel_edge caption="spark scatter"
+sound wet_impact source=procedural_sine_noise material=blood_cloth caption="blood wetness"
+sound debris_scatter source=procedural_sine_noise material=debris caption="impact debris"
+sound shock_cue source=procedural_sine_noise material=capability_delta caption="shock cue"
+sound fight_film_marker source=procedural_sine_noise material=replay_marker caption="fight-film emphasis"

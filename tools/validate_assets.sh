@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+out="${1:-assets}"
+mkdir -p "$out"
+structural_log="$out/asset_structural_validation.log"
+python3 tools/asset_pipeline.py validate > "$structural_log" 2>&1
+structural_rc=$?
+
+python3 - "$out" "$structural_rc" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+out = Path(sys.argv[1])
+structural_rc = int(sys.argv[2])
+root = Path.cwd()
+local_failures = []
+production_blockers = []
+production_candidate_manifest_claimed_complete = False
+production_assets_complete = False
+data = {}
+
+if structural_rc != 0:
+    local_failures.append(
+        f'low-level structural asset validation failed; see {out / "asset_structural_validation.log"}'
+    )
+
+prod = root / 'assets/production_visual_manifest.json'
+if not prod.is_file():
+    local_failures.append('missing production visual asset manifest: assets/production_visual_manifest.json')
+else:
+    try:
+        data = json.loads(prod.read_text(encoding='utf-8'))
+    except Exception as exc:
+        local_failures.append(f'production visual asset manifest invalid JSON: {exc}')
+        data = {}
+
+    if data.get('schema') != 'oathyard.production_visual_assets.v1':
+        local_failures.append(
+            f'production visual asset manifest has unexpected schema: {data.get("schema")}'
+        )
+
+    production_assets_complete = data.get('production_assets_complete') is True
+    production_candidate_manifest_claimed_complete = (
+        production_assets_complete or data.get('production_candidate_assets_complete') is True
+    )
+    if not production_candidate_manifest_claimed_complete:
+        local_failures.append(
+            'production visual asset manifest does not prove production-candidate completeness'
+        )
+    if not production_assets_complete:
+        production_blockers.append(
+            'production visual asset manifest does not prove production_assets_complete true'
+        )
+    if data.get('candidate_run_id') == 't_73291be5':
+        production_blockers.append(
+            't_73291be5 model candidates are production-candidate evidence, not final high-fidelity DCC-authored production assets'
+        )
+
+    for flag in [
+        'production_renderer_complete',
+        'owner_visual_acceptance',
+        'public_demo_ready',
+        'release_candidate_ready',
+    ]:
+        if data.get(flag) is True:
+            local_failures.append(f'production visual asset manifest claims {flag} true without gate evidence')
+
+    required_categories = {'fighters', 'armor', 'weapons', 'arenas'}
+    entries = data.get('entries', [])
+    cats = {e.get('kind') for e in entries}
+    missing = sorted(required_categories - cats)
+    if missing:
+        local_failures.append('production visual asset manifest missing categories: ' + ','.join(missing))
+
+    for e in entries:
+        aid = e.get('id', '<unknown>')
+        for field in [
+            'source_file',
+            'provenance_license',
+            'authoring_process',
+            'runtime_export',
+            'content_hash',
+            'preview_render',
+            'in_engine_screenshot',
+            'validation_result',
+        ]:
+            if not e.get(field):
+                local_failures.append(f'{aid} missing {field}')
+        source_file = str(e.get('source_file', ''))
+        source_ext = Path(source_file).suffix.lower()
+        if source_ext not in {'.blend', '.usd', '.usda', '.usdc', '.fbx'}:
+            production_blockers.append(
+                f'{aid} source_file {source_file} is not a DCC/interchange source (.blend/.usd/.usda/.usdc/.fbx)'
+            )
+        authoring = e.get('authoring_process', {})
+        if authoring.get('external_dcc_validation_claimed') is not True:
+            production_blockers.append(f'{aid} lacks external_dcc_validation_claimed true')
+        if authoring.get('external_khronos_validation_claimed') is not True:
+            production_blockers.append(f'{aid} lacks external_khronos_validation_claimed true')
+        if 'procedural' in str(authoring.get('method', '')).lower():
+            production_blockers.append(
+                f'{aid} authoring process is procedural candidate generation, not final DCC production authoring'
+            )
+        if e.get('kind') == 'fighters':
+            for field in [
+                'rig',
+                'skin_weights',
+                'truth_joint_mapping',
+                'cosmetic_bone_separation',
+                'damage_masks',
+                'armor_sockets',
+            ]:
+                if not e.get(field):
+                    local_failures.append(f'{aid} fighter missing {field}')
+        if e.get('kind') == 'armor':
+            for field in [
+                'coverage_gap_maps',
+                'straps_fasteners',
+                'material_layers',
+                'deformation_damage_states',
+                'mass_inertia_profile',
+                'collision_contact_regions',
+            ]:
+                if not e.get(field):
+                    local_failures.append(f'{aid} armor missing {field}')
+        if e.get('kind') == 'weapons':
+            for field in [
+                'grip_frames',
+                'edge_point_blunt_hook_features',
+                'mass_distribution',
+                'moment_of_inertia_profile',
+                'contact_geometry',
+                'material_durability_state',
+            ]:
+                if not e.get(field):
+                    local_failures.append(f'{aid} weapon missing {field}')
+        if e.get('kind') == 'arenas':
+            for field in [
+                'verdict_ring',
+                'witness_positions',
+                'oath_witness_stone',
+                'lighting_anchors',
+                'camera_anchors',
+                'collision_footing_metadata',
+                'weather_atmosphere_hooks',
+            ]:
+                if not e.get(field):
+                    local_failures.append(f'{aid} arena missing {field}')
+
+local_asset_gate_passed = not local_failures and production_candidate_manifest_claimed_complete
+high_fidelity_production_gate_passed = production_assets_complete and not production_blockers
+passed = local_asset_gate_passed
+manifest = {
+    'schema': 'oathyard.asset_validation.v2',
+    'tool': 'tools/validate_assets.sh',
+    'passed': passed,
+    'local_asset_gate_passed': local_asset_gate_passed,
+    'high_fidelity_production_gate_passed': high_fidelity_production_gate_passed,
+    'structural_asset_validation_rc': structural_rc,
+    'production_assets_complete': production_assets_complete and high_fidelity_production_gate_passed,
+    'production_candidate_manifest_claimed_complete': production_candidate_manifest_claimed_complete,
+    'production_renderer_complete': False,
+    'owner_visual_acceptance': False,
+    'public_demo_ready': False,
+    'release_candidate_ready': False,
+    'failed_check_count': len(local_failures),
+    'failures': local_failures,
+    'production_blocker_count': len(production_blockers),
+    'production_blockers': production_blockers,
+}
+(out / 'production_asset_validation_manifest.json').write_text(
+    json.dumps(manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+)
+report = [
+    '# OATHYARD Asset Validation',
+    '',
+    f"Status: {'PASSED' if passed else 'FAILED'}",
+    '',
+    f'- Structural validation rc: `{structural_rc}`',
+    f'- Local asset gate passed: `{str(local_asset_gate_passed).lower()}`',
+    f'- Production assets complete: `{str(production_assets_complete and high_fidelity_production_gate_passed).lower()}`',
+    f'- Production-candidate manifest claimed complete: `{str(production_candidate_manifest_claimed_complete).lower()}`',
+    f'- High-fidelity production gate passed: `{str(high_fidelity_production_gate_passed).lower()}`',
+    '- Production renderer complete: `false`',
+    '- Owner visual acceptance: `false`',
+    '',
+]
+if local_failures:
+    report += ['## Local failures', ''] + [f'- {f}' for f in local_failures] + ['']
+if production_blockers:
+    report += ['## Production blockers', ''] + [f'- {f}' for f in production_blockers]
+(out / 'asset_validation_report_v2.md').write_text('\n'.join(report) + '\n', encoding='utf-8')
+if not passed:
+    raise SystemExit(1)
+PY

@@ -1,0 +1,61 @@
+{
+  "aggregate": {
+    "approx_visible_slots_total": 358,
+    "status": "addendum_created_but_requires_curation_before_Rodin_selection"
+  },
+  "auditor": "Hermes vision_analyze hostile QA",
+  "created_utc": "2026-06-30T18:58:32Z",
+  "not_claimed": [
+    "production asset completion",
+    "3D geometry",
+    "native in-engine runtime capture",
+    "owner visual acceptance",
+    "public demo readiness",
+    "release candidate readiness"
+  ],
+  "pages": [
+    {
+      "approx_visible_slots": 168,
+      "failures": [
+        "high near-duplicate density among daggers, wrist launchers, claws, and short blades",
+        "many designs are generic dark-fantasy/steampunk item icons, not clearly martial-rhythm differentiated",
+        "some over-detailed mechanical items become mush at icon size",
+        "no text/logos/characters/hands; no direct YOMI/YOMIH copied character/sprite/UI detected",
+        "insufficient visible stance/timing/move-function separation despite many objects"
+      ],
+      "page_id": "page_A_yomih_martial_weapon_archetypes",
+      "verdict": "fail_as_moveset_catalog_pass_as_raw_icon_pool"
+    },
+    {
+      "approx_visible_slots": 120,
+      "failures": [
+        "organized into subpanels but contains unreadable pseudo-label tags/text artifacts",
+        "several disembodied hand/claw/gauntlet-like forms risk reading as body parts rather than equipment",
+        "near-duplicates in daggers, shuriken, fans, cages, chains, and crystal orbs",
+        "static props do not sufficiently encode martial arts timing, cancels, stances, or combo routes",
+        "no explicit YOMI/YOMIH logos/characters; IP-copy risk low at asset level but inspiration must stay mechanical not visual-copy"
+      ],
+      "page_id": "page_B_yomih_style_loadout_objects",
+      "verdict": "fail_as_yomih_breadth_reference_needs_curation"
+    },
+    {
+      "approx_visible_slots": 70,
+      "failures": [
+        "far fewer visible slots than pages A/B or the original 230-slot catalog",
+        "near-duplicates among spears, cylindrical rods, gauntlets, claws, maces, and orb devices",
+        "mostly static prop shapes; limited martial-arts/moveset grammar visible",
+        "some items are generic fantasy/steampunk rather than OATHYARD-specific",
+        "no text/logos/characters/hands; no direct YOMI/YOMIH copied identity detected"
+      ],
+      "page_id": "page_C_yomih_superpowered_duel_implements",
+      "verdict": "pass_as_curated_prompt_direction_fail_as_giant_catalog"
+    }
+  ],
+  "schema": "oathyard.codex_weapon_catalog_yomih_visual_audit.v1",
+  "truth_boundary": {
+    "classification": "offline_research_authoring",
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

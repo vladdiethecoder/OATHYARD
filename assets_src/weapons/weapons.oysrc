@@ -1,0 +1,12 @@
+schema=oathyard.weapon_source.v1
+provenance=repo_owned_original_text_asset
+collision_features=edge,blunt,pierce,hook,grip,reach_line
+
+weapon curved_sword mesh=curved_single_edge length_mm=880 contact=edge_sweep hook_tip grip_one preview_color=ochre
+weapon longsword mesh=straight_double_edge length_mm=1220 contact=edge_pierce_cross grip_two preview_color=steel
+weapon bearded_axe mesh=hooked_beard_head length_mm=760 contact=edge_hook_blunt grip_one preview_color=iron
+weapon ash_spear mesh=leaf_head_long_shaft length_mm=2120 contact=pierce_brace_blunt grip_two preview_color=ash
+weapon round_shield mesh=round_boss_disc length_mm=620 contact=blunt_bind_cover grip_two preview_color=chalk_red
+weapon iron_maul mesh=heavy_rect_head length_mm=940 contact=blunt_crush grip_two preview_color=dark_iron
+weapon arming_sword mesh=short_straight_edge length_mm=910 contact=edge_pierce grip_one preview_color=steel_blue
+weapon billhook mesh=long_hooked_polearm length_mm=1680 contact=edge_hook_pierce_bind grip_two preview_color=blackened_ash

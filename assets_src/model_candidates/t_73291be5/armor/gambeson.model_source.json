@@ -1,0 +1,61 @@
+{
+  "art_direction": {
+    "anchors": [
+      "readable duel silhouette before ornament",
+      "cold oath-stone palette with restrained legal/faction accents",
+      "tactile PBR material families: cloth, leather, mail, plate, ash wood, stone, blood/wear",
+      "riggable truth-joint candidates with synthetic idle/walk/attack motion proof"
+    ],
+    "style_target": "grounded stylized realism for dark-fantasy judicial duels"
+  },
+  "asset_id": "gambeson",
+  "generated_metrics": {
+    "materials": 5,
+    "primitive_material_groups": 5,
+    "triangles": 520,
+    "vertices": 672
+  },
+  "kanban_task": "t_73291be5",
+  "kind": "armor",
+  "license_status": "repo_owned_original_internal_candidate_pending_project_license_review",
+  "not_claimed": [
+    "owner visual acceptance",
+    "public demo readiness",
+    "release candidate readiness",
+    "external Khronos validation",
+    "Blender/DCC round trip",
+    "native renderer animation capture"
+  ],
+  "product": "OATHYARD",
+  "provenance": "repo_owned_original_procedural_model_candidate",
+  "repair_task": "t_49e26ba5",
+  "rig_contract": {
+    "canonical_truth_joints": [],
+    "grip_frames": [],
+    "max_vertex_influences": 0,
+    "motion_proof_status": "not_applicable"
+  },
+  "schema": "oathyard.model_candidate_source.v2",
+  "source_basis": {
+    "art_direction_brief": "docs/design/ART_DIRECTION_BRIEF.md",
+    "category_source_fields": {
+      "id": "gambeson",
+      "material": "quilted_linen",
+      "pieces": "torso_skirt,sleeves",
+      "straps": "cord_ties",
+      "visual": "stitched_padding"
+    },
+    "content_manifest": "content/oathyard_content.manifest",
+    "loadout": {}
+  },
+  "technical_budget": {
+    "hard_max": 8000,
+    "min": 500,
+    "target_max": 5000
+  },
+  "truth_boundary": {
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

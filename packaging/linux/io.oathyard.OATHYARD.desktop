@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=OATHYARD
+GenericName=Deterministic Melee Duel
+Comment=Native planned-time physical melee duel game
+Exec=oathyard
+Icon=io.oathyard.OATHYARD
+Terminal=false
+Categories=Game;
+Keywords=duel;melee;deterministic;replay;native;
+StartupNotify=false

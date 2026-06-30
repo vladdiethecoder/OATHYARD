@@ -1,0 +1,10 @@
+# OATHYARD expanded deterministic duel.
+scenario axe_vs_spear
+fighter 0 chain bearded_axe lamellar
+fighter 1 reed ash_spear gambeson
+turn 0 0 hook_bind forward weapon_arm
+turn 0 1 brace center torso
+turn 1 0 shove forward torso
+turn 1 1 thrust forward torso
+turn 2 0 recover center torso
+turn 2 1 pivot left lead_leg

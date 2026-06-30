@@ -1,0 +1,11 @@
+schema=oathyard.fighter_source.v1
+provenance=repo_owned_original_text_asset
+rig_joint_order=root,spine_lower,spine_upper,neck_head,shoulder_r,elbow_r,wrist_r,shoulder_l,elbow_l,wrist_l,hip_r,knee_r,ankle_r,hip_l,knee_l,ankle_l
+cosmetic_bones=cloak_l,cloak_r,scabbard
+
+fighter saltreach_duelist body_mass_g=74400 reach_bias_mm=20 stance_bias_permille=1010 silhouette=lean_forward visual=inked_salt_sash
+fighter oathyard_writ body_mass_g=81600 reach_bias_mm=50 stance_bias_permille=1030 silhouette=balanced visual=black_oath_tabard
+fighter chainbreaker body_mass_g=86200 reach_bias_mm=-20 stance_bias_permille=960 silhouette=wide_hooking visual=split_chain_badge
+fighter reed_sentinel body_mass_g=79100 reach_bias_mm=240 stance_bias_permille=980 silhouette=long_reed_guard visual=ash_pole_wrap
+fighter gate_shield body_mass_g=90400 reach_bias_mm=-80 stance_bias_permille=1080 silhouette=shielded_low visual=chalked_round_shield
+fighter bruiser_oath body_mass_g=98200 reach_bias_mm=-40 stance_bias_permille=940 silhouette=heavy_maul visual=iron_oath_mask

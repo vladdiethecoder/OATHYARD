@@ -1,0 +1,72 @@
+{
+  "aggregate": {
+    "approx_visible_slots_total": 230,
+    "pages": 4,
+    "status": "concept_catalog_created_not_production_assets"
+  },
+  "auditor": "Hermes vision_analyze hostile QA",
+  "created_utc": "2026-06-30T18:48:09Z",
+  "not_claimed": [
+    "production asset completion",
+    "3D geometry",
+    "native in-engine runtime capture",
+    "owner visual acceptance",
+    "public demo readiness",
+    "release candidate readiness"
+  ],
+  "pages": [
+    {
+      "approx_visible_slots": 54,
+      "notes": [
+        "large bladed catalog; mostly readable unique silhouettes",
+        "grid deviated from intended 8x6 to about 6x9",
+        "no visible text/logos/characters/hands reported",
+        "some broad weapon-family repetition expected in blade-only page"
+      ],
+      "page_id": "page_01_blades",
+      "verdict": "pass_with_notes"
+    },
+    {
+      "approx_visible_slots": 72,
+      "notes": [
+        "large catalog; about 6x12 slots",
+        "no visible text/logos/characters/hands",
+        "near-duplicate halberd/axe/mace silhouettes reduce true uniqueness",
+        "some bottom-row flail/mace details are busy/blobby",
+        "generic dark-fantasy inventory-icon look needs further OATHYARD-specific art direction before production use"
+      ],
+      "page_id": "page_02_polearms_axes_blunt",
+      "verdict": "pass_with_blockers_for_uniqueness"
+    },
+    {
+      "approx_visible_slots": 48,
+      "notes": [
+        "6x8 grid; all slots occupied",
+        "no visible text/logos/characters/hands",
+        "shield/flexible/offhand families readable",
+        "minor near-duplicates among bucklers and gauntlets"
+      ],
+      "page_id": "page_03_shields_flexible_offhand",
+      "verdict": "pass_with_minor_uniqueness_notes"
+    },
+    {
+      "approx_visible_slots": 56,
+      "notes": [
+        "about 7x8 slots; many rare ballistic/arcane/hybrid implements",
+        "no visible text/logos/characters/hands",
+        "near-duplicate revolvers/lanterns/wands",
+        "some composite cells contain multiple objects rather than one clear weapon",
+        "generic steampunk/dark-fantasy resemblance; no direct known-IP copy identified"
+      ],
+      "page_id": "page_04_ballistic_arcane_hybrid",
+      "verdict": "pass_with_reservations"
+    }
+  ],
+  "schema": "oathyard.codex_weapon_catalog_visual_audit.v1",
+  "truth_boundary": {
+    "classification": "offline_research_authoring",
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

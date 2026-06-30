@@ -1,0 +1,368 @@
+{
+  "entries": [
+    {
+      "id": "saltreach_duelist",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "29710cb1ba06914c94ae8cd9c055a94cf48baeabed7f9ebd2af8108f009148f9",
+        "gltf": "04113425aecca1a6e1fd60cf7cffc5714e952c6e1bde0c85dfeec34acc2716d7",
+        "source": "bdf29b90c0bd5d53fb0538e2474a17b79174aa5eb22e11038952eef4a4eadfd0",
+        "textures": {
+          "saltreach_duelist_base.png": "330a1ce7ac02b12d2866fe0477fe8ac0e04f0c8fa2c8fe5a033161bd1644fc5b",
+          "saltreach_duelist_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "saltreach_duelist_orm.png": "058d8fe9d807448f0885b4f19cb263770c22849f5f9a05330af5cadece778da4"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/saltreach_duelist.model_source.json",
+      "triangles": 23564
+    },
+    {
+      "id": "oathyard_writ",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "61b078f12e88dd2e2bf8150096832a51fcbfaf23aef9051024a22cbc7272f99b",
+        "gltf": "cf251fdffc32700856bbcab91fc73e35f9f43cc4be5e7b411f94f051519cb63a",
+        "source": "c75612f691a69b761d0e2fdca9acb81ee9dfa648aaf8878628506e1d21c23bb0",
+        "textures": {
+          "oathyard_writ_base.png": "5b09ac84141b04215525aa22694f2a2028c2c178d9a9acf9cab85c242786c347",
+          "oathyard_writ_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "oathyard_writ_orm.png": "058d8fe9d807448f0885b4f19cb263770c22849f5f9a05330af5cadece778da4"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/oathyard_writ.model_source.json",
+      "triangles": 23408
+    },
+    {
+      "id": "chainbreaker",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "f03285ff64aab08045734ca238a91740723a035aeaf2e8eb2a1434e35d281eb6",
+        "gltf": "c20c783c13a572892f0f3e88887e11b38adcafc5aa094e8abb31d2b9353909f3",
+        "source": "689d610b0920c80d032c74b0629d431c244abc01737c46e43ac9fe78e81e38a7",
+        "textures": {
+          "chainbreaker_base.png": "20e2f8882d9d5300ecbd12abd724d143a8792cf6d3be321775ad547e0f296f13",
+          "chainbreaker_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "chainbreaker_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/chainbreaker.model_source.json",
+      "triangles": 23816
+    },
+    {
+      "id": "reed_sentinel",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "e31a34e74f0d51c9160a45b0ca3120d33945431c7091c30ee52bf506cf87b599",
+        "gltf": "9b375a3a61e1f86e4b3cabbfb03c7a56575ad5875b43b59da2b11873407b3bed",
+        "source": "fc65caac19905f20aaa8a50e1b0bd9963b22817f8343522ef97bf48023f34d4e",
+        "textures": {
+          "reed_sentinel_base.png": "f4b9b1aa574c87163c0b872fe68640944a904b39740e85a327d0185970bd8271",
+          "reed_sentinel_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "reed_sentinel_orm.png": "058d8fe9d807448f0885b4f19cb263770c22849f5f9a05330af5cadece778da4"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/reed_sentinel.model_source.json",
+      "triangles": 23468
+    },
+    {
+      "id": "gate_shield",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "8d34e92b6b25758da6f8a45720e2de6067c01b21cb98389b986e4b58709ff2a7",
+        "gltf": "b616aedaed72cdaa7746d51317e9437ad6f22f1f9eb4653bbf5c141a329a5f0c",
+        "source": "f1a0ac513f9755479b617ac586b553fe13d496488abb3b09b62c79a9b2a92d5f",
+        "textures": {
+          "gate_shield_base.png": "58985f25b2e3eb4feb6b27a28b29fd1c94b6a968821a8aa5098b87b975db3b74",
+          "gate_shield_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "gate_shield_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/gate_shield.model_source.json",
+      "triangles": 23756
+    },
+    {
+      "id": "bruiser_oath",
+      "kind": "fighter",
+      "sha256": {
+        "bin": "1f5d4d77b3d86d4410eb4f600d3c95798f2109b4ead0ce73a448746a4bc85b96",
+        "gltf": "d7fc06e33980943e5da54eb4b3f8da737cf705a4999ef062a5e80374797e9ef6",
+        "source": "7fd01fb5bfe7ff65f319b6c45c4c3c3fd326284d9398519d0f9d6db51c169006",
+        "textures": {
+          "bruiser_oath_base.png": "2d282db95e8af69f42b43728643a429ecaeead8d9da04384cdfd1b2c1f3f0b1a",
+          "bruiser_oath_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "bruiser_oath_orm.png": "058d8fe9d807448f0885b4f19cb263770c22849f5f9a05330af5cadece778da4"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/fighters/bruiser_oath.model_source.json",
+      "triangles": 23396
+    },
+    {
+      "id": "curved_sword",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "53e09de7814a8f48ef0cee46269866a935465792505f1e09d18798b753e9681b",
+        "gltf": "2e7808cf6bfafd5d37ac3e1c80dc3cc48567d6b2d98e647d3e8d14612b8f4806",
+        "source": "36cfe8aeeebe8177be94f8a9529b6bca94b9363a590662261fc9a747576e4927",
+        "textures": {
+          "curved_sword_base.png": "5a2efce917856fd4ff406b94bbe9e384017347cf7d535b4fa824b860115b69e2",
+          "curved_sword_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "curved_sword_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/curved_sword.model_source.json",
+      "triangles": 1028
+    },
+    {
+      "id": "longsword",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "62b70ffee8b984d78dd6651d898119e371d260495189206f75cf2340bd2afac3",
+        "gltf": "3de6c007c2d972ebbe00459f491a0a962de24af7d49bb39eda568ed65c8e1ff2",
+        "source": "5279305ef468ed18788a764f25430679929dac8a799a7ea50568cd2f455d6ccc",
+        "textures": {
+          "longsword_base.png": "aeafb0ba5c921cab1c38a1e88d42ac26798ea54a97bd2112a47e5975e5551b58",
+          "longsword_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "longsword_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/longsword.model_source.json",
+      "triangles": 1220
+    },
+    {
+      "id": "bearded_axe",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "f7d5a47181b134d02e2f31f3671a42943e9e372fedaea93701cb5219c4654ca6",
+        "gltf": "97d21a7d772dfbad59b146af580cb4251a08b868537a52fa9ab57b77c59b2d5f",
+        "source": "af20262bfbb93c0c6387a495982971778f318018cf803906550529db3a16a563",
+        "textures": {
+          "bearded_axe_base.png": "42e22220bd36be27cf73e37a7e2da36fa9b93e6f313a1cb6d866e136675837d1",
+          "bearded_axe_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "bearded_axe_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/bearded_axe.model_source.json",
+      "triangles": 820
+    },
+    {
+      "id": "ash_spear",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "622820697edf018b02397dc214d6fd3a63b29e561a9abec489fdc198db3dd88c",
+        "gltf": "deda2a9f20d562699cfa3b3d8d6c971416336e1c38de8464027c157859566b41",
+        "source": "ec3e35a07e740bafeb85dce5cc7e328efc4e6bb58633ec6b33d9d3d85d79e607",
+        "textures": {
+          "ash_spear_base.png": "c69ea556fb3b0f90378ada485f86963c4bef20754e7ac3c3a630b72e44952026",
+          "ash_spear_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "ash_spear_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/ash_spear.model_source.json",
+      "triangles": 1224
+    },
+    {
+      "id": "round_shield",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "fa74ce2c7b43fb1c7138c3f2db2fb696bfbd6a0e9aa9d06cf17791c8abc9e5d4",
+        "gltf": "d3e7d7eb15314090c025ee8aba24c6f74dd0d94feb336217eecbe8b497476573",
+        "source": "36ec875dadd5447371c5a7af54590c2d166eb5fa89ada237ffde2d0a4d262673",
+        "textures": {
+          "round_shield_base.png": "97b12ce672b512dfb5ad570b7139a055af47f1b5a4e49bcd9d7a40525906e45d",
+          "round_shield_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "round_shield_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/round_shield.model_source.json",
+      "triangles": 3488
+    },
+    {
+      "id": "iron_maul",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "e10b312fa90fe09d676b75444bf1b22bee5776f57c106f7f91b48b4808d55816",
+        "gltf": "64adaa3f60a2c1955182124e8f9cddab009609bc1f00bebd7478007469265c1b",
+        "source": "897321b9dcb8dc502b70cc92f16d76192fc36317715b178e98ce80672e8f5529",
+        "textures": {
+          "iron_maul_base.png": "6ee793f814182e7e24107328f47dec2874268666ffa3fed1fac9916e65ef33d3",
+          "iron_maul_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "iron_maul_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/iron_maul.model_source.json",
+      "triangles": 1224
+    },
+    {
+      "id": "arming_sword",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "2246975752dcfa88ccd400b6466eaedc88c0f6bd54ee6224f5aa33c0ece2b188",
+        "gltf": "9bdbbdd034e687bb6dc180bac3974c985163759e39fd169c54eed8f3ae769578",
+        "source": "122a997e04917511f9aa2378b2f6fc5e90a0f5b6406bd5ab5c09a7d09cbf9e3b",
+        "textures": {
+          "arming_sword_base.png": "da59f406a4ed20e6656a068413a3a0985282520025d118311df924555901b16a",
+          "arming_sword_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "arming_sword_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/arming_sword.model_source.json",
+      "triangles": 924
+    },
+    {
+      "id": "billhook",
+      "kind": "weapon",
+      "sha256": {
+        "bin": "f3dbb28c39c0bb50007a89cf9d1df803743d0d35665a4f9d3e9e6718c8cb24ad",
+        "gltf": "1d3a3706f0c9f24aeaa9193d02f07bc830bb319305e87ba7b9a99393f8b6407b",
+        "source": "f889552c67a505b6f66b7adf6c8a7f895e4cca6e655639dd5a827c40d51edbf1",
+        "textures": {
+          "billhook_base.png": "e4141675352bfaf62662564197f092d827535eea8c43097958db52c56cd0dabc",
+          "billhook_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "billhook_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/weapons/billhook.model_source.json",
+      "triangles": 1228
+    },
+    {
+      "id": "gambeson",
+      "kind": "armor",
+      "sha256": {
+        "bin": "bbd49970ef544a63638fc16f7708e75ac747b934d6c57af1dfab3dcef3d20441",
+        "gltf": "8f0b9ff22fc40c25f5ab2e366cd3f247e43637f3324bb9aef570f358a396d8ce",
+        "source": "d4365ab2ddf8edc0cf8cffcbaafa768e2b106844970cf47e23559b1e5ffb1579",
+        "textures": {
+          "gambeson_base.png": "b987a8ac29ecd76cf96dc0aaa290cb04d74f305bc328e5e60127b3e6b8c3afb5",
+          "gambeson_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "gambeson_orm.png": "058d8fe9d807448f0885b4f19cb263770c22849f5f9a05330af5cadece778da4"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/gambeson.model_source.json",
+      "triangles": 520
+    },
+    {
+      "id": "mail_hauberk",
+      "kind": "armor",
+      "sha256": {
+        "bin": "7cce6f97d2aadcdd916c15bd7a9ed4417a09ddae85c221509639e4b8a4b1b75c",
+        "gltf": "31866d8f2a20e58d5f5dfa6f71b3dfb29aae25b1763459b8914c2e2f4dfd9042",
+        "source": "9c1bded56e8a236094af658137c783e29cf9677e2788fe59fadf998177a65402",
+        "textures": {
+          "mail_hauberk_base.png": "6ea0ab36650c29d160779f434972fefc0c4aa58f5ca4cd415a0603ee943cb97f",
+          "mail_hauberk_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "mail_hauberk_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/mail_hauberk.model_source.json",
+      "triangles": 1976
+    },
+    {
+      "id": "heavy_plate",
+      "kind": "armor",
+      "sha256": {
+        "bin": "a51d992f2d61d5886b2af6fea626e5834353196272b2ae92a745733200d8a714",
+        "gltf": "96862829e81352f571a24d11a237471b41582b1e4d8827c9dc545747ead6366a",
+        "source": "ddb2803aa4d9e14e5ade2bbd243329f19c2fcbcf7ab4f3470a5afa56f9b0b46b",
+        "textures": {
+          "heavy_plate_base.png": "491fb899c1a9e0eabf4cffd54560a5995b9556e6ab0456eb695607b916e0e431",
+          "heavy_plate_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "heavy_plate_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/heavy_plate.model_source.json",
+      "triangles": 528
+    },
+    {
+      "id": "lamellar",
+      "kind": "armor",
+      "sha256": {
+        "bin": "a51d992f2d61d5886b2af6fea626e5834353196272b2ae92a745733200d8a714",
+        "gltf": "3ccb0fd3cb3bee7feaecd48928820cb102609ea9fcab3e307d75893048769434",
+        "source": "e138768c0cce4b2b91265ad0d9232543dc8dd28c5d9619d1535ffc25490b2255",
+        "textures": {
+          "lamellar_base.png": "ad6178633f7be936a69f426b2c024eb9f0aa292435f39585578da9c130a4d87d",
+          "lamellar_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "lamellar_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/lamellar.model_source.json",
+      "triangles": 528
+    },
+    {
+      "id": "fencer_light",
+      "kind": "armor",
+      "sha256": {
+        "bin": "bbd49970ef544a63638fc16f7708e75ac747b934d6c57af1dfab3dcef3d20441",
+        "gltf": "a7caa727e34d03a094ed77d7535c4264a90ade25245e5b6b3dbc0fa209c8824d",
+        "source": "8459ac618f0b4d440563a633aed35051ad5cf1359b5ce87a726e4f539d097508",
+        "textures": {
+          "fencer_light_base.png": "90483e6dee08d158ecf8b7f06888ee4e5e64692d3ea4f6d3492084fd19ecab62",
+          "fencer_light_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "fencer_light_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/fencer_light.model_source.json",
+      "triangles": 520
+    },
+    {
+      "id": "bruiser_padded_plate",
+      "kind": "armor",
+      "sha256": {
+        "bin": "a51d992f2d61d5886b2af6fea626e5834353196272b2ae92a745733200d8a714",
+        "gltf": "498f4f8ab576e9d5ad27510214490e183a88f126e079a2ee190bb926c79fa230",
+        "source": "1208b53b525cc950d784752c49ca5abc749cecdf43052f7d7db1a26b5e1dbef8",
+        "textures": {
+          "bruiser_padded_plate_base.png": "ac1e4ac3b347628b7a16b06cc66a91db43ef4960ec606ab66ab07a2e1b5d0f4d",
+          "bruiser_padded_plate_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "bruiser_padded_plate_orm.png": "d662607593f62196742bc011b363d67dc6f9b3e68e26cf3600dd8d0d87005c11"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/armor/bruiser_padded_plate.model_source.json",
+      "triangles": 528
+    },
+    {
+      "id": "oathyard_verdict_ring",
+      "kind": "arena",
+      "sha256": {
+        "bin": "129e9fac9cef90bbe99fa1bd0edb04d613288409e03afc4fa0296b4b7a8c2a6e",
+        "gltf": "e714e720c361ff810968e9c0b462cf24bcab658d3ca3dd827e6f5e35a77be205",
+        "source": "0d7532558a89a7576cf88147cd84d7e68a34deb560c29ce1ab998333cbcf5a0a",
+        "textures": {
+          "oathyard_verdict_ring_base.png": "757e3cfe41ae8906fd1b32c07c7e639d979bca436e44ac7b46b9992fe51803a9",
+          "oathyard_verdict_ring_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "oathyard_verdict_ring_orm.png": "6e8147d2681747d4282a738e5d6725fdee7dd57912c4e804fd098727e82b8a8b"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/arenas/oathyard_verdict_ring.model_source.json",
+      "triangles": 2000
+    },
+    {
+      "id": "training_yard",
+      "kind": "arena",
+      "sha256": {
+        "bin": "e3e0909119fd7463cfe1414a289e62d0de3c9cb2caa73d02291e4246f1759c24",
+        "gltf": "bf998f7ac46e2b7e1d48ea2eb44373e2a2c83b4472241cbd6212081894fc539f",
+        "source": "f326f059b8136d16ee682df76f3f0a4af852d75954195f21a5badc7b1182496d",
+        "textures": {
+          "training_yard_base.png": "a074aeec8ef5c5d39003dc17fef4e6211428440e7e63f7b19382d0ab10fa9fce",
+          "training_yard_normal.png": "64f7cb277a74417e3c86f3bd21b85abf2fc4d48bbdc27bda8f4f03603fd0d5d2",
+          "training_yard_orm.png": "6e8147d2681747d4282a738e5d6725fdee7dd57912c4e804fd098727e82b8a8b"
+        }
+      },
+      "source": "assets_src/model_candidates/t_73291be5/arenas/training_yard.model_source.json",
+      "triangles": 2008
+    }
+  ],
+  "kanban_task": "t_73291be5",
+  "not_claimed": [
+    "owner visual acceptance",
+    "public demo readiness",
+    "release candidate readiness",
+    "external Khronos validation",
+    "Blender/DCC round trip",
+    "native renderer animation capture"
+  ],
+  "product": "OATHYARD",
+  "repair_task": "t_49e26ba5",
+  "schema": "oathyard.model_candidate_source_manifest.v2"
+}

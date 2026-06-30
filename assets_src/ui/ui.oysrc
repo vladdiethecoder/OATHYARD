@@ -1,0 +1,9 @@
+schema=oathyard.ui_source.v1
+provenance=repo_owned_vector_spec
+
+icon observe shape=eye_ring
+icon plan shape=timeline_cards
+icon commit_reveal shape=sealed_hands
+icon resolve shape=crossed_lines
+icon consequence shape=body_delta
+icon replay shape=hash_loop

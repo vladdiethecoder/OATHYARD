@@ -1,0 +1,124 @@
+{
+  "created_utc": "2026-06-30T19:16:28Z",
+  "curation_rules": [
+    "one object or coherent paired set per crop",
+    "full object visible with padding, no grid/text/background clutter",
+    "reject floating parts, disconnected geometry, pseudo-machinery, cartoon-slab mass, or fragile impossible ornament",
+    "prefer high-readability silhouettes over ornate variants",
+    "keep YOMIH inspiration mechanical and role-based, not visual-copy"
+  ],
+  "schema": "oathyard.physical_weapon_size_band_spec.v1",
+  "size_bands": [
+    {
+      "approx_length_cm": [
+        25,
+        60
+      ],
+      "band": "small_offhand",
+      "examples": [
+        "belt knife",
+        "rondel dagger",
+        "parrying dagger",
+        "rope dart head"
+      ],
+      "notes": "low mass, one-hand/hidden/offhand tools",
+      "rodin_priority": "medium"
+    },
+    {
+      "approx_length_cm": [
+        65,
+        105
+      ],
+      "band": "one_handed",
+      "examples": [
+        "arming sword",
+        "saber",
+        "falchion",
+        "hatchet",
+        "mace",
+        "buckler sidearm"
+      ],
+      "notes": "best first Rodin weapon batch: coherent silhouettes and simple topology",
+      "rodin_priority": "high"
+    },
+    {
+      "approx_length_cm": [
+        110,
+        150
+      ],
+      "band": "hand_and_half_two_handed",
+      "examples": [
+        "longsword",
+        "bastard sword",
+        "dane axe",
+        "war hammer"
+      ],
+      "notes": "needs full-length crop with handle and balance visible",
+      "rodin_priority": "high"
+    },
+    {
+      "approx_length_cm": [
+        150,
+        190
+      ],
+      "band": "heavy_great",
+      "examples": [
+        "greatsword",
+        "great axe",
+        "maul",
+        "execution sword"
+      ],
+      "notes": "reject cartoon slabs; require counterweight/shaft thickness",
+      "rodin_priority": "medium"
+    },
+    {
+      "approx_length_cm": [
+        190,
+        260
+      ],
+      "band": "polearm_reach",
+      "examples": [
+        "spear",
+        "glaive",
+        "halberd",
+        "poleaxe",
+        "billhook"
+      ],
+      "notes": "needs high-resolution crop; long/thin shafts can be hard for image-to-3D",
+      "rodin_priority": "medium"
+    },
+    {
+      "approx_length_cm": [
+        80,
+        250
+      ],
+      "band": "flexible_control",
+      "examples": [
+        "chain flail",
+        "hooked chain",
+        "rope snare",
+        "weighted sash"
+      ],
+      "notes": "high risk for Rodin due thin flexible self-occluding topology; prefer authored modeling",
+      "rodin_priority": "low"
+    },
+    {
+      "approx_length_cm": [
+        30,
+        180
+      ],
+      "band": "defensive_hybrid",
+      "examples": [
+        "buckler",
+        "heater shield",
+        "lantern shield",
+        "gauntlet",
+        "parry hook",
+        "ring staff"
+      ],
+      "notes": "must show straps/grips/hinges/attachments clearly",
+      "rodin_priority": "medium"
+    }
+  ],
+  "source_catalog": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z"
+}

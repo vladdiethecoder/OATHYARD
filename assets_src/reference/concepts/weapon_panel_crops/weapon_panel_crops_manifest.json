@@ -1,0 +1,417 @@
+{
+  "created_utc": "2026-06-30T18:28:58Z",
+  "crops": [
+    {
+      "box_xyxy": [
+        35,
+        115,
+        520,
+        230
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/colossal_war_hammer.png",
+      "id": "colossal_war_hammer",
+      "panel_number": 1,
+      "row_index": 1,
+      "sha256": "8ae41f259bff709e255be74ff3ecd13e13a8bc4b507c09e0bcffb8c33eaf9a5d",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        230,
+        520,
+        345
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/ardent_sword.png",
+      "id": "ardent_sword",
+      "panel_number": 2,
+      "row_index": 2,
+      "sha256": "88a6bb6e29f4171daf085a422dde3637f279a1e5e865a3804c3d84394cbe6ed2",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        345,
+        520,
+        460
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/longsword.png",
+      "id": "longsword",
+      "panel_number": 3,
+      "row_index": 3,
+      "sha256": "a694c7f414d3ad52e49af6c5f949c4559052c5785b8c68ee6f687684bbf77f26",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        460,
+        520,
+        575
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/greatsword_zweihander.png",
+      "id": "greatsword_zweihander",
+      "panel_number": 4,
+      "row_index": 4,
+      "sha256": "f804fc054cebd8a64c8686eca00193a23cad42e6c0dd1cd5fbaae1905326f97b",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        575,
+        520,
+        690
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/greatblade_nodachi.png",
+      "id": "greatblade_nodachi",
+      "panel_number": 5,
+      "row_index": 5,
+      "sha256": "3d65cad40739ecd309b89224ecb47ef102803a06187f2b527f7df1bf35f51ca9",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        690,
+        520,
+        805
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/spear.png",
+      "id": "spear",
+      "panel_number": 6,
+      "row_index": 6,
+      "sha256": "2c65cf4684881e512585ea4a726b9d7bb6d6dd2953859a97b662d138752d32a6",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        805,
+        520,
+        920
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/glaive.png",
+      "id": "glaive",
+      "panel_number": 7,
+      "row_index": 7,
+      "sha256": "ae5d6d448bdd9faf3dab1188564aecfc93b5ca80f6132b430ebe5fb8946c296c",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        920,
+        520,
+        1035
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/halberd_poleaxe.png",
+      "id": "halberd_poleaxe",
+      "panel_number": 8,
+      "row_index": 8,
+      "sha256": "7dedc08641c8004b66688b8096fbd1ac52c2ec3ba592516427037eaa7deca857",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        115,
+        1025,
+        230
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/battle_axe.png",
+      "id": "battle_axe",
+      "panel_number": 9,
+      "row_index": 1,
+      "sha256": "a2dc1486d3a3d3424ee48d86e189b4d21dcf963f639e1d718dc84b8eed774964",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        230,
+        1025,
+        345
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/dane_axe.png",
+      "id": "dane_axe",
+      "panel_number": 10,
+      "row_index": 2,
+      "sha256": "53febd69c8c8c1092f6066418a882460cc41df45d31cdf0402c4042107e7be09",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        345,
+        1025,
+        460
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/mace.png",
+      "id": "mace",
+      "panel_number": 11,
+      "row_index": 3,
+      "sha256": "d8ba3b7e55f5ca778cd731dde3190eec9db7baa76fd007d3001ea2f850c71aea",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        460,
+        1025,
+        575
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/flanged_maul.png",
+      "id": "flanged_maul",
+      "panel_number": 12,
+      "row_index": 4,
+      "sha256": "032c600829eeeae202f6ea2fcc66dff0f87f291da0089b1cadd16434860b19ea",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        575,
+        1025,
+        690
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/chain_flail.png",
+      "id": "chain_flail",
+      "panel_number": 13,
+      "row_index": 5,
+      "sha256": "efd0503b50508925621fd436d3a158abdd622d7c35fdcc663477ab4a87a08192",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        690,
+        1025,
+        805
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/dual_daggers.png",
+      "id": "dual_daggers",
+      "panel_number": 14,
+      "row_index": 6,
+      "sha256": "a3cbe25365a05a8853dd152ba4dc4757729f45cf94443dc1fd2c417192c078be",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        805,
+        1025,
+        920
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/saber_scimitar.png",
+      "id": "saber_scimitar",
+      "panel_number": 15,
+      "row_index": 7,
+      "sha256": "47f691a284e6295da4f836428f11d352bafc9063fa6efe80ea5aeec5b01a7ac8",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        920,
+        1025,
+        1035
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/bo_staff.png",
+      "id": "bo_staff",
+      "panel_number": 16,
+      "row_index": 8,
+      "sha256": "df13076f260d0cee70ade018e65de5a5f947dc85d071bcfcc527dfad06cdfabb",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        1010,
+        520,
+        1125
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/shield_one_handed.png",
+      "id": "shield_one_handed",
+      "panel_number": 17,
+      "row_index": 9,
+      "sha256": "ca43d4827afd1980acf1863283c7172426cc622aa4c31b32ebe1649deb511249",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        1010,
+        1025,
+        1125
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/hand_cannon.png",
+      "id": "hand_cannon",
+      "panel_number": 18,
+      "row_index": 9,
+      "sha256": "4c9c7b04b88d48a33df0c9c4f7fe58fe8a15ca8c5ea492eb4da982eb90d0060d",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        1125,
+        520,
+        1240
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/rotary_revolver.png",
+      "id": "rotary_revolver",
+      "panel_number": 19,
+      "row_index": 10,
+      "sha256": "4cd7e11983279fb0822aebd86dbc656d482dd1e90bf347bd59ff0f26558149e7",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        1125,
+        1025,
+        1240
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/hooked_chain.png",
+      "id": "hooked_chain",
+      "panel_number": 20,
+      "row_index": 10,
+      "sha256": "c4f47fde9bf832939fe0a9a083b18f5015f070f6d5385d156c33efce8ff3acd4",
+      "size": [
+        490,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        35,
+        1240,
+        520,
+        1355
+      ],
+      "column": "left",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/hollow_fist_gloves.png",
+      "id": "hollow_fist_gloves",
+      "panel_number": 21,
+      "row_index": 11,
+      "sha256": "4c38cc3248f9f8346d738a7a1662c4afc116ddb5cd170397fdfcf5915e01d7c6",
+      "size": [
+        485,
+        115
+      ]
+    },
+    {
+      "box_xyxy": [
+        535,
+        1240,
+        1025,
+        1355
+      ],
+      "column": "right",
+      "file": "assets_src/reference/concepts/weapon_panel_crops/arcane_focus.png",
+      "id": "arcane_focus",
+      "panel_number": 22,
+      "row_index": 11,
+      "sha256": "615275f96ed25806cec7d0df5c5e1589503a83145b1c97100d66adbcf7e3df64",
+      "size": [
+        490,
+        115
+      ]
+    }
+  ],
+  "notes": [
+    "Panel crops include text/detail callouts as concept-control evidence; for Rodin generation, pair with prompt/spec and reject text artifacts visually.",
+    "For pure image-to-3D, tighter object-only crops may be needed after first no-credit/low-credit smoke."
+  ],
+  "schema": "oathyard.weapon_panel_crops.v1",
+  "source_file": "assets_src/reference/concepts/hustle_honor_weapon_diversity_concept_sheet.png",
+  "source_sha256": "e6ab4dcf8a7e9026a273e5a7fba1d2620f54e0c20e020719cff2b8a10b41a9f6",
+  "source_size": [
+    1055,
+    1491
+  ],
+  "truth_boundary": {
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

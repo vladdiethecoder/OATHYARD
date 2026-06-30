@@ -1,0 +1,225 @@
+{
+  "created_utc": "2026-06-30T18:31:12Z",
+  "crops": [
+    {
+      "box_xyxy": [
+        40,
+        125,
+        285,
+        940
+      ],
+      "character": "base_male",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_male_front.png",
+      "id": "base_male_front",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "a5c36420eb8ad4cbeb76342c478ecf853736db56297cbe91c0437c932a805ded",
+      "size": [
+        245,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "view": "front"
+    },
+    {
+      "box_xyxy": [
+        315,
+        125,
+        535,
+        940
+      ],
+      "character": "base_male",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_male_front_right.png",
+      "id": "base_male_front_right",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "26073ec42534823315f2202bd64dc1350047447cf7bdad535b018d1c1d54ab2c",
+      "size": [
+        220,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "view": "front_right"
+    },
+    {
+      "box_xyxy": [
+        560,
+        125,
+        765,
+        940
+      ],
+      "character": "base_male",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_male_side_profile.png",
+      "id": "base_male_side_profile",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "70d1e65773927b20292e66d07355291dabf4c29859fe0616e6666292b707eeaa",
+      "size": [
+        205,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "view": "side_profile"
+    },
+    {
+      "box_xyxy": [
+        820,
+        125,
+        1035,
+        940
+      ],
+      "character": "base_male",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_male_back.png",
+      "id": "base_male_back",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "6eff83afea4152c3a994c28a434e166b7342832cf1bfbd8a148fbf4f569ee7a6",
+      "size": [
+        215,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "view": "back"
+    },
+    {
+      "box_xyxy": [
+        535,
+        970,
+        1045,
+        1485
+      ],
+      "character": "base_male",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_male_portrait.png",
+      "id": "base_male_portrait",
+      "rodin_use": "face_detail_reference_candidate",
+      "sha256": "923ce82628b9815d0220245019c4e76be5f90d3db4b086ff84741cfdb28b1fad",
+      "size": [
+        510,
+        515
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "view": "portrait"
+    },
+    {
+      "box_xyxy": [
+        40,
+        125,
+        285,
+        940
+      ],
+      "character": "base_female",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_female_front.png",
+      "id": "base_female_front",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "d5555418cba635cdee387dae3523d1bfdda6c53079832b82985b5a788dcd94ed",
+      "size": [
+        245,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "view": "front"
+    },
+    {
+      "box_xyxy": [
+        315,
+        125,
+        535,
+        940
+      ],
+      "character": "base_female",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_female_front_right.png",
+      "id": "base_female_front_right",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "73290d224b507e9f9c259af6ca8efd7ae8fd4ddc60cb2ac922d42765cbab2ded",
+      "size": [
+        220,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "view": "front_right"
+    },
+    {
+      "box_xyxy": [
+        560,
+        125,
+        765,
+        940
+      ],
+      "character": "base_female",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_female_side_profile.png",
+      "id": "base_female_side_profile",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "3591d6cb199f1f896da36c0f97b93023e6fa28765025e1f248c648fc9888cab8",
+      "size": [
+        205,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "view": "side_profile"
+    },
+    {
+      "box_xyxy": [
+        820,
+        125,
+        1035,
+        940
+      ],
+      "character": "base_female",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_female_back.png",
+      "id": "base_female_back",
+      "rodin_use": "multiview_input_candidate",
+      "sha256": "ed601b6b78b09d79135afe86f04e78f53d3e6451b12632f071585e291b7e0955",
+      "size": [
+        215,
+        815
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "view": "back"
+    },
+    {
+      "box_xyxy": [
+        535,
+        970,
+        1045,
+        1485
+      ],
+      "character": "base_female",
+      "file": "assets_src/reference/concepts/character_multiview_crops/base_female_portrait.png",
+      "id": "base_female_portrait",
+      "rodin_use": "face_detail_reference_candidate",
+      "sha256": "88be93fb9e57d6831dfd76ddaf504b6fde8623ab63921343922980d3952aaa56",
+      "size": [
+        510,
+        515
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "view": "portrait"
+    }
+  ],
+  "notes": [
+    "Revised after hostile visual QA: full-body crops stop before lower portrait/notes/neighbor leakage; portrait crops are separate face-detail references.",
+    "Crops isolate one view per image to avoid Rodin treating a turntable sheet as multiple/fused bodies."
+  ],
+  "schema": "oathyard.character_reference_crops.v1",
+  "sources": {
+    "base_female": {
+      "original_path": "/home/vdubrov/Downloads/[redacted_basename].png",
+      "size": [
+        1055,
+        1491
+      ],
+      "source_file": "assets_src/reference/concepts/base_female_multiview_source.png",
+      "source_sha256": "e60597467efc46656742510e415ecace08837f1b64e4dd236b17cf733666dbea"
+    },
+    "base_male": {
+      "original_path": "/home/vdubrov/Downloads/[redacted_basename].png",
+      "size": [
+        1055,
+        1491
+      ],
+      "source_file": "assets_src/reference/concepts/base_male_multiview_source.png",
+      "source_sha256": "cdc991a8da65dd2c63518eddb948fa4f4ec3ab45e7d868186a1f4c313315d784"
+    }
+  },
+  "truth_boundary": {
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

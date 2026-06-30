@@ -1,0 +1,17 @@
+schema=oathyard.vfx_source.v1
+provenance=repo_owned_text_vfx_spec
+
+vfx edge_spark truth_event=deflect presentation_only=true color=amber
+vfx dust_step truth_event=step presentation_only=true color=chalk
+vfx armor_shift truth_event=capability_delta presentation_only=true color=grey
+vfx grip_loss truth_event=grip_loss presentation_only=true color=red_ink
+vfx bind_flash truth_event=hook_bind presentation_only=true color=blue_steel
+vfx collapse_mark truth_event=stance_collapse_risk presentation_only=true color=black_ink
+vfx arena_dust_mote truth_event=replay_system presentation_only=true color=chalk
+vfx commit_flash truth_event=replay_system presentation_only=true color=ui_gold
+vfx weapon_trail_arc truth_event=committed_action presentation_only=true color=blue_steel
+vfx material_impact_burst truth_event=contact_trace presentation_only=true color=impact_orange
+vfx blood_wetness truth_event=contact_trace presentation_only=true color=dark_red
+vfx impact_debris truth_event=contact_trace presentation_only=true color=stone_grey
+vfx shock_ring truth_event=contact_trace presentation_only=true color=violet
+vfx fight_film_pulse truth_event=contact_trace presentation_only=true color=violet

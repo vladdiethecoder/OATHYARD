@@ -1,0 +1,10 @@
+# OATHYARD deterministic bootstrap duel.
+scenario basic_oathyard
+fighter 0 rook arming_sword gambeson
+fighter 1 vale longsword mail_hauberk
+turn 0 0 cut forward torso
+turn 0 1 guard center torso
+turn 1 0 recover center torso
+turn 1 1 thrust forward torso
+turn 2 0 guard center torso
+turn 2 1 recover back torso

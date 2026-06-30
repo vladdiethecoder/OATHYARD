@@ -1,0 +1,113 @@
+{
+  "catalog_pages": [
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/pages/page_A_yomih_martial_weapon_archetypes.png",
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_A_yomih_martial_weapon_archetypes",
+      "sha256": "6bea2c7ee85a163a1f303bbcd16149ab6586b986b6f81d4ac21a4bee7aca7da0",
+      "size": [
+        1024,
+        1536
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/pages/page_B_yomih_style_loadout_objects.png",
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_B_yomih_style_loadout_objects",
+      "sha256": "1415de3e966c49eabcd5f8c03eb8b6ec9f68ced95621998737e6bca611eb0c73",
+      "size": [
+        1536,
+        1024
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/pages/page_C_yomih_superpowered_duel_implements.png",
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_C_yomih_superpowered_duel_implements",
+      "sha256": "aa991f24d1513cea033bf764a938dcdbbeef2430d8c184478001e979c59dc2bf",
+      "size": [
+        1536,
+        1024
+      ],
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    }
+  ],
+  "created_utc": "2026-06-30T18:57:53Z",
+  "design_instruction": "Weapon and weapon/martial arts variety should be heavily inspired by YOMIH mechanics while avoiding copied YOMI/YOMIH names, characters, sprites, UI, exact weapons, or proprietary identity.",
+  "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
+  "overview_contact_sheet": {
+    "file": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/codex_weapon_catalog_yomih_overview.png",
+    "sha256": "60a0b915293745526d7ba56ccc4ac187177528a5ab488e75cea755a6b73a304b",
+    "size": [
+      796,
+      3594
+    ]
+  },
+  "run_id": "codex_weapon_catalog_yomih_20260630T185753Z",
+  "schema": "oathyard.codex_weapon_catalog_yomih_addendum.v1",
+  "source_context": [
+    "Steam store page: Your Only Move Is HUSTLE, released 2023-02-02, frame-by-frame turn-based combat simulator description",
+    "Ivy Sly page: online turn-based fighting game and superpowered fight scene simulator",
+    "Ivy Sly 1.9.0 patch notes: prediction, hit frames, parry timing, initiative, character loader/modded characters, Mutant rushdown/mobility, Ninja grappling hook/shuriken/caltrops, Robot move/grappler evidence"
+  ],
+  "truth_boundary": {
+    "classification": "offline_research_authoring",
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  },
+  "usage_notes": [
+    "Use as inspiration-control catalog for OATHYARD combat variety and Rodin candidate selection.",
+    "Extract individual silhouettes/martial implements before 3D generation.",
+    "Do not use or copy YOMIH names, characters, UI, sprites, or exact weapons.",
+    "Generated images are not production assets or acceptance evidence."
+  ],
+  "visual_audit": {
+    "approx_visible_slots_total": 358,
+    "json": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/audit/visual_audit.json",
+    "markdown": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/audit/visual_audit.md",
+    "page_verdicts": {
+      "page_A_yomih_martial_weapon_archetypes": "fail_as_moveset_catalog_pass_as_raw_icon_pool",
+      "page_B_yomih_style_loadout_objects": "fail_as_yomih_breadth_reference_needs_curation",
+      "page_C_yomih_superpowered_duel_implements": "pass_as_curated_prompt_direction_fail_as_giant_catalog"
+    }
+  }
+}

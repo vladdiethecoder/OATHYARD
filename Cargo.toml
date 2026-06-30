@@ -1,0 +1,16 @@
+[package]
+name = "oathyard"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic native-PC planned-time physical melee duel"
+license-file = "LICENSE"
+readme = "README.md"
+rust-version = "1.96"
+
+[[bin]]
+name = "oathyard"
+path = "src/bin/oathyard.rs"
+
+[lib]
+name = "oathyard"
+path = "src/lib.rs"

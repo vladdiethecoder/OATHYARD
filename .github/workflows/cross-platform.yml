@@ -1,0 +1,62 @@
+name: Cross-Platform Determinism
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # First-line guard: cargo test --locked on all declared target platforms.
+  # This catches platform-specific compile failures and test divergences early.
+  # Full hash-stamp cross-platform verification is done via
+  # tools/cross_platform_verify.sh and tools/cross_platform_hash_exchange.sh.
+  test-matrix:
+    name: cargo test --locked (${{ matrix.os }} / ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            platform_id: linux-x86_64
+          - os: windows-latest
+            arch: x86_64
+            target: x86_64-pc-windows-msvc
+            platform_id: windows-x86_64
+          - os: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+            platform_id: macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Verify Cargo.lock is committed
+        run: test -f Cargo.lock
+
+      - name: cargo test --locked
+        run: cargo test --locked
+
+      - name: cargo fmt --check
+        run: cargo fmt --check
+        continue-on-error: true
+
+      - name: Run cross-platform hash stamp (Linux only)
+        if: matrix.platform_id == 'linux-x86_64'
+        run: |
+          ./tools/cross_platform_verify.sh --out artifacts/cross_platform/ci-${{ matrix.platform_id }}
+
+      - name: Upload hash stamp artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-platform-stamp-${{ matrix.platform_id }}
+          path: artifacts/cross_platform/ci-${{ matrix.platform_id }}/stamps/
+          retention-days: 30

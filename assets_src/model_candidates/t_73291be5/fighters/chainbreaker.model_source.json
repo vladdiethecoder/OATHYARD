@@ -1,0 +1,85 @@
+{
+  "art_direction": {
+    "anchors": [
+      "readable duel silhouette before ornament",
+      "cold oath-stone palette with restrained legal/faction accents",
+      "tactile PBR material families: cloth, leather, mail, plate, ash wood, stone, blood/wear",
+      "riggable truth-joint candidates with synthetic idle/walk/attack motion proof"
+    ],
+    "style_target": "grounded stylized realism for dark-fantasy judicial duels"
+  },
+  "asset_id": "chainbreaker",
+  "generated_metrics": {
+    "materials": 10,
+    "primitive_material_groups": 10,
+    "triangles": 23816,
+    "vertices": 13472
+  },
+  "kanban_task": "t_73291be5",
+  "kind": "fighter",
+  "license_status": "repo_owned_original_internal_candidate_pending_project_license_review",
+  "not_claimed": [
+    "owner visual acceptance",
+    "public demo readiness",
+    "release candidate readiness",
+    "external Khronos validation",
+    "Blender/DCC round trip",
+    "native renderer animation capture"
+  ],
+  "product": "OATHYARD",
+  "provenance": "repo_owned_original_procedural_model_candidate",
+  "repair_task": "t_49e26ba5",
+  "rig_contract": {
+    "canonical_truth_joints": [
+      "root",
+      "spine_lower",
+      "spine_upper",
+      "neck_head",
+      "shoulder_r",
+      "elbow_r",
+      "wrist_r",
+      "shoulder_l",
+      "elbow_l",
+      "wrist_l",
+      "hip_r",
+      "knee_r",
+      "ankle_r",
+      "hip_l",
+      "knee_l",
+      "ankle_l"
+    ],
+    "grip_frames": [
+      "grip_r",
+      "grip_l"
+    ],
+    "max_vertex_influences": 4,
+    "motion_proof_status": "synthetic glTF idle/walk/attack channels present"
+  },
+  "schema": "oathyard.model_candidate_source.v2",
+  "source_basis": {
+    "art_direction_brief": "docs/design/ART_DIRECTION_BRIEF.md",
+    "category_source_fields": {
+      "body_mass_g": "86200",
+      "id": "chainbreaker",
+      "reach_bias_mm": "-20",
+      "silhouette": "wide_hooking",
+      "stance_bias_permille": "960",
+      "visual": "split_chain_badge"
+    },
+    "content_manifest": "content/oathyard_content.manifest",
+    "loadout": {
+      "armor": "lamellar",
+      "weapon": "bearded_axe"
+    }
+  },
+  "technical_budget": {
+    "hard_max": 40000,
+    "min": 18000,
+    "target_max": 30000
+  },
+  "truth_boundary": {
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  }
+}

@@ -1,0 +1,10 @@
+# OATHYARD light-vs-balanced deterministic duel.
+scenario duelist_vs_writ
+fighter 0 salt curved_sword fencer_light
+fighter 1 writ longsword mail_hauberk
+turn 0 0 pivot right torso
+turn 0 1 guard center torso
+turn 1 0 cut forward weapon_arm
+turn 1 1 parry right weapon_arm
+turn 2 0 kick forward lead_leg
+turn 2 1 thrust forward torso

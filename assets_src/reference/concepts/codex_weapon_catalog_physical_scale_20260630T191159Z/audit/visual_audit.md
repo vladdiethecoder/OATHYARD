@@ -1,0 +1,81 @@
+# Physical-Scale Codex Weapon Catalog Visual Audit
+
+UTC: `2026-06-30T19:16:28Z`
+
+Approx visible items total: `173`
+Overall verdict: `pass_as_replacement_reference_pool_fail_as_direct_Rodin_input`
+
+## User correction addressed
+- Prior generated weapon catalogs had physically impossible/ridiculous weapons and insufficient size variety.
+- This V2 catalog targets physically buildable construction and clear size bands from dagger to polearm/great weapon.
+
+## Page results
+### page_01_scale_ladder
+- Approx visible items: `33`
+- Physical plausibility: `pass_with_minor_notes`
+- Visible size variety: `pass`
+- Verdict: `pass_as_scale_reference`
+- several daggers/straight swords are near-duplicates
+- generic grimdark-medieval styling remains
+- one or two heavy shapes are fantasy-large but still constructible
+- not directly Rodin-ready because it is a full composite sheet
+
+### page_02_light_one_handed
+- Approx visible items: `42`
+- Physical plausibility: `pass_with_minor_notes`
+- Visible size variety: `pass_within_light_one_hand_band`
+- Verdict: `pass_with_curation`
+- many near-duplicate straight daggers and paired knife variants
+- axes/maces/hook tools repeat silhouettes within category
+- some gauntlet/bracer entries read as gear rather than standalone weapons
+- not directly Rodin-ready until each item is cropped/masked
+
+### page_03_two_handed_heavy
+- Approx visible items: `29`
+- Physical plausibility: `mixed`
+- Visible size variety: `pass`
+- Verdict: `conditional_fail_for_heaviest_slots`
+- top-row swords include near-duplicates
+- bottom-right colossal hammer/axe heads push cartoon-slab/impossible-weight territory
+- some huge blades have small handles/counterweights relative to blade mass
+- two cleaver/glaive and multiple mace forms are near-duplicates
+- no text/logos/characters/hands and no direct known-IP copy detected
+
+### page_04_reach_polearms_control
+- Approx visible items: `32`
+- Physical plausibility: `pass_with_notes`
+- Visible size variety: `fail_or_weak`
+- Verdict: `fail_as_size_variety_reference_pass_as_polearm_pool`
+- weapons are normalized to near-identical cell height, weakening visible length contrast
+- many shafts are same length/thickness despite different classes
+- a few ornate winged heads are decorative/fragile rather than structurally convincing
+- chain/net/flexible weapons remain high-risk for Rodin due thin parts and self-occlusion
+- near-duplicate halberd/spear silhouettes
+
+### page_05_defensive_hybrid_ritual
+- Approx visible items: `37`
+- Physical plausibility: `mixed_fail_for_firearms_and_ritual_hybrids`
+- Visible size variety: `mixed`
+- Verdict: `conditional_fail_until_curated`
+- front/back/variant pairs create many near-duplicates
+- some firearms lack clear lock/hammer/cylinder/ignition logic and read as pseudo-machinery
+- crystal/censer/ritual heads look heavy or fragile relative to handles and joints
+- some entries are non-weapon props or armor pieces, which may confuse Rodin semantics
+- derivative Soulslike item-icon style, though no direct copied IP/logos/characters detected
+
+## Improvements over prior
+- clearer physical construction with grips, guards, hafts, sockets, straps, rivets, chains, and shields
+- better size taxonomy: knives/daggers, one-handed weapons, two-handed/heavy weapons, polearms/control tools, defensive/hybrid tools
+- fewer impossible floating/disconnected parts than prior Codex/YOMIH addendum pages
+- page 01 directly addresses visible size ladder from small knife to polearm
+
+## Remaining Rodin blockers
+- full-sheet composites must be cropped into one-object images
+- remove labels/page text and grid panels before Rodin
+- standardize background, contrast, crop padding, and camera angle per item
+- reject or redesign page 03 heaviest slab weapons and page 05 pseudo-firearms/fragile ritual hybrids
+- avoid chains/nets/whips as first Rodin batch unless manually authored/retopologized; thin flexible parts are high-risk
+- select physically buildable candidates with clear silhouette and no near-duplicate redundancy
+
+## Boundary
+- Concept/reference only; not 3D, not runtime-imported, not owner accepted.

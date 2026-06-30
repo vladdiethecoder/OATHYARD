@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="OATHYARD icon">
+  <rect width="256" height="256" rx="28" fill="#16181c"/>
+  <circle cx="128" cy="128" r="86" fill="none" stroke="#d8d0bd" stroke-width="10"/>
+  <path d="M78 176 L178 76" stroke="#c95b3d" stroke-width="14" stroke-linecap="round"/>
+  <path d="M82 78 L176 172" stroke="#7fa6a0" stroke-width="14" stroke-linecap="round"/>
+  <path d="M128 46 L143 108 L210 128 L143 148 L128 210 L113 148 L46 128 L113 108 Z" fill="none" stroke="#d8d0bd" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="128" cy="128" r="14" fill="#d8d0bd"/>
+</svg>

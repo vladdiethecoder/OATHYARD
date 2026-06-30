@@ -1,0 +1,15 @@
+schema=oathyard.pbr_surface_source.v1
+product=OATHYARD
+provenance=repo_owned
+truth_authoritative=false
+presentation_only=true
+notes=Procedural repo-owned PBR surface schema; material masks are presentation-only and read verified replay/contact events after truth hashes.
+
+surface tempered_steel_edge_worn applies=weapons,armor material_ids=steel_edge,tempered_plate albedo=104,111,108 metallic=930 roughness=410 normal=540 height=180 edge_wear=820 dirt=220 blood_wetness=260 cloth_grain=0 steel_scratches=900 leather_strain=0 stone_dust=110 stitching=0 hair_skin_variation=0
+surface riveted_mail_oiled applies=armor material_ids=riveted_mail,steel_edge albedo=74,79,78 metallic=860 roughness=520 normal=720 height=330 edge_wear=640 dirt=260 blood_wetness=340 cloth_grain=0 steel_scratches=780 leather_strain=0 stone_dust=120 stitching=0 hair_skin_variation=0
+surface quilted_linen_stitched applies=armor,fighters material_ids=quilted_linen,cloth,textile_padding albedo=137,116,86 metallic=0 roughness=910 normal=610 height=420 edge_wear=360 dirt=620 blood_wetness=540 cloth_grain=930 steel_scratches=0 leather_strain=0 stone_dust=260 stitching=880 hair_skin_variation=0
+surface strained_buff_leather applies=armor,fighters material_ids=buff_leather_textile,leather,lamellar_iron_leather albedo=106,74,45 metallic=0 roughness=780 normal=560 height=310 edge_wear=520 dirt=480 blood_wetness=420 cloth_grain=240 steel_scratches=0 leather_strain=910 stone_dust=190 stitching=540 hair_skin_variation=0
+surface ash_wood_grain_dented applies=weapons,arenas material_ids=ash_wood,wood,grip albedo=122,95,58 metallic=0 roughness=820 normal=680 height=460 edge_wear=520 dirt=560 blood_wetness=320 cloth_grain=0 steel_scratches=0 leather_strain=170 stone_dust=340 stitching=0 hair_skin_variation=0
+surface chalked_stone_dust applies=arenas material_ids=chalked_stone,stone,ground albedo=150,143,124 metallic=0 roughness=960 normal=480 height=390 edge_wear=300 dirt=740 blood_wetness=220 cloth_grain=0 steel_scratches=0 leather_strain=0 stone_dust=940 stitching=0 hair_skin_variation=0
+surface skin_hair_variation applies=fighters material_ids=skin,hair,flesh albedo=139,96,73 metallic=0 roughness=720 normal=360 height=160 edge_wear=0 dirt=360 blood_wetness=620 cloth_grain=0 steel_scratches=0 leather_strain=0 stone_dust=160 stitching=0 hair_skin_variation=960
+surface wet_blood_trace_overlay applies=weapons,armor,fighters,arenas material_ids=blood,wetness,trace_overlay albedo=88,18,16 metallic=0 roughness=280 normal=220 height=120 edge_wear=0 dirt=180 blood_wetness=980 cloth_grain=0 steel_scratches=0 leather_strain=0 stone_dust=120 stitching=0 hair_skin_variation=0

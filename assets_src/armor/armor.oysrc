@@ -1,0 +1,10 @@
+schema=oathyard.armor_source.v1
+provenance=repo_owned_original_text_asset
+coverage_features=torso,head,weapon_arm,lead_leg,gaps,straps,overlap,shift,detach
+
+armor gambeson material=quilted_linen pieces=torso_skirt,sleeves straps=cord_ties visual=stitched_padding
+armor mail_hauberk material=riveted_mail pieces=torso_hauberk,coif_scarf straps=belt visual=ring_pattern
+armor heavy_plate material=tempered_plate pieces=breastplate,pauldrons,vambraces,greaves straps=leather_hinges visual=inked_plate_edges
+armor lamellar material=lamellar_iron_leather pieces=scale_cuirass,tassets,bracers straps=side_laces visual=layered_tiles
+armor fencer_light material=buff_leather_textile pieces=jack,forearm_guard straps=buckles visual=pale_duelist_trim
+armor bruiser_padded_plate material=padded_plate_mix pieces=reinforced_coat,iron_mask,heavy_cuffs straps=wide_belts visual=dark_padded_blocks

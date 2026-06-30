@@ -1,0 +1,182 @@
+{
+  "catalog_pages": [
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/pages/page_01_scale_ladder.png",
+      "intended_slots": 30,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_01_scale_ladder",
+      "sha256": "1545897aa342255bf209fd321a743c3f2af6d49fc9e1702c4757161e02a9b67d",
+      "size": [
+        1024,
+        1536
+      ],
+      "size_focus": "all bands 25cm-260cm",
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/pages/page_02_light_one_handed.png",
+      "intended_slots": 32,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_02_light_one_handed",
+      "sha256": "3bd62f96204cfeec1911c2c79b1056d132ab4501097ade7d021b2cbd94a09b84",
+      "size": [
+        1024,
+        1536
+      ],
+      "size_focus": "light/offhand/one-handed 25cm-100cm",
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/pages/page_03_two_handed_heavy.png",
+      "intended_slots": 28,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_03_two_handed_heavy",
+      "sha256": "cc2ea3be0f14eb9b260b3634112cd7ce074176e19bb469d6d64bf819142cefaa",
+      "size": [
+        1536,
+        1024
+      ],
+      "size_focus": "two-handed/heavy/colossal 110cm-190cm",
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/pages/page_04_reach_polearms_control.png",
+      "intended_slots": 30,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_04_reach_polearms_control",
+      "sha256": "3a8dd03cb5f8490392276c208941634cd59a0d888e5263861b8f39cfa64611df",
+      "size": [
+        1536,
+        1024
+      ],
+      "size_focus": "reach/polearm/flexible/control 120cm-260cm",
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    },
+    {
+      "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/pages/page_05_defensive_hybrid_ritual.png",
+      "intended_slots": 30,
+      "model": "openai-codex/gpt-image-2-high",
+      "not_claimed": [
+        "production asset completion",
+        "3D geometry",
+        "native in-engine runtime capture",
+        "owner visual acceptance",
+        "public demo readiness",
+        "release candidate readiness"
+      ],
+      "page_id": "page_05_defensive_hybrid_ritual",
+      "sha256": "65822fd6eae6f32f8be5decb60faffd365ffbc2a3b6285a9a9002304fa7d551f",
+      "size": [
+        1024,
+        1536
+      ],
+      "size_focus": "defensive/hybrid/ritual 25cm-230cm",
+      "truth_boundary": {
+        "does_not_mutate_gameplay_truth": true,
+        "presentation_only": true,
+        "truth_authoritative": false
+      }
+    }
+  ],
+  "created_utc": "2026-06-30T19:11:59Z",
+  "design_correction": "Regenerate after user rejected prior physically impossible/ridiculous weapons. This version emphasizes physically buildable weapon construction and visible size variety from dagger to polearm/great weapon.",
+  "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
+  "overview_contact_sheet": {
+    "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/codex_weapon_catalog_physical_scale_overview.png",
+    "sha256": "e04ca097183f7a84ec7a3969e54aae1b24f51b4268f6a57c04403483e6854585",
+    "size": [
+      756,
+      5678
+    ]
+  },
+  "physical_plausibility_rules": [
+    "consistent scale within each page where possible",
+    "visible grip/guard/tang/socket/pommel/rivets/langets/straps/hinges where applicable",
+    "believable mass distribution and center of mass",
+    "one coherent object per panel except paired weapon sets",
+    "no floating parts, disconnected geometry, fractal blades, oversized cartoon slabs, impossible firearms, unreadable pseudo-machinery, or decorative spikes larger than the weapon function"
+  ],
+  "physical_size_band_spec": {
+    "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/physical_size_band_spec.json",
+    "sha256": "b8ce90bd0381a4e3de00b0d2419565a3664aed7b4e84e4d52135b1df30951dc5"
+  },
+  "reference_inspiration_boundary": [
+    "For Honor: broad readable hero/weapon silhouettes and size-role contrast; do not copy factions/heroes/weapons/UI.",
+    "Elden Ring: broad weapon category scale range including daggers/swords/greatswords/colossal/great spears/halberds/greathammers; do not copy named weapons/models.",
+    "YOMIH: mechanical breadth and frame-planned role variety only; do not copy names/characters/sprites/UI/exact weapons."
+  ],
+  "run_id": "codex_weapon_catalog_physical_scale_20260630T191159Z",
+  "schema": "oathyard.codex_weapon_catalog_physical_scale.v1",
+  "truth_boundary": {
+    "classification": "offline_research_authoring",
+    "does_not_mutate_gameplay_truth": true,
+    "presentation_only": true,
+    "truth_authoritative": false
+  },
+  "usage_notes": [
+    "Use this V2 catalog as the replacement source pool for physically plausible, size-varied candidate selection.",
+    "Crop/curate individual one-object candidates before Rodin or 3D generation; do not submit full sheets as single image inputs.",
+    "Do not treat generated pages as production art or acceptance evidence."
+  ],
+  "visual_audit": {
+    "approx_visible_items_total": 173,
+    "json": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/audit/visual_audit.json",
+    "markdown": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/audit/visual_audit.md",
+    "overall_verdict": "pass_as_replacement_reference_pool_fail_as_direct_Rodin_input",
+    "page_verdicts": {
+      "page_01_scale_ladder": "pass_as_scale_reference",
+      "page_02_light_one_handed": "pass_with_curation",
+      "page_03_two_handed_heavy": "conditional_fail_for_heaviest_slots",
+      "page_04_reach_polearms_control": "fail_as_size_variety_reference_pass_as_polearm_pool",
+      "page_05_defensive_hybrid_ritual": "conditional_fail_until_curated"
+    }
+  }
+}
