@@ -25,6 +25,7 @@ run_step truth_audit ./tools/audit_truth.sh
 run_step deterministic_duel_a ./tools/run_duel.sh examples/duels/basic_oathyard.duel --out "$out/verify_a"
 run_step deterministic_duel_b ./tools/run_duel.sh examples/duels/basic_oathyard.duel --out "$out/verify_b"
 run_step replay_verify ./tools/replay_verify.sh "$out/verify_a/replay.json"
+run_step audit_rodin_assets ./tools/audit_rodin_assets.sh "$out/rodin_asset_audit"
 run_step build_assets ./tools/build_assets.sh
 run_step validate_assets ./tools/validate_assets.sh "$out/assets"
 run_step render_asset_previews ./tools/render_asset_previews.sh "$out/asset_previews"

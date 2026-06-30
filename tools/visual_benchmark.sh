@@ -63,14 +63,27 @@ report = [
 for sid, verdict, summary in sections:
     report.append(f'| `{sid}` | `{verdict}` | {summary} |')
 report.extend(['', '## Next fixes', '',
-    '1. Unblock a functional DCC/source-asset toolchain: current `/usr/bin/blender` fails with a MaterialX symbol lookup error.',
+    '1. Use the now-working Blender 4.3.2 or OpenUSD/Godot/Bevy path to create real DCC/interchange production source assets; candidate JSON/glTF remains insufficient.',
     '2. Execute the V1 renderer/backend spike or superseding ADR with measured native 3D renderer evidence and truth isolation.',
-    '3. Create `assets/production_visual_manifest.json` with real source files, license/provenance, rigs/skin weights/material maps/runtime exports/previews/in-engine screenshots.',
+    '3. Populate `assets/production_visual_manifest.json` only with real source-approved production assets; keep candidate-only assets in `assets/production_candidate_visual_manifest.json`.',
     '4. Generate the complete 1920x1080+ capture matrix with native production renderer and production assets loaded.',
     '5. Re-run `./tools/presentation_truth_isolation.sh`, `./tools/validate_assets.sh`, `./tools/capture_high_fidelity_screens.sh`, and this benchmark.',
     '6. Submit the packet for owner/human visual review; until then owner visual acceptance remains pending/false.',
 ])
 (out / 'visual_benchmark_report.md').write_text('\n'.join(report) + '\n', encoding='utf-8')
+gap_lines = [
+    '# OATHYARD Visual Gap List',
+    '',
+    'Status: FAILED',
+    '',
+    'Blocking high-fidelity visual gaps:',
+    '',
+]
+for sid, verdict, summary in sections:
+    if verdict == 'FAIL':
+        gap_lines.append(f'- `{sid}`: {summary}')
+gap_lines.extend(['', 'Readiness flags remain false:', '', '- Public demo ready: `false`', '- Release candidate ready: `false`', '- Owner visual accepted: `false`'])
+(out / 'visual_gap_list.md').write_text('\n'.join(gap_lines) + '\n', encoding='utf-8')
 raise SystemExit(1)
 PY
 

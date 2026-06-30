@@ -17,6 +17,10 @@ The frontier research pass adds a sharper production target:
 - external simulation tools as offline references only;
 - fail-closed visual benchmark and capture gates.
 
+2026-06-30 update: the replacement-batch/Rodin-style turntable/contact-sheet evidence is promoted only to `V0.5 candidate_asset_preview`. It improves geometry and silhouette visibility over the earlier PPM/SVG/debug proof, but it remains candidate evidence until provenance, license/export terms, source/DCC files, material/rig/contact profiles, native-engine loading, 1920x1080 gameplay captures, benchmark review, and owner visual acceptance are complete.
+
+Current toolchain inspection supersedes the older Blender blocker recorded in earlier snapshots: `/home/vdubrov/.local/bin/blender` reports Blender 4.3.2 successfully. `/usr/bin/godot`, USD tools, `assimp`, `gltf-transform`, shader tools, ImageMagick, FFmpeg, Vulkan, and an RTX 5090 are available. Unreal is not installed. glTF Validator and KTX/Basis texture-compressor tools remain unavailable locally.
+
 ## Decision
 
 OATHYARD targets a complete high-fidelity native-PC 3D emergent melee simulation game. Current raw X11, PPM, SVG, low-poly glTF, software-raster, and diagnostic contact-sheet artifacts remain `Tier 0 / debug-local verification` until a production renderer and asset pipeline produce 1920x1080+ current-run captures with production assets and owner visual acceptance.
@@ -84,7 +88,7 @@ Current target acceptance requires all of these before any high-fidelity complet
 Current status is deliberately fail-closed:
 
 ```text
-current_fidelity_tier: Tier 0 / debug-local verification
+current_fidelity_tier: V0.5 candidate_asset_preview plus Tier 0 debug-local verification
 production_renderer_complete: false
 owner_visual_acceptance: false
 public_demo_ready: false

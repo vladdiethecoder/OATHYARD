@@ -14,6 +14,7 @@ import fcntl
 import hashlib
 import json
 import math
+import subprocess
 import struct
 import sys
 import zlib
@@ -26,6 +27,7 @@ SRC_ROOT = ROOT / "assets_src" / "model_candidates" / RUN_ID
 PKG_ROOT = ROOT / "assets" / "model_candidates" / RUN_ID
 CANDIDATE_MANIFEST = PKG_ROOT / "model_candidate_manifest.json"
 SOURCE_MANIFEST = SRC_ROOT / "model_source_manifest.json"
+PUBLISH_SCRIPT = ROOT / "tools" / "model_candidates" / "publish_t73291be5_animation_ready.py"
 PRESENTATION_MANIFEST = ROOT / "assets" / "presentation_manifest.json"
 PRODUCTION_VISUAL_MANIFEST = ROOT / "assets" / "production_visual_manifest.json"
 PRESENTATION_GLTF_DIR = ROOT / "assets" / "presentation_gltf"
@@ -124,6 +126,25 @@ def read_json(path: Path) -> dict:
 def write_json(path: Path, payload) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def ensure_candidate_package() -> None:
+    if CANDIDATE_MANIFEST.is_file():
+        return
+    if not PUBLISH_SCRIPT.is_file():
+        raise SystemExit(f"missing candidate publisher: {PUBLISH_SCRIPT.relative_to(ROOT)}")
+    result = subprocess.run(
+        [sys.executable, PUBLISH_SCRIPT.as_posix()],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SystemExit(
+            "failed to generate required candidate package via "
+            f"{PUBLISH_SCRIPT.relative_to(ROOT)}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
 
 
 @contextlib.contextmanager
@@ -683,6 +704,7 @@ def production_validation_evidence(kind: str, source_json: dict, candidate: dict
 
 def build() -> dict:
     failures: list[str] = []
+    ensure_candidate_package()
     for required in [CANDIDATE_MANIFEST, SOURCE_MANIFEST]:
         if not required.is_file():
             raise SystemExit(f"missing required candidate artifact: {required.relative_to(ROOT)}")

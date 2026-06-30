@@ -178,6 +178,19 @@ report.extend(['', '## Current artifact sample', ''])
 for a in artifacts[:40]:
     report.append(f"- `{a['path']}` `{a['suffix']}` `{a['width']}x{a['height']}` debug=`{a['debug_or_baseline_evidence']}` sha256=`{a['sha256'][:16]}`")
 (out / 'visual_gap_audit_report.md').write_text('\n'.join(report) + '\n', encoding='utf-8')
+gap_list = [
+    '# OATHYARD Visual Gap List',
+    '',
+    f"Status: {'PASSED' if passed else 'FAILED'}",
+    '',
+    'The current visual packet remains candidate/debug evidence unless every item below is resolved.',
+    '',
+]
+if failures:
+    gap_list.extend(f'- {f}' for f in failures)
+else:
+    gap_list.append('- none')
+(out / 'visual_gap_list.md').write_text('\n'.join(gap_list) + '\n', encoding='utf-8')
 if not passed:
     raise SystemExit(1)
 PY

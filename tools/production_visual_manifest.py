@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PRESENTATION = ROOT / "assets" / "presentation_manifest.json"
 OUTPUT = ROOT / "assets" / "production_visual_manifest.json"
+CANDIDATE_OUTPUT = ROOT / "assets" / "production_candidate_visual_manifest.json"
 REQUIRED_COUNTS = {"fighters": 6, "weapons": 8, "armor": 6, "arenas": 2}
 
 
@@ -187,8 +188,8 @@ def main() -> int:
         and all(entry.get("validation_result", {}).get("passed") is True for entry in entries)
         and all(kind_counts.get(kind, 0) >= required for kind, required in REQUIRED_COUNTS.items())
     )
-    payload = {
-        "schema": "oathyard.production_visual_assets.v1",
+    candidate_payload = {
+        "schema": "oathyard.production_candidate_visual_assets.v1",
         "product": "OATHYARD",
         "source_manifest": PRESENTATION.relative_to(ROOT).as_posix(),
         "source_manifest_hash": sha256_file(PRESENTATION),
@@ -211,10 +212,40 @@ def main() -> int:
         "entries": entries,
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    payload["manifest_hash"] = sha256_file(OUTPUT)
-    OUTPUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"production_candidate_passed": candidate_passed, "manifest": OUTPUT.relative_to(ROOT).as_posix(), "entries": len(entries)}, indent=2, sort_keys=True))
+    CANDIDATE_OUTPUT.write_text(json.dumps(candidate_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    candidate_payload["manifest_hash"] = sha256_file(CANDIDATE_OUTPUT)
+    CANDIDATE_OUTPUT.write_text(json.dumps(candidate_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    production_payload = {
+        "schema": "oathyard.production_visual_assets.v1",
+        "product": "OATHYARD",
+        "source_manifest": PRESENTATION.relative_to(ROOT).as_posix(),
+        "source_manifest_hash": sha256_file(PRESENTATION),
+        "production_candidate_manifest": CANDIDATE_OUTPUT.relative_to(ROOT).as_posix(),
+        "production_candidate_manifest_hash": sha256_file(CANDIDATE_OUTPUT),
+        "candidate_run_id": presentation.get("candidate_run_id", ""),
+        "production_assets_complete": False,
+        "production_assets_scope": "empty production lane; candidate entries are quarantined in production_candidate_visual_manifest.json",
+        "production_renderer_complete": False,
+        "owner_visual_acceptance": False,
+        "public_demo_ready": False,
+        "release_candidate_ready": False,
+        "legal_clearance": False,
+        "trademark_clearance": False,
+        "store_readiness": False,
+        "presentation_only": True,
+        "truth_authoritative": False,
+        "truth_mutation": False,
+        "entry_count": 0,
+        "kind_counts": {kind: 0 for kind in REQUIRED_COUNTS},
+        "candidate_entry_count": len(entries),
+        "candidate_kind_counts": kind_counts,
+        "entries": [],
+    }
+    OUTPUT.write_text(json.dumps(production_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    production_payload["manifest_hash"] = sha256_file(OUTPUT)
+    OUTPUT.write_text(json.dumps(production_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps({"production_candidate_passed": candidate_passed, "candidate_manifest": CANDIDATE_OUTPUT.relative_to(ROOT).as_posix(), "production_manifest": OUTPUT.relative_to(ROOT).as_posix(), "candidate_entries": len(entries), "production_entries": 0}, indent=2, sort_keys=True))
     return 0 if candidate_passed else 1
 
 

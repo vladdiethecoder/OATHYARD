@@ -63,6 +63,9 @@ manifest={'schema':'oathyard.presentation_truth_isolation.v3','tool':'tools/pres
 report=['# OATHYARD Presentation Truth Isolation Report','',f"Status: {'PASSED' if passed else 'FAILED'}",'',f'- Scenario: `{scenario}`',f"- Presentation-disabled final hash: `{off['final_hash_text']}`",f"- Presentation-enabled-after final hash: `{after['final_hash_text']}`",f"- Replay SHA stable: `{off['replay_sha256'] == after['replay_sha256']}`",f"- Trace SHA stable: `{off['trace_sha256'] == after['trace_sha256']}`",'- Production presentation on/off proof required: `artifacts/production_renderer/latest/production_renderer_manifest.json`','- Current debug-local presentation truth isolation is useful but cannot satisfy production renderer isolation by itself.']
 if failures: report.extend(['','## Failures']+[f'- {f}' for f in failures])
 (out/'presentation_truth_isolation_report.md').write_text('\n'.join(report)+'\n', encoding='utf-8')
+visual_review = Path('artifacts/visual_review/latest')
+visual_review.mkdir(parents=True, exist_ok=True)
+(visual_review/'presentation_truth_isolation.md').write_text('\n'.join(report)+'\n', encoding='utf-8')
 if not passed: raise SystemExit(1)
 PY
 

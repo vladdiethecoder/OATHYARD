@@ -702,6 +702,9 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
     let manifest = fs::read_to_string(manifest_path).expect("presentation manifest");
     let production_manifest = fs::read_to_string("assets/production_visual_manifest.json")
         .expect("production visual manifest");
+    let production_candidate_manifest =
+        fs::read_to_string("assets/production_candidate_visual_manifest.json")
+            .expect("production candidate visual manifest");
 
     assert!(manifest.contains("\"schema\": \"oathyard.presentation_assets.v1\""));
     assert!(manifest.contains("\"candidate_run_id\": \"t_73291be5\""));
@@ -734,18 +737,27 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
     assert!(manifest.contains("\"backend\": \"deterministic_software_product_capture\""));
     assert!(production_manifest.contains("\"schema\": \"oathyard.production_visual_assets.v1\""));
     assert!(production_manifest.contains("\"production_assets_complete\": false"));
-    assert!(production_manifest.contains("\"production_candidate_assets_complete\": true"));
     assert!(production_manifest.contains("\"production_renderer_complete\": false"));
     assert!(production_manifest.contains("\"owner_visual_acceptance\": false"));
-    assert!(production_manifest.contains("\"source_file\":"));
-    assert!(production_manifest.contains("\"provenance_license\":"));
-    assert!(production_manifest.contains("\"authoring_process\":"));
-    assert!(production_manifest.contains("\"runtime_export\":"));
-    assert!(production_manifest.contains("\"in_engine_screenshot\":"));
-    assert!(production_manifest.contains("\"validation_result\":"));
-    assert!(production_manifest.contains("\"armor_sockets\":"));
-    assert!(production_manifest.contains("\"contact_geometry\":"));
-    assert!(production_manifest.contains("\"collision_footing_metadata\":"));
+    assert!(production_manifest.contains(
+        "\"production_candidate_manifest\": \"assets/production_candidate_visual_manifest.json\""
+    ));
+    assert!(production_manifest.contains("\"entry_count\": 0"));
+    assert!(production_manifest.contains("\"entries\": []"));
+    assert!(production_candidate_manifest
+        .contains("\"schema\": \"oathyard.production_candidate_visual_assets.v1\""));
+    assert!(
+        production_candidate_manifest.contains("\"production_candidate_assets_complete\": true")
+    );
+    assert!(production_candidate_manifest.contains("\"source_file\":"));
+    assert!(production_candidate_manifest.contains("\"provenance_license\":"));
+    assert!(production_candidate_manifest.contains("\"authoring_process\":"));
+    assert!(production_candidate_manifest.contains("\"runtime_export\":"));
+    assert!(production_candidate_manifest.contains("\"in_engine_screenshot\":"));
+    assert!(production_candidate_manifest.contains("\"validation_result\":"));
+    assert!(production_candidate_manifest.contains("\"armor_sockets\":"));
+    assert!(production_candidate_manifest.contains("\"contact_geometry\":"));
+    assert!(production_candidate_manifest.contains("\"collision_footing_metadata\":"));
 
     let validate_out = Path::new("target/tmp/oathyard_asset_validation_local_gate_test");
     if validate_out.exists() {
