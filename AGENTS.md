@@ -1,5 +1,9 @@
 # OATHYARD Agent Rules
 
+## Design Knowledge Base
+
+`docs/DESIGN_KB.md` is a consolidated design reference synthesizing identity, canon, mechanics, systems, content, art direction, architecture, roadmap, acceptance gates, and source map. Use it for orientation. It does not override the canon sources below.
+
 ## Canon Precedence
 
 Read and preserve this order before changing behavior:

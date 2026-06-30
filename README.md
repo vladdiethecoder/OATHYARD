@@ -4,6 +4,10 @@ OATHYARD is a deterministic native-PC planned-time physical melee duel foundatio
 
 This repository is a deterministic OATHYARD game foundation. It now contains verified local-duel systems and full-game-facing tools/assets, but public-demo-ready, release-candidate-ready, owner-final-accepted, legal clearance, and trademark clearance remain false unless their external gates are actually performed. The project is license-pending/unlicensed; see `LICENSE`.
 
+## Design Knowledge Base
+
+`docs/DESIGN_KB.md` consolidates the game identity, canon, mechanics, systems, content, art direction, architecture, roadmap, acceptance gates, and source map into one navigable reference.
+
 ## Requirements
 
 - Rust/Cargo 1.96 or newer with the lockfile honored via `--locked`.
