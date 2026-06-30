@@ -200,8 +200,19 @@ def collect_candidate_entries():
             if isinstance(data, dict):
                 sources.append(rel(manifest_path))
                 for e in data.get("entries", []) or []:
-                    if e.get("id") and e.get("id") not in entries_by_id:
+                    if not e.get("id"):
+                        continue
+                    if e["id"] not in entries_by_id:
                         entries_by_id[e["id"]] = dict(e, _manifest=rel(manifest_path))
+                    else:
+                        # Later/raw manifests can carry mesh metrics absent from
+                        # the candidate presentation manifest. Merge only
+                        # missing fields so the preferred presentation evidence
+                        # stays authoritative while audited counts stay sane.
+                        existing = entries_by_id[e["id"]]
+                        for key in ["vertices", "triangles", "materials", "primitives", "category", "runtime_gltf", "runtime_bin", "textures", "bounds_min", "bounds_max"]:
+                            if existing.get(key) is None and e.get(key) is not None:
+                                existing[key] = e.get(key)
 
     # Raw model-candidate manifest.
     for path in sorted((ROOT / "assets" / "model_candidates").glob("*/model_candidate_manifest.json")):
@@ -209,8 +220,15 @@ def collect_candidate_entries():
         if isinstance(data, dict):
             sources.append(rel(path))
             for e in data.get("entries", []) or []:
-                if e.get("id") and e.get("id") not in entries_by_id:
+                if not e.get("id"):
+                    continue
+                if e["id"] not in entries_by_id:
                     entries_by_id[e["id"]] = dict(e, _manifest=rel(path))
+                else:
+                    existing = entries_by_id[e["id"]]
+                    for key in ["vertices", "triangles", "materials", "primitives", "category", "runtime_gltf", "runtime_bin", "textures", "bounds_min", "bounds_max"]:
+                        if existing.get(key) is None and e.get(key) is not None:
+                            existing[key] = e.get(key)
 
     return list(entries_by_id.values()), sorted(set(sources))
 
@@ -342,9 +360,12 @@ for entry in entries:
     runtime = (entry.get("runtime_export") or {}).get("source_candidate_gltf") or (entry.get("runtime_export") or {}).get("runtime_gltf") or entry.get("runtime_gltf") or ""
     runtime_path = ROOT / runtime if runtime else Path("")
     metrics = gltf_metrics(runtime_path) if runtime_path.is_file() and runtime_path.suffix.lower() == ".gltf" else {}
-    # Prefer manifest metrics when present because candidate manifests were already audited.
+    # Prefer manifest metrics when present because candidate manifests were
+    # already audited by the model-candidate lane. Raw glTF accessors can be
+    # shared across primitives; summing primitive POSITION accessors can
+    # over-count vertices for multi-material meshes.
     for k_src, k_dst in [("vertices", "vertices"), ("triangles", "triangles"), ("materials", "material_count"), ("primitives", "primitive_count")]:
-        if entry.get(k_src) is not None and not metrics.get(k_dst):
+        if entry.get(k_src) is not None:
             metrics[k_dst] = entry.get(k_src)
     tex_res = texture_resolutions(runtime_path.parent if runtime_path else ROOT, metrics.get("image_uris", []))
     status, blockers, license_status, provenance = classify_acceptance(entry, source, metrics, production_manifest_contains_candidate)

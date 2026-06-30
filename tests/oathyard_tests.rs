@@ -759,6 +759,16 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
     assert!(production_candidate_manifest.contains("\"contact_geometry\":"));
     assert!(production_candidate_manifest.contains("\"collision_footing_metadata\":"));
 
+    let structural_assets = Command::new("./tools/build_assets.sh")
+        .output()
+        .expect("build structural assets before local asset validation");
+    assert!(
+        structural_assets.status.success(),
+        "structural asset build failed before local validation\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&structural_assets.stdout),
+        String::from_utf8_lossy(&structural_assets.stderr)
+    );
+
     let validate_out = Path::new("target/tmp/oathyard_asset_validation_local_gate_test");
     if validate_out.exists() {
         fs::remove_dir_all(validate_out).expect("clear old validate-assets output");
