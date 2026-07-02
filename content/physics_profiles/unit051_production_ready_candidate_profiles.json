@@ -1,0 +1,329 @@
+{
+  "schema": "oathyard.unit051_production_ready_candidate_physics_profiles.v1",
+  "description": "Structured physical profiles for the first-kit: longsword, gambeson, fighter_mannequin, witness_stone. Physical parameters only — no HP, armor points, DPS, crit, or stat shortcuts.",
+  "profile_count": 4,
+  "unit": "unit051",
+  "truth_boundary": "presentation_only_metadata",
+  "profiles": [
+    {
+      "asset_id": "longsword",
+      "asset_class": "weapon",
+      "schema": "oathyard.weapon_physics_profile.v1",
+      "length_mm": 1180,
+      "mass_kg": 1.8,
+      "mass_distribution": "blade_heavy",
+      "center_of_mass_mm_from_pommel": 520,
+      "center_of_mass_mm_from_crossguard": 180,
+      "moment_of_inertia_kg_m2_about_crossguard": 0.182,
+      "moment_of_inertia_kg_m2_about_com": 0.041,
+      "moment_of_inertia_status": "estimated_from_length_mass_com",
+      "grip_frames": [
+        {
+          "name": "grip_r_primary",
+          "position_mm_from_crossguard": [-20, 0, 0],
+          "orientation": "palm_facing_blade_edge_down",
+          "derived_from_truth_joint": "wrist_r",
+          "offset_kind": "weapon_grip_offset"
+        },
+        {
+          "name": "grip_l_secondary",
+          "position_mm_from_crossguard": [-160, 0, 0],
+          "orientation": "palm_facing_blade_edge_up",
+          "derived_from_truth_joint": "wrist_l",
+          "offset_kind": "weapon_grip_offset"
+        }
+      ],
+      "contact_regions": [
+        {
+          "name": "blade_edge",
+          "type": "edge",
+          "span_mm_from_crossguard": [80, 1050],
+          "width_mm": 2.5,
+          "material_class": "steel_edge",
+          "response_profile": "cut"
+        },
+        {
+          "name": "blade_point",
+          "type": "point",
+          "span_mm_from_crossguard": [1050, 1120],
+          "material_class": "steel_point",
+          "response_profile": "thrust"
+        },
+        {
+          "name": "crossguard",
+          "type": "blunt",
+          "span_mm_from_crossguard": [-10, 10],
+          "width_mm": 220,
+          "material_class": "steel_blunt",
+          "response_profile": "deflect_parry"
+        },
+        {
+          "name": "pommel",
+          "type": "blunt",
+          "span_mm_from_crossguard": [-200, -180],
+          "material_class": "steel_blunt",
+          "response_profile": "bash"
+        },
+        {
+          "name": "grip_leather",
+          "type": "contact_surface",
+          "span_mm_from_crossguard": [-180, -10],
+          "material_class": "leather_wrap",
+          "response_profile": "hand_contact_only"
+        }
+      ],
+      "edge_alignment": "single_edge_downward_in_guard",
+      "point_of_balance_mm_from_crossguard": 180,
+      "pivot_point_default": "grip_r_primary",
+      "swing_arc_category": "longsword_cut_thrust",
+      "contact_profile_status": "structured_presentation_metadata",
+      "truth_mutation": false,
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "remaining_blockers": ["license_and_commercial_clearance", "native_renderer_capture_matrix_completion", "owner_visual_acceptance"]
+    },
+    {
+      "asset_id": "gambeson",
+      "asset_class": "armor",
+      "schema": "oathyard.armor_physics_profile.v1",
+      "mass_kg": 4.5,
+      "coverage_regions": [
+        {
+          "name": "torso_front",
+          "body_region": "torso",
+          "coverage_fraction": 0.92,
+          "layer_count": 3
+        },
+        {
+          "name": "torso_back",
+          "body_region": "torso",
+          "coverage_fraction": 0.95,
+          "layer_count": 3
+        },
+        {
+          "name": "shoulders",
+          "body_region": "shoulder_r_shoulder_l",
+          "coverage_fraction": 0.80,
+          "layer_count": 2
+        },
+        {
+          "name": "upper_arms",
+          "body_region": "upper_arm_r_upper_arm_l",
+          "coverage_fraction": 0.70,
+          "layer_count": 2
+        },
+        {
+          "name": "forearms",
+          "body_region": "forearm_r_forearm_l",
+          "coverage_fraction": 0.60,
+          "layer_count": 1
+        }
+      ],
+      "coverage_gaps": [
+        {
+          "name": "neck_gap",
+          "body_region": "neck_head",
+          "coverage_fraction": 0.05,
+          "description": "Exposed neck above collar"
+        },
+        {
+          "name": "lower_body_gap",
+          "body_region": "hip_r_hip_l_upper_leg",
+          "coverage_fraction": 0.0,
+          "description": "No coverage below waist"
+        },
+        {
+          "name": "hands_gap",
+          "body_region": "wrist_r_wrist_l_hand",
+          "coverage_fraction": 0.0,
+          "description": "Hands fully exposed"
+        }
+      ],
+      "material_layers": [
+        {
+          "name": "outer_linen",
+          "thickness_mm": 1.5,
+          "material_class": "linen_weave",
+          "weave_type": "tabby",
+          "thread_count_per_cm": 14
+        },
+        {
+          "name": "padding",
+          "thickness_mm": 8.0,
+          "material_class": "stitched_cotton_felt",
+          "stitch_pattern": "diamond_quilt",
+          "stitch_spacing_mm": 25
+        },
+        {
+          "name": "inner_lining",
+          "thickness_mm": 1.0,
+          "material_class": "linen_weave",
+          "weave_type": "tabby",
+          "thread_count_per_cm": 12
+        }
+      ],
+      "response_profile": [
+        {
+          "damage_type": "cut",
+          "penetration_threshold_j": 45,
+          "deflection_factor": 0.35,
+          "description": "Layered textile absorbs edge energy; resists glancing cuts"
+        },
+        {
+          "damage_type": "thrust",
+          "penetration_threshold_j": 28,
+          "deflection_factor": 0.12,
+          "description": "Point force concentrates; padding compresses before failure"
+        },
+        {
+          "damage_type": "blunt",
+          "penetration_threshold_j": null,
+          "deflection_factor": 0.20,
+          "energy_transfer_fraction": 0.68,
+          "description": "Padding compresses and transfers blunt force to body"
+        }
+      ],
+      "total_thickness_mm": 10.5,
+      "contact_profile_status": "structured_presentation_metadata",
+      "truth_mutation": false,
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "remaining_blockers": ["license_and_commercial_clearance", "native_renderer_capture_matrix_completion", "owner_visual_acceptance"]
+    },
+    {
+      "asset_id": "fighter_mannequin",
+      "asset_class": "fighter",
+      "schema": "oathyard.fighter_physics_profile.v1",
+      "scale_mm": 1780,
+      "mass_kg": 75.0,
+      "canonical_truth_joint_count": 16,
+      "canonical_truth_joints": [
+        "root", "spine_lower", "spine_upper", "neck_head",
+        "shoulder_r", "elbow_r", "wrist_r",
+        "shoulder_l", "elbow_l", "wrist_l",
+        "hip_r", "knee_r", "ankle_r",
+        "hip_l", "knee_l", "ankle_l"
+      ],
+      "derived_grip_frames": ["grip_r", "grip_l"],
+      "body_region_map": [
+        {
+          "name": "head",
+          "truth_joints": ["neck_head"],
+          "collision_regions": ["skull", "jaw", "face"],
+          "coverage_from_armor": "neck_gap_exposed"
+        },
+        {
+          "name": "torso",
+          "truth_joints": ["spine_lower", "spine_upper"],
+          "collision_regions": ["chest_front", "chest_back", "abdomen"],
+          "coverage_from_armor": "gambeson_covered_3_layer"
+        },
+        {
+          "name": "right_arm",
+          "truth_joints": ["shoulder_r", "elbow_r", "wrist_r"],
+          "collision_regions": ["upper_arm_r", "forearm_r", "hand_r"],
+          "coverage_from_armor": "gambeson_partial_2_layer"
+        },
+        {
+          "name": "left_arm",
+          "truth_joints": ["shoulder_l", "elbow_l", "wrist_l"],
+          "collision_regions": ["upper_arm_l", "forearm_l", "hand_l"],
+          "coverage_from_armor": "gambeson_partial_2_layer"
+        },
+        {
+          "name": "right_leg",
+          "truth_joints": ["hip_r", "knee_r", "ankle_r"],
+          "collision_regions": ["thigh_r", "shin_r", "foot_r"],
+          "coverage_from_armor": "uncovered"
+        },
+        {
+          "name": "left_leg",
+          "truth_joints": ["hip_l", "knee_l", "ankle_l"],
+          "collision_regions": ["thigh_l", "shin_l", "foot_l"],
+          "coverage_from_armor": "uncovered"
+        }
+      ],
+      "grip_frames": [
+        {
+          "name": "grip_r",
+          "derived_from": "wrist_r",
+          "offset_kind": "weapon_grip_offset",
+          "weapon_class": "longsword",
+          "position_offset_mm": [0, -15, -40]
+        },
+        {
+          "name": "grip_l",
+          "derived_from": "wrist_l",
+          "offset_kind": "weapon_grip_offset",
+          "weapon_class": "longsword",
+          "position_offset_mm": [0, -15, -180]
+        }
+      ],
+      "rig_status": "canonical_truth_joints_defined",
+      "skin_weights_status": "presentation_bone_partition_by_y",
+      "contact_profile_status": "structured_presentation_metadata",
+      "truth_mutation": false,
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "remaining_blockers": ["license_and_commercial_clearance", "native_renderer_capture_matrix_completion", "owner_visual_acceptance"]
+    },
+    {
+      "asset_id": "witness_stone",
+      "asset_class": "arena",
+      "schema": "oathyard.arena_physics_profile.v1",
+      "mass_kg": null,
+      "material_class": "cracked_stone",
+      "collision_footing": {
+        "type": "solid_ground",
+        "friction_coefficient_static": 0.72,
+        "friction_coefficient_kinetic": 0.58,
+        "footing_stability": "firm_packed_earth_and_stone",
+        "unevenness_mm": 15
+      },
+      "collision_regions": [
+        {
+          "name": "base",
+          "type": "static_collision",
+          "footing_surface": true,
+          "material_class": "packed_earth"
+        },
+        {
+          "name": "shaft",
+          "type": "static_collision",
+          "footing_surface": false,
+          "material_class": "dressed_stone"
+        },
+        {
+          "name": "inscription_band",
+          "type": "static_collision",
+          "footing_surface": false,
+          "material_class": "carved_stone"
+        }
+      ],
+      "material_friction_profile": {
+        "stone_dry": {"friction_static": 0.72, "friction_kinetic": 0.58},
+        "stone_wet": {"friction_static": 0.41, "friction_kinetic": 0.32},
+        "earth_packed": {"friction_static": 0.68, "friction_kinetic": 0.55}
+      },
+      "camera_lighting_anchors": [
+        {
+          "name": "establishing_high",
+          "position": [0.0, 2.2, 4.5],
+          "look_at": [0.0, 0.0, -0.2],
+          "fov_radians": 0.75
+        },
+        {
+          "name": "closeup_low",
+          "position": [0.0, 0.55, 2.0],
+          "look_at": [0.0, 0.0, -0.3],
+          "fov_radians": 0.52
+        }
+      ],
+      "contact_profile_status": "structured_presentation_metadata",
+      "truth_mutation": false,
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "remaining_blockers": ["license_and_commercial_clearance", "native_renderer_capture_matrix_completion", "owner_visual_acceptance"]
+    }
+  ]
+}

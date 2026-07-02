@@ -2276,3 +2276,133 @@ fn unit050_native_3d_game_flow_planning_loop_truth_isolated() {
     assert!(anim.contains("retargeting_bridge"));
     assert!(anim.contains("truth_mutation"));
 }
+
+#[test]
+fn unit051_first_kit_production_ready_candidate_truth_isolated() {
+    // Verify first-kit production-ready-candidate asset manifest exists
+    let assets =
+        std::fs::read_to_string("content/assets/unit051_production_ready_candidate_assets.json")
+            .expect("missing unit051 production ready candidate assets manifest");
+    assert!(assets.contains("unit051"));
+    assert!(assets.contains("production_ready_candidate"));
+    // Each first-kit asset must have required metadata
+    for field in [
+        "source_path",
+        "runtime_path",
+        "material_channels",
+        "vertex_count",
+        "triangle_count",
+        "physics_contact_profile",
+        "current_state",
+        "remaining_blockers",
+        "production_ready",
+    ] {
+        assert!(
+            assets.contains(field),
+            "asset manifest missing field: {field}"
+        );
+    }
+    // No first-kit asset is marked production_ready true
+    assert!(assets.contains("\"production_ready\": false"));
+
+    // Verify physics/contact profiles exist with physical parameters
+    let profiles = std::fs::read_to_string(
+        "content/physics_profiles/unit051_production_ready_candidate_profiles.json",
+    )
+    .expect("missing unit051 physics profiles");
+    assert!(profiles.contains("longsword"));
+    assert!(profiles.contains("gambeson"));
+    assert!(profiles.contains("fighter_mannequin"));
+    assert!(profiles.contains("witness_stone"));
+    assert!(profiles.contains("mass_kg"));
+    assert!(profiles.contains("moment_of_inertia"));
+    assert!(profiles.contains("grip_frames"));
+    assert!(profiles.contains("contact_regions"));
+    // No HP/stat shortcuts
+    assert!(!profiles.contains("\"hp_points\""));
+    assert!(!profiles.contains("\"damage_dice\""));
+    assert!(!profiles.contains("\"dps\""));
+    assert!(!profiles.contains("\"crit_chance\""));
+    assert!(!profiles.contains("\"armor_points\""));
+
+    // Verify material manifest has 4+ distinct material regions per asset
+    let materials = std::fs::read_to_string(
+        "content/materials/unit051_production_ready_candidate_materials.json",
+    )
+    .expect("missing unit051 materials manifest");
+    assert!(materials.contains("material_region_count"));
+    assert!(materials.contains("base_color"));
+    assert!(materials.contains("normal"));
+    assert!(materials.contains("orm"));
+    // At least 4 material regions per asset
+    for asset in [
+        "longsword",
+        "gambeson",
+        "fighter_mannequin",
+        "witness_stone",
+    ] {
+        assert!(
+            materials.contains(asset),
+            "material manifest missing asset: {asset}"
+        );
+    }
+
+    // Verify WGSL shader has Unit-051 enhancements
+    let wgsl = std::fs::read_to_string("spikes/wgpu_renderer/src/verdict_ring.wgsl")
+        .expect("missing WGSL shader");
+    assert!(wgsl.contains("Unit-051"), "WGSL missing Unit-051 marker");
+    assert!(
+        wgsl.contains("ssao_approx"),
+        "WGSL missing SSAO approximation"
+    );
+    assert!(
+        wgsl.contains("ground_occlusion"),
+        "WGSL missing ground contact darkening"
+    );
+    assert!(
+        wgsl.contains("blade_steel"),
+        "WGSL missing blade steel region"
+    );
+    assert!(
+        wgsl.contains("crossguard"),
+        "WGSL missing crossguard region"
+    );
+    assert!(
+        wgsl.contains("grip_leather"),
+        "WGSL missing grip leather region"
+    );
+    assert!(wgsl.contains("pommel"), "WGSL missing pommel region");
+    assert!(
+        wgsl.contains("diamond_quilt"),
+        "WGSL missing gambeson quilt pattern"
+    );
+    assert!(wgsl.contains("crack"), "WGSL missing stone crack detail");
+
+    // Verify Rust renderer has guard/cut/thrust/recover poses
+    let renderer = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing renderer main.rs");
+    assert!(renderer.contains("\"cut\""), "renderer missing cut pose");
+    assert!(
+        renderer.contains("\"thrust\""),
+        "renderer missing thrust pose"
+    );
+    assert!(
+        renderer.contains("\"recover\""),
+        "renderer missing recover pose"
+    );
+
+    // Verify capture matrix classification in the wrapper script
+    let wrapper = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike wrapper");
+    assert!(wrapper.contains("production_ready_candidate_native_3d_capture"));
+    assert!(wrapper.contains("unit051_candidate_roles"));
+    assert!(wrapper.contains("planning_timeline"));
+    assert!(wrapper.contains("material_armor_damage_frame"));
+    assert!(wrapper.contains("injury_capability_consequence_frame"));
+
+    // Verify large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+    assert!(lfs_policy.contains("50 MiB"));
+}

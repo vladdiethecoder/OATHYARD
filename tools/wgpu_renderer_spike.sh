@@ -275,6 +275,13 @@ render_capture "gameplay_distance_fighter_loadout_seed" "gameplay_distance_fight
 render_capture "pre_contact_frame_seed" "pre_contact_frame" "fighter_mannequin,longsword" "$out/render/pre_contact_frame_seed" "production_renderer_wgpu_spike_pre_contact_frame_seed_1920x1080" "" "$seed_fighter_manifest"
 render_capture "contact_frame_seed" "contact_frame" "fighter_mannequin,gambeson,longsword" "$out/render/contact_frame_seed" "production_renderer_wgpu_spike_contact_frame_seed_1920x1080" "" "$seed_fighter_manifest"
 render_capture "fight_film_replay_camera_shot" "fight_film_replay_camera_shot" "fighter_mannequin,longsword" "$out/render/fight_film_replay_camera_shot" "production_renderer_wgpu_spike_fight_film_replay_camera_shot_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-051: production-ready-candidate captures for first-kit ---
+# These use the enhanced material/lighting/pose paths and are classified separately.
+# Required roles: planning_timeline, material_armor_damage_frame, injury_capability_consequence_frame
+render_capture "planning_timeline" "planning_timeline" "fighter_mannequin,gambeson,longsword" "$out/render/planning_timeline" "production_renderer_wgpu_spike_planning_timeline_1920x1080" "" "$seed_fighter_manifest"
+render_capture "material_armor_damage_frame" "material_armor_damage_frame" "fighter_mannequin,gambeson,longsword" "$out/render/material_armor_damage_frame" "production_renderer_wgpu_spike_material_armor_damage_frame_1920x1080" "" "$seed_armor_manifest"
+render_capture "injury_capability_consequence_frame" "injury_capability_consequence_frame" "fighter_mannequin,longsword" "$out/render/injury_capability_consequence_frame" "production_renderer_wgpu_spike_injury_capability_consequence_frame_1920x1080" "" "$seed_fighter_manifest"
 run_log "$out/truth_presentation_enabled_after.log" ./tools/run_duel.sh "$scenario" --out "$out/truth_presentation_enabled_after"
 run_log "$out/replay_verify_enabled_after.log" ./tools/replay_verify.sh "$out/truth_presentation_enabled_after/replay.json"
 
@@ -499,15 +506,33 @@ if len(material_bound_meshes) != len(all_mesh_assets):
 if distinct_texture_sha256_count < 9:
     failures.append(f'distinct texture SHA256 count below 9: {distinct_texture_sha256_count}')
 
-# Unit-047: classify captures as candidate vs production_seed
+# Unit-047: classify captures as candidate vs production_seed vs production_ready_candidate
 production_seed_captures = []
 candidate_captures_list = []
+production_ready_candidate_captures = []
+# Unit-051: captures that use enhanced first-kit with improved materials/lighting/poses
+unit051_candidate_roles = {
+    'fighter_closeup_01',
+    'armor_loadout_family_closeup_01',
+    'weapon_family_closeup_01',
+    'oathyard_verdict_ring_establishing',
+    'planning_timeline',
+    'pre_contact_frame',
+    'contact_frame',
+    'material_armor_damage_frame',
+    'injury_capability_consequence_frame',
+    'fight_film_replay_camera_shot',
+}
 for cap in captures:
     cap_id = str(cap.get('capture_id', ''))
-    # Production seed captures are identified by capture_id prefix or candidate_status
     mesh_summary = cap.get('mesh_summary') or {}
     candidate_status = str(mesh_summary.get('candidate_status', ''))
-    if cap_id.startswith('production_seed_') or 'production_seed' in candidate_status:
+    # Unit-051: production-ready-candidate captures take priority — they use the
+    # improved first-kit materials/lighting/poses but share the same seed meshes.
+    if cap_id in unit051_candidate_roles:
+        cap['capture_classification'] = 'production_ready_candidate_native_3d_capture'
+        production_ready_candidate_captures.append(cap)
+    elif cap_id.startswith('production_seed_') or 'production_seed' in candidate_status:
         cap['capture_classification'] = 'production_seed_native_3d_capture'
         production_seed_captures.append(cap)
     else:
@@ -515,9 +540,11 @@ for cap in captures:
         candidate_captures_list.append(cap)
 production_seed_count = len(production_seed_captures)
 candidate_capture_count = len(candidate_captures_list)
+production_ready_candidate_count = len(production_ready_candidate_captures)
 
 render_manifest['candidate_capture_count'] = candidate_capture_count
 render_manifest['production_seed_capture_count'] = production_seed_count
+render_manifest['production_ready_candidate_capture_count'] = production_ready_candidate_count
 render_manifest['production_ready_capture_count'] = 0
 render_manifest['candidate_asset_ids'] = sorted(all_candidate_asset_ids)
 render_manifest['mesh_geometry_consumed'] = bool(mesh_backed_captures)
@@ -548,6 +575,7 @@ summary = [
     f"- Manifest: `{latest / 'production_renderer_manifest.json'}`",
     f"- Candidate capture count: `{candidate_capture_count}`",
     f"- Production seed capture count: `{production_seed_count}`",
+    f"- Production ready candidate capture count: `{production_ready_candidate_count}`",
     f"- Production ready capture count: `0`",
     f"- First frame: `{latest / captures[0]['capture_file']}`",
     f"- First frame SHA256: `{sha(latest / captures[0]['capture_file'])}`",

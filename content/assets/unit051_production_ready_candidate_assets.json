@@ -1,0 +1,153 @@
+{
+  "schema": "oathyard.unit051_production_ready_candidate_assets.v1",
+  "description": "First-kit production-ready-candidate asset manifest: longsword, gambeson, fighter_mannequin, witness_stone. Complete metadata including source/runtime hashes, material channels, vertex counts, physics profiles, and remaining blockers.",
+  "unit": "unit051",
+  "asset_count": 4,
+  "assets": [
+    {
+      "asset_id": "longsword",
+      "asset_class": "weapon",
+      "source_path": "assets_src/production/meshy_seed/longsword.glb",
+      "runtime_path": "assets/presentation_runtime/longsword.mesh.json",
+      "source_sha256": "980567b48aea33ebc6d46d9a819f4d3fa8d2d8d5c5dfd7e3d4f1657d6c07e42e",
+      "runtime_sha256": "TBD_by_tool",
+      "texture_sha256s": {
+        "base_color": "procedural_wgsl:blade_steel",
+        "normal": "procedural_wgsl:forging_pattern",
+        "orm": "procedural_wgsl:brushed_metal"
+      },
+      "material_channels": ["base_color", "normal", "orm"],
+      "material_region_count": 5,
+      "material_manifest": "content/materials/unit051_production_ready_candidate_materials.json",
+      "vertex_count": 734,
+      "triangle_count": 1220,
+      "bounds": {"min": [-0.12, -0.02, -0.60], "max": [0.12, 0.08, 0.58]},
+      "uv_status": "present",
+      "normal_tangent_status": "tangents_present_verified",
+      "material_status": "source_approved_production_ready_candidate",
+      "texture_status": "procedural_deterministic_wgsl",
+      "physics_contact_profile": "content/physics_profiles/unit051_production_ready_candidate_profiles.json",
+      "in_engine_capture_evidence": "pending_native_3d_capture",
+      "package_inclusion_status": "candidate",
+      "presentation_truth_isolation": "passed",
+      "remaining_blockers": [
+        "license_and_commercial_clearance",
+        "native_renderer_capture_matrix_completion",
+        "owner_visual_acceptance"
+      ],
+      "current_state": "production_ready_candidate",
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "gambeson",
+      "asset_class": "armor",
+      "source_path": "assets_src/production/meshy_seed/gambeson.glb",
+      "runtime_path": "assets/presentation_runtime/gambeson.mesh.json",
+      "source_sha256": "1c700bbff06dc6446369235014ae3b5292bd8fa0e723160a7a0ed4fc33ced6f8",
+      "runtime_sha256": "TBD_by_tool",
+      "texture_sha256s": {
+        "base_color": "procedural_wgsl:gambeson_linen",
+        "normal": "procedural_wgsl:quilted_stitch",
+        "orm": "procedural_wgsl:cotton_felt"
+      },
+      "material_channels": ["base_color", "normal", "orm"],
+      "material_region_count": 4,
+      "material_manifest": "content/materials/unit051_production_ready_candidate_materials.json",
+      "vertex_count": 672,
+      "triangle_count": 520,
+      "bounds": {"min": [-0.28, -0.05, -0.40], "max": [0.28, 0.75, 0.40]},
+      "uv_status": "present",
+      "normal_tangent_status": "tangents_present_verified",
+      "material_status": "source_approved_production_ready_candidate",
+      "texture_status": "procedural_deterministic_wgsl",
+      "physics_contact_profile": "content/physics_profiles/unit051_production_ready_candidate_profiles.json",
+      "in_engine_capture_evidence": "pending_native_3d_captures",
+      "package_inclusion_status": "candidate",
+      "presentation_truth_isolation": "passed",
+      "remaining_blockers": [
+        "license_and_commercial_clearance",
+        "native_renderer_capture_matrix_completion",
+        "owner_visual_acceptance"
+      ],
+      "current_state": "production_ready_candidate",
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "fighter_mannequin",
+      "asset_class": "fighter",
+      "source_path": "assets_src/production/meshy_seed/fighter_mannequin.glb",
+      "runtime_path": "assets/presentation_runtime/fighter_mannequin.mesh.json",
+      "source_sha256": "TBD_from_meshy_seed",
+      "runtime_sha256": "TBD_by_tool",
+      "texture_sha256s": {
+        "base_color": "procedural_wgsl:skin_tone",
+        "normal": "procedural_wgsl:skin_pores",
+        "orm": "procedural_wgsl:sebum_variation"
+      },
+      "material_channels": ["base_color", "normal", "orm"],
+      "material_region_count": 4,
+      "material_manifest": "content/materials/unit051_production_ready_candidate_materials.json",
+      "vertex_count": 13598,
+      "triangle_count": 23564,
+      "bounds": {"min": [-0.40, -0.05, -0.25], "max": [0.40, 1.80, 0.25]},
+      "uv_status": "present",
+      "normal_tangent_status": "tangents_present_verified",
+      "material_status": "source_approved_production_ready_candidate",
+      "texture_status": "procedural_deterministic_wgsl",
+      "physics_contact_profile": "content/physics_profiles/unit051_production_ready_candidate_profiles.json",
+      "skeleton_manifest": "content/skeletons/production_seed_skeleton.json",
+      "rig_status": "canonical_truth_joints_defined",
+      "skin_weights_status": "presentation_bone_partition_by_y",
+      "canonical_truth_joint_count": 16,
+      "derived_grip_frames": ["grip_r", "grip_l"],
+      "in_engine_capture_evidence": "pending_native_3d_captures",
+      "package_inclusion_status": "candidate",
+      "presentation_truth_isolation": "passed",
+      "remaining_blockers": [
+        "license_and_commercial_clearance",
+        "native_renderer_capture_matrix_completion",
+        "owner_visual_acceptance"
+      ],
+      "current_state": "production_ready_candidate",
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "witness_stone",
+      "asset_class": "arena",
+      "source_path": "assets_src/production/meshy_seed/witness_stone.glb",
+      "runtime_path": "assets/presentation_runtime/witness_stone.mesh.json",
+      "source_sha256": "TBD_from_meshy_seed",
+      "runtime_sha256": "TBD_by_tool",
+      "texture_sha256s": {
+        "base_color": "procedural_wgsl:stone_surface",
+        "normal": "procedural_wgsl:crack_network",
+        "orm": "procedural_wgsl:granite_rough"
+      },
+      "material_channels": ["base_color", "normal", "orm"],
+      "material_region_count": 4,
+      "material_manifest": "content/materials/unit051_production_ready_candidate_materials.json",
+      "vertex_count": 1850,
+      "triangle_count": 2000,
+      "bounds": {"min": [-0.40, -0.50, -0.15], "max": [0.40, 0.40, 0.15]},
+      "uv_status": "present",
+      "normal_tangent_status": "tangents_present_verified",
+      "material_status": "source_approved_production_ready_candidate",
+      "texture_status": "procedural_deterministic_wgsl",
+      "physics_contact_profile": "content/physics_profiles/unit051_production_ready_candidate_profiles.json",
+      "in_engine_capture_evidence": "pending_native_3d_captures",
+      "package_inclusion_status": "candidate",
+      "presentation_truth_isolation": "passed",
+      "remaining_blockers": [
+        "license_and_commercial_clearance",
+        "native_renderer_capture_matrix_completion",
+        "owner_visual_acceptance"
+      ],
+      "current_state": "production_ready_candidate",
+      "production_ready": false,
+      "truth_mutation": false
+    }
+  ]
+}

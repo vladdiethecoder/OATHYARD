@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 use std::env;
 use std::fs;
 use std::io::{BufReader, BufWriter};
@@ -80,12 +81,44 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
             pose.bone_yaw2[2] = -0.1;
         }
         "guard_pose" => {
-            pose.bone_yaw[3] = -0.3;  // right arm
-            pose.bone_yaw2[0] = 0.3;  // left arm
-            pose.bone_offset_y[3] = 0.02;
-            pose.bone_offset_y2[0] = 0.02;
+            // Unit-051: Refined guard with weapon raised and centered
+            pose.bone_yaw[3] = -0.35;  // right arm raised to guard
+            pose.bone_yaw2[0] = 0.35;  // left arm supports weapon
+            pose.bone_offset_y[3] = 0.03;
+            pose.bone_offset_y2[0] = 0.03;
+            pose.bone_offset_z[3] = 0.015;  // weapon forward
+            pose.bone_offset_z2[0] = 0.015;
+            pose.bone_offset_y[1] = 0.005;  // slight spine straightening
+        }
+        "cut" => {
+            // Unit-051: Diagonal cut — right arm swings down-across with torso twist
+            pose.bone_yaw[3] = -0.75;  // right arm extended in cut arc
+            pose.bone_offset_z[3] = 0.05;  // forward extension
+            pose.bone_offset_y[3] = -0.02;  // downward swing
+            pose.bone_yaw[1] = 0.22;  // torso twist into cut
+            pose.bone_offset_z2[1] = 0.03;  // right leg steps forward
+            pose.bone_offset_z2[2] = -0.015; // left leg braces back
+        }
+        "thrust" => {
+            // Unit-051: Straight thrust — arms forward, weight shifts forward
+            pose.bone_offset_z[3] = 0.08;  // right arm thrusts forward
+            pose.bone_offset_z2[0] = 0.06;  // left arm follows weapon shaft
+            pose.bone_offset_y[3] = 0.04;   // weapon at shoulder height
+            pose.bone_offset_y2[0] = 0.04;
+            pose.bone_yaw[3] = -0.15;  // slight inward rotation
+            pose.bone_offset_z2[1] = 0.04;  // right leg lunges forward
+            pose.bone_offset_z2[2] = -0.03; // left leg extends back
+            pose.bone_yaw[1] = 0.08;  // slight torso lean forward
+        }
+        "recover" => {
+            // Unit-051: Recovery settle — return from action to guard
+            pose.bone_yaw[3] = -0.20;  // right arm settling
+            pose.bone_offset_y[3] = 0.015;
+            pose.bone_offset_z[3] = 0.005;
+            pose.bone_offset_y[1] = 0.003;  // spine settling
         }
         "attack" => {
+            // Legacy attack: maps to cut
             pose.bone_yaw[3] = -0.6;  // right arm swinging
             pose.bone_offset_z[3] = 0.03;
             pose.bone_yaw[1] = 0.15;  // torso twist
@@ -100,14 +133,17 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
 fn clip_id_for_capture(capture_id: &str) -> &'static str {
     match capture_id {
         "boot_main_menu" => "idle",
-        "fighter_select" => "idle",
         "loadout_select" => "guard_pose",
         "fighter_closeup_01" | "fighter_select" => "idle",
-        "gameplay_distance_fighter_weapon_01" | "gameplay_distance_fighter_weapon_seed" => "walk",
-        "gameplay_distance_fighter_loadout_family_01" | "gameplay_distance_fighter_loadout_seed" => "walk",
-        "pre_contact_frame" | "pre_contact_frame_seed" => "attack",
-        "contact_frame" | "contact_frame_seed" => "attack",
-        "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => "attack",
+        "gameplay_distance_fighter_weapon_01" | "gameplay_distance_fighter_weapon_seed" => "guard_pose",
+        "gameplay_distance_fighter_loadout_family_01" | "gameplay_distance_fighter_loadout_seed" => "guard_pose",
+        "pre_contact_frame" | "pre_contact_frame_seed" => "cut",
+        "contact_frame" | "contact_frame_seed" => "thrust",
+        "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => "cut",
+        // Unit-051: explicit guard/cut/thrust/recover captures
+        "planning_timeline" => "guard_pose",
+        "material_armor_damage_frame" => "recover",
+        "injury_capability_consequence_frame" => "recover",
         _ => "idle",
     }
 }
@@ -180,6 +216,10 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "contact_frame" => CameraMode { eye: [0.08, 0.70, 1.8], look_at: [0.0, 0.38, -0.05], fov_radians: 0.52 },
         "fight_film_candidate_shot_01" => CameraMode { eye: [0.35, 1.2, 3.2], look_at: [0.0, 0.30, -0.15], fov_radians: 0.66 },
         "fight_film_replay_camera_shot" => CameraMode { eye: [-0.3, 1.1, 2.8], look_at: [0.05, 0.35, -0.1], fov_radians: 0.64 },
+        // Unit-051: production-ready-candidate capture cameras
+        "planning_timeline" => CameraMode { eye: [0.0, 1.1, 3.4], look_at: [0.0, 0.40, -0.1], fov_radians: 0.68 },
+        "material_armor_damage_frame" => CameraMode { eye: [0.1, 0.65, 1.8], look_at: [0.0, 0.30, -0.05], fov_radians: 0.55 },
+        "injury_capability_consequence_frame" => CameraMode { eye: [-0.15, 0.85, 2.2], look_at: [0.0, 0.35, -0.1], fov_radians: 0.58 },
         // Production seed single-asset closeups
         "production_seed_weapon_longsword" => CameraMode { eye: [0.0, 0.45, 1.4], look_at: [0.0, 0.20, -0.08], fov_radians: 0.48 },
         "production_seed_armor_gambeson" => CameraMode { eye: [0.0, 0.80, 2.2], look_at: [0.0, 0.40, -0.1], fov_radians: 0.58 },
@@ -359,7 +399,11 @@ fn real_main() -> Result<(), String> {
             "skeletal_animation_pose_uniform": true,
             "presentation_bricks_motion_system": true,
             "in_scene_ui_panels": true,
-            "debug_text_overlay": false
+            "debug_text_overlay": false,
+            "unit051_ssao_approximation": true,
+            "unit051_ground_contact_darkening": true,
+            "unit051_multi_region_materials": true,
+            "unit051_guard_cut_thrust_recover_poses": true
         },
         "presentation_truth_isolation_passed": false,
         "presentation_only": true,

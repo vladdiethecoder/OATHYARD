@@ -1,0 +1,235 @@
+{
+  "schema": "oathyard.unit051_production_ready_candidate_materials.v1",
+  "description": "Enhanced material manifests for the first-kit. Each asset has at least 4 distinguishable material regions. Procedural textures are source-tracked and deterministic.",
+  "material_count": 4,
+  "unit": "unit051",
+  "deterministic_generation": true,
+  "materials": [
+    {
+      "asset_id": "longsword",
+      "asset_class": "weapon",
+      "material_region_count": 5,
+      "regions": [
+        {
+          "name": "blade_steel",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#C8C4D0",
+          "normal_source": "procedural_forging_pattern",
+          "orm_source": "procedural_brushed_metal",
+          "roughness_range": [0.18, 0.35],
+          "metallic": 0.92,
+          "description": "Polished steel blade with visible forging grain and edge bevel"
+        },
+        {
+          "name": "crossguard_steel",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#8A8480",
+          "normal_source": "procedural_cast_iron",
+          "orm_source": "procedular_cast_roughness",
+          "roughness_range": [0.45, 0.60],
+          "metallic": 0.80,
+          "description": "Darker cast steel crossguard, rougher than blade"
+        },
+        {
+          "name": "grip_leather",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#4A2E1A",
+          "normal_source": "procedural_leather_wrap_crosshatch",
+          "orm_source": "procedural_leather_grain",
+          "roughness_range": [0.72, 0.90],
+          "metallic": 0.02,
+          "description": "Dark leather-wrapped grip with visible stitching lines"
+        },
+        {
+          "name": "pommel_bronze",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#7A5C30",
+          "normal_source": "procedural_cast_bronze",
+          "orm_source": "procedural_patina",
+          "roughness_range": [0.30, 0.45],
+          "metallic": 0.88,
+          "description": "Bronze pommel with patina variation"
+        },
+        {
+          "name": "edge_bevel",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#E8E4F0",
+          "normal_source": "procedural_sharpened_edge",
+          "orm_source": "procedural_polished_edge",
+          "roughness_range": [0.10, 0.18],
+          "metallic": 0.95,
+          "description": "Brighter polished edge bevel showing sharpening"
+        }
+      ],
+      "texture_source": "procedural_wgsl_shader",
+      "texture_generation_deterministic": true,
+      "texture_source_hash": "procedural_wgsl:verdict_ring.wgsl:procedural_pbr:type0",
+      "acceptance_state": "source_approved_production_ready_candidate",
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "gambeson",
+      "asset_class": "armor",
+      "material_region_count": 4,
+      "regions": [
+        {
+          "name": "outer_linen_natural",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#8B7A5A",
+          "normal_source": "procedural_linen_tabby_weave",
+          "orm_source": "procedural_fabric_roughness",
+          "roughness_range": [0.75, 0.85],
+          "metallic": 0.01,
+          "description": "Natural undyed linen outer layer with visible tabby weave"
+        },
+        {
+          "name": "diamond_quilt_stitching",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#6B5A40",
+          "normal_source": "procedural_quilted_stitch_lines",
+          "orm_source": "procedural_stitch_channel",
+          "roughness_range": [0.80, 0.88],
+          "metallic": 0.01,
+          "description": "Visible diamond-pattern quilting stitch channels"
+        },
+        {
+          "name": "padding_puff",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#9B8A6A",
+          "normal_source": "procedural_puffed_quilt_bumps",
+          "orm_source": "procedural_cotton_felt",
+          "roughness_range": [0.82, 0.90],
+          "metallic": 0.01,
+          "description": "Raised puffy quilt sections between stitch lines"
+        },
+        {
+          "name": "edge_trim_wear",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#5B4A30",
+          "normal_source": "procedural_worn_edge_fiber",
+          "orm_source": "procedural_worn_fabric",
+          "roughness_range": [0.85, 0.92],
+          "metallic": 0.01,
+          "description": "Worn darker edges at cuffs, hem, collar showing fiber fraying"
+        }
+      ],
+      "texture_source": "procedural_wgsl_shader",
+      "texture_generation_deterministic": true,
+      "texture_source_hash": "procedural_wgsl:verdict_ring.wgsl:procedural_pbr:type2",
+      "acceptance_state": "source_approved_production_ready_candidate",
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "fighter_mannequin",
+      "asset_class": "fighter",
+      "material_region_count": 4,
+      "regions": [
+        {
+          "name": "skin_face_hands",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#B88060",
+          "normal_source": "procedural_skin_pores",
+          "orm_source": "procedural_sebum_variation",
+          "roughness_range": [0.50, 0.65],
+          "metallic": 0.01,
+          "description": "Exposed skin with pore detail and natural color variation"
+        },
+        {
+          "name": "hair_brown",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#3A2A18",
+          "normal_source": "procedural_hair_strands",
+          "orm_source": "procedural_hair_roughness",
+          "roughness_range": [0.60, 0.72],
+          "metallic": 0.01,
+          "description": "Brown hair with strand-level variation"
+        },
+        {
+          "name": "underclothes_linen",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#7A6A48",
+          "normal_source": "procedural_linen_tabby_weave",
+          "orm_source": "procedural_fabric_roughness",
+          "roughness_range": [0.78, 0.86],
+          "metallic": 0.01,
+          "description": "Linen underclothes beneath armor showing at neck and wrists"
+        },
+        {
+          "name": "boots_leather",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#3A2812",
+          "normal_source": "procedural_leather_grain",
+          "orm_source": "procedural_worn_leather",
+          "roughness_range": [0.70, 0.82],
+          "metallic": 0.02,
+          "description": "Dark leather boots with scuff and crease detail"
+        }
+      ],
+      "texture_source": "procedural_wgsl_shader",
+      "texture_generation_deterministic": true,
+      "texture_source_hash": "procedural_wgsl:verdict_ring.wgsl:procedural_pbr:type4",
+      "acceptance_state": "source_approved_production_ready_candidate",
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "asset_id": "witness_stone",
+      "asset_class": "arena",
+      "material_region_count": 4,
+      "regions": [
+        {
+          "name": "dressed_stone_surface",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#5A5450",
+          "normal_source": "procedural_stone_chisel_marks",
+          "orm_source": "procedural_stone_granite_rough",
+          "roughness_range": [0.85, 0.92],
+          "metallic": 0.01,
+          "description": "Dressed stone with chisel mark surface normal variation"
+        },
+        {
+          "name": "cracked_fissures",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#2A2825",
+          "normal_source": "procedural_crack_network",
+          "orm_source": "procedural_crack_depth_darken",
+          "roughness_range": [0.90, 0.96],
+          "metallic": 0.01,
+          "description": "Dark cracks and fissures with depth-based darkening"
+        },
+        {
+          "name": "grime_stain",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#3A3530",
+          "normal_source": "procedural_organic_stain",
+          "orm_source": "procedural_grime_roughness",
+          "roughness_range": [0.88, 0.94],
+          "metallic": 0.01,
+          "description": "Organic grime and moss-stain darkening near base"
+        },
+        {
+          "name": "scuff_cut_marks",
+          "channels": ["base_color", "normal", "orm"],
+          "base_color_hex": "#7A7470",
+          "normal_source": "procedural_blade_scuff",
+          "orm_source": "procedural_scuff_brighten",
+          "roughness_range": [0.70, 0.80],
+          "metallic": 0.02,
+          "description": "Brighter scuff/cut marks from past blade contact"
+        }
+      ],
+      "texture_source": "procedural_wgsl_shader",
+      "texture_generation_deterministic": true,
+      "texture_source_hash": "procedural_wgsl:verdict_ring.wgsl:procedural_pbr:type3",
+      "acceptance_state": "source_approved_production_ready_candidate",
+      "production_ready_candidate": true,
+      "production_ready": false,
+      "truth_mutation": false
+    }
+  ]
+}
