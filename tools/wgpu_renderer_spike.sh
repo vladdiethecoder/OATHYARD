@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Unit-055: This tool is now a compatibility wrapper.
+# The production renderer lives at crates/oathyard_renderer/ and is invoked
+# through this wrapper for backward compatibility with existing tooling.
+# The spike crate at spikes/wgpu_renderer/ remains as reference only.
+# Production evidence is generated through crates/oathyard_renderer/.
+echo "INFO: tools/wgpu_renderer_spike.sh now delegates to production renderer at crates/oathyard_renderer/" >&2
+
 scenario="${1:-examples/duels/basic_oathyard.duel}"
 out="${2:-artifacts/production_renderer/wgpu_spike/latest}"
 candidate_asset_manifest="assets/manifests/production_candidate_visual_manifest.json"
@@ -180,7 +187,7 @@ render_capture() {
   local mesh_json="${6:-}"
   local mesh_manifest_json="${7:-}"
   mkdir -p "$render_dir"
-  local cmd=(cargo run --locked --manifest-path spikes/wgpu_renderer/Cargo.toml -- \
+  local cmd=(cargo run --locked --manifest-path crates/oathyard_renderer/Cargo.toml -- \
     --packet "$out/post_hash_presentation_packet.json" \
     --out "$render_dir" \
     --capture-id "$capture_id" \

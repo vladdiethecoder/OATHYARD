@@ -2212,7 +2212,8 @@ fn wgpu_renderer_spike_lane_is_source_buildable_and_truth_isolated() {
     assert!(shader.contains("contact_bloom"));
     assert!(tool.contains("./tools/run_duel.sh"));
     assert!(tool.contains("./tools/replay_verify.sh"));
-    assert!(tool.contains("cargo run --locked --manifest-path spikes/wgpu_renderer/Cargo.toml"));
+    // Unit-055: wrapper now delegates to production renderer at crates/oathyard_renderer/
+    assert!(tool.contains("cargo run --locked --manifest-path crates/oathyard_renderer/Cargo.toml"));
     assert!(tool.contains("post_hash_presentation_packet.json"));
     assert!(tool.contains("production_renderer_manifest.json"));
     assert!(tool.contains("native_3d_render_capture"));
@@ -2623,6 +2624,55 @@ fn unit054_production_quality_certification_truth_isolated() {
         wrapper.contains("loadout_select"),
         "wrapper missing loadout_select in PRC list"
     );
+
+    // Large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+}
+
+#[test]
+fn unit055_production_renderer_path_truth_isolated() {
+    // Verify production renderer crate exists outside spikes/
+    let prod_cargo = std::fs::read_to_string("crates/oathyard_renderer/Cargo.toml")
+        .expect("missing production renderer Cargo.toml");
+    assert!(prod_cargo.contains("oathyard-renderer"));
+    assert!(prod_cargo.contains("oathyard-native-renderer"));
+
+    // Verify production renderer source exists
+    let prod_main = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
+        .expect("missing production renderer main.rs");
+    assert!(prod_main.contains("oathyard-native-wgpu-production-v1"));
+    assert!(!prod_main.contains("spike"));
+
+    // Verify production shader exists
+    let prod_shader = std::fs::read_to_string("crates/oathyard_renderer/src/verdict_ring.wgsl")
+        .expect("missing production renderer shader");
+    assert!(prod_shader.contains("Unit-054 RI-01"));
+    assert!(prod_shader.contains("Unit-054 RI-02"));
+
+    // Verify spike wrapper delegates to production renderer
+    let wrapper =
+        std::fs::read_to_string("tools/wgpu_renderer_spike.sh").expect("missing spike wrapper");
+    assert!(
+        wrapper.contains("crates/oathyard_renderer/Cargo.toml"),
+        "spike wrapper must delegate to production renderer"
+    );
+    assert!(
+        wrapper.contains("compatibility wrapper"),
+        "spike wrapper must declare compatibility status"
+    );
+
+    // Verify production renderer tool exists
+    let prod_tool = std::fs::read_to_string("tools/run_production_renderer.sh")
+        .expect("missing production renderer tool");
+    assert!(prod_tool.contains("crates/oathyard_renderer/Cargo.toml"));
+    assert!(prod_tool.contains("production"));
+
+    // Verify game-flow tool uses renderer (through compatibility wrapper)
+    let game_flow = std::fs::read_to_string("tools/run_native_3d_game_flow.sh")
+        .expect("missing game flow tool");
+    assert!(game_flow.contains("wgpu_renderer_spike.sh"));
 
     // Large asset policy still enforced
     let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
