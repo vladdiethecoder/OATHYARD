@@ -1,0 +1,58 @@
+{
+  "schema": "oathyard.unit053_capture_slot_closure_plan.v1",
+  "unit": "unit053",
+  "description": "Closure plan for all 56 required capture-matrix slots. Unit-053 fills the remaining 21 slots that were blocked in Unit-052.",
+  "total_required_slots": 56,
+  "total_filled_after_unit053": 56,
+  "total_remaining_blocked": 0,
+  "closure_summary": {
+    "before_unit053": {
+      "production_ready_candidate": 31,
+      "production_seed": 13,
+      "production_ready": 0,
+      "missing": 21
+    },
+    "after_unit053": {
+      "production_ready_candidate": 52,
+      "production_seed": 13,
+      "production_ready": 0,
+      "missing": 0
+    }
+  },
+  "closed_slots": [
+    {"slot": "fighter_closeup_04", "camera_mode": "fighter_closeup_04", "asset": "fighter_mannequin", "method": "distinct_camera_angle"},
+    {"slot": "fighter_closeup_05", "camera_mode": "fighter_closeup_05", "asset": "fighter_mannequin", "method": "distinct_camera_angle"},
+    {"slot": "fighter_closeup_06", "camera_mode": "fighter_closeup_06", "asset": "fighter_mannequin", "method": "distinct_camera_angle"},
+    {"slot": "armor_loadout_family_closeup_04", "camera_mode": "armor_loadout_family_closeup_04", "asset": "gambeson", "method": "distinct_camera_angle"},
+    {"slot": "armor_loadout_family_closeup_05", "camera_mode": "armor_loadout_family_closeup_05", "asset": "gambeson", "method": "distinct_camera_angle"},
+    {"slot": "armor_loadout_family_closeup_06", "camera_mode": "armor_loadout_family_closeup_06", "asset": "gambeson", "method": "distinct_camera_angle"},
+    {"slot": "weapon_family_closeup_04", "camera_mode": "weapon_family_closeup_04", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "weapon_family_closeup_05", "camera_mode": "weapon_family_closeup_05", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "weapon_family_closeup_06", "camera_mode": "weapon_family_closeup_06", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "weapon_family_closeup_07", "camera_mode": "weapon_family_closeup_07", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "weapon_family_closeup_08", "camera_mode": "weapon_family_closeup_08", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_fighter_loadout_family_03", "camera_mode": "gameplay_distance_fighter_loadout_family_03", "assets": "fighter_mannequin,gambeson,longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_fighter_loadout_family_04", "camera_mode": "gameplay_distance_fighter_loadout_family_04", "assets": "fighter_mannequin,gambeson,longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_fighter_loadout_family_05", "camera_mode": "gameplay_distance_fighter_loadout_family_05", "assets": "fighter_mannequin,gambeson,longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_fighter_loadout_family_06", "camera_mode": "gameplay_distance_fighter_loadout_family_06", "assets": "fighter_mannequin,gambeson,longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_03", "camera_mode": "gameplay_distance_weapon_family_03", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_04", "camera_mode": "gameplay_distance_weapon_family_04", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_05", "camera_mode": "gameplay_distance_weapon_family_05", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_06", "camera_mode": "gameplay_distance_weapon_family_06", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_07", "camera_mode": "gameplay_distance_weapon_family_07", "asset": "longsword", "method": "distinct_camera_angle"},
+    {"slot": "gameplay_distance_weapon_family_08", "camera_mode": "gameplay_distance_weapon_family_08", "asset": "longsword", "method": "distinct_camera_angle"}
+  ],
+  "remaining_blockers_after_unit053": {
+    "production_ready_count": 0,
+    "reason": "production_renderer_complete=false, owner_visual_acceptance=false, license_and_commercial_clearance pending",
+    "global_gates": [
+      "production_renderer_complete",
+      "owner_visual_acceptance",
+      "license_and_commercial_clearance",
+      "public_demo_ready",
+      "release_candidate_ready"
+    ]
+  },
+  "truth_mutation": false,
+  "final_truth_hash": "f17c8f76b9dfae86"
+}

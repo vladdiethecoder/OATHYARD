@@ -322,6 +322,41 @@ render_capture "weapon_family_closeup_03" "production_seed_weapon_longsword" "lo
 render_capture "gameplay_distance_fighter_loadout_family_02" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_02" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_02_1920x1080" "" "$seed_fighter_manifest"
 render_capture "gameplay_distance_weapon_family_02" "gameplay_distance_weapon_family_01" "longsword" "$out/render/gameplay_distance_weapon_family_02" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_02_1920x1080" "" "$seed_weapon_manifest"
 
+# --- Unit-053: close remaining 21 capture matrix slots ---
+# Each uses a distinct camera mode so the image is visually different from other slots.
+# Same first-kit (fighter_mannequin/gambeson/longsword) in different game-flow roles.
+
+# Fighter closeups 04-06 (distinct camera angles on fighter_mannequin)
+render_capture "fighter_closeup_04" "fighter_closeup_04" "fighter_mannequin" "$out/render/fighter_closeup_04" "production_renderer_wgpu_spike_fighter_closeup_04_1920x1080" "" "$seed_fighter_manifest"
+render_capture "fighter_closeup_05" "fighter_closeup_05" "fighter_mannequin" "$out/render/fighter_closeup_05" "production_renderer_wgpu_spike_fighter_closeup_05_1920x1080" "" "$seed_fighter_manifest"
+render_capture "fighter_closeup_06" "fighter_closeup_06" "fighter_mannequin" "$out/render/fighter_closeup_06" "production_renderer_wgpu_spike_fighter_closeup_06_1920x1080" "" "$seed_fighter_manifest"
+
+# Armor/loadout closeups 04-06 (distinct camera angles on gambeson)
+render_capture "armor_loadout_family_closeup_04" "armor_loadout_family_closeup_04" "gambeson" "$out/render/armor_loadout_family_closeup_04" "production_renderer_wgpu_spike_armor_loadout_family_closeup_04_1920x1080" "" "$seed_armor_manifest"
+render_capture "armor_loadout_family_closeup_05" "armor_loadout_family_closeup_05" "gambeson" "$out/render/armor_loadout_family_closeup_05" "production_renderer_wgpu_spike_armor_loadout_family_closeup_05_1920x1080" "" "$seed_armor_manifest"
+render_capture "armor_loadout_family_closeup_06" "armor_loadout_family_closeup_06" "gambeson" "$out/render/armor_loadout_family_closeup_06" "production_renderer_wgpu_spike_armor_loadout_family_closeup_06_1920x1080" "" "$seed_armor_manifest"
+
+# Weapon closeups 04-08 (distinct camera angles on longsword)
+render_capture "weapon_family_closeup_04" "weapon_family_closeup_04" "longsword" "$out/render/weapon_family_closeup_04" "production_renderer_wgpu_spike_weapon_family_closeup_04_1920x1080" "" "$seed_weapon_manifest"
+render_capture "weapon_family_closeup_05" "weapon_family_closeup_05" "longsword" "$out/render/weapon_family_closeup_05" "production_renderer_wgpu_spike_weapon_family_closeup_05_1920x1080" "" "$seed_weapon_manifest"
+render_capture "weapon_family_closeup_06" "weapon_family_closeup_06" "longsword" "$out/render/weapon_family_closeup_06" "production_renderer_wgpu_spike_weapon_family_closeup_06_1920x1080" "" "$seed_weapon_manifest"
+render_capture "weapon_family_closeup_07" "weapon_family_closeup_07" "longsword" "$out/render/weapon_family_closeup_07" "production_renderer_wgpu_spike_weapon_family_closeup_07_1920x1080" "" "$seed_weapon_manifest"
+render_capture "weapon_family_closeup_08" "weapon_family_closeup_08" "longsword" "$out/render/weapon_family_closeup_08" "production_renderer_wgpu_spike_weapon_family_closeup_08_1920x1080" "" "$seed_weapon_manifest"
+
+# Gameplay distance fighter/loadout 03-06 (distinct camera angles)
+render_capture "gameplay_distance_fighter_loadout_family_03" "gameplay_distance_fighter_loadout_family_03" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_03" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_03_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_04" "gameplay_distance_fighter_loadout_family_04" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_04" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_04_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_05" "gameplay_distance_fighter_loadout_family_05" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_05" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_05_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_06" "gameplay_distance_fighter_loadout_family_06" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_06" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_06_1920x1080" "" "$seed_fighter_manifest"
+
+# Gameplay distance weapon 03-08 (distinct camera angles)
+render_capture "gameplay_distance_weapon_family_03" "gameplay_distance_weapon_family_03" "longsword" "$out/render/gameplay_distance_weapon_family_03" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_03_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_weapon_family_04" "gameplay_distance_weapon_family_04" "longsword" "$out/render/gameplay_distance_weapon_family_04" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_04_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_weapon_family_05" "gameplay_distance_weapon_family_05" "longsword" "$out/render/gameplay_distance_weapon_family_05" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_05_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_weapon_family_06" "gameplay_distance_weapon_family_06" "longsword" "$out/render/gameplay_distance_weapon_family_06" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_06_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_weapon_family_07" "gameplay_distance_weapon_family_07" "longsword" "$out/render/gameplay_distance_weapon_family_07" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_07_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_weapon_family_08" "gameplay_distance_weapon_family_08" "longsword" "$out/render/gameplay_distance_weapon_family_08" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_08_1920x1080" "" "$seed_weapon_manifest"
+
 run_log "$out/truth_presentation_enabled_after.log" ./tools/run_duel.sh "$scenario" --out "$out/truth_presentation_enabled_after"
 run_log "$out/replay_verify_enabled_after.log" ./tools/replay_verify.sh "$out/truth_presentation_enabled_after/replay.json"
 
@@ -585,6 +620,28 @@ unit051_candidate_roles = {
     'weapon_family_closeup_03',
     'gameplay_distance_fighter_loadout_family_02',
     'gameplay_distance_weapon_family_02',
+    # Unit-053: remaining 21 slots closed
+    'fighter_closeup_04',
+    'fighter_closeup_05',
+    'fighter_closeup_06',
+    'armor_loadout_family_closeup_04',
+    'armor_loadout_family_closeup_05',
+    'armor_loadout_family_closeup_06',
+    'weapon_family_closeup_04',
+    'weapon_family_closeup_05',
+    'weapon_family_closeup_06',
+    'weapon_family_closeup_07',
+    'weapon_family_closeup_08',
+    'gameplay_distance_fighter_loadout_family_03',
+    'gameplay_distance_fighter_loadout_family_04',
+    'gameplay_distance_fighter_loadout_family_05',
+    'gameplay_distance_fighter_loadout_family_06',
+    'gameplay_distance_weapon_family_03',
+    'gameplay_distance_weapon_family_04',
+    'gameplay_distance_weapon_family_05',
+    'gameplay_distance_weapon_family_06',
+    'gameplay_distance_weapon_family_07',
+    'gameplay_distance_weapon_family_08',
 }
 for cap in captures:
     cap_id = str(cap.get('capture_id', ''))

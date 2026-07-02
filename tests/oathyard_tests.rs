@@ -2485,3 +2485,62 @@ fn unit052_roster_loadout_capture_matrix_breadth_truth_isolated() {
         .expect("missing large-file policy");
     assert!(lfs_policy.contains("gambeson.obj"));
 }
+
+#[test]
+fn unit053_capture_matrix_completion_truth_isolated() {
+    // Verify slot closure plan exists
+    let closure = std::fs::read_to_string("content/assets/unit053_capture_slot_closure_plan.json")
+        .expect("missing unit053 capture slot closure plan");
+    assert!(closure.contains("unit053"));
+    assert!(closure.contains("\"total_required_slots\": 56"));
+    assert!(closure.contains("\"total_filled_after_unit053\": 56"));
+    assert!(closure.contains("\"total_remaining_blocked\": 0"));
+    assert!(closure.contains("fighter_closeup_04"));
+    assert!(closure.contains("weapon_family_closeup_08"));
+    assert!(closure.contains("gameplay_distance_fighter_loadout_family_06"));
+    assert!(closure.contains("gameplay_distance_weapon_family_08"));
+
+    // Verify renderer has Unit-053 camera modes
+    let renderer =
+        std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs").expect("missing renderer");
+    assert!(renderer.contains("unit053_capture_matrix_complete"));
+    assert!(renderer.contains("fighter_closeup_04"));
+    assert!(renderer.contains("fighter_closeup_06"));
+    assert!(renderer.contains("armor_loadout_family_closeup_04"));
+    assert!(renderer.contains("armor_loadout_family_closeup_06"));
+    assert!(renderer.contains("weapon_family_closeup_04"));
+    assert!(renderer.contains("weapon_family_closeup_08"));
+    assert!(renderer.contains("gameplay_distance_fighter_loadout_family_03"));
+    assert!(renderer.contains("gameplay_distance_fighter_loadout_family_06"));
+    assert!(renderer.contains("gameplay_distance_weapon_family_03"));
+    assert!(renderer.contains("gameplay_distance_weapon_family_08"));
+
+    // Verify wrapper has all 21 new captures
+    let wrapper = std::fs::read_to_string("tools/wgpu_renderer_spike.sh").expect("missing wrapper");
+    assert!(wrapper.contains("fighter_closeup_04"));
+    assert!(wrapper.contains("fighter_closeup_05"));
+    assert!(wrapper.contains("fighter_closeup_06"));
+    assert!(wrapper.contains("armor_loadout_family_closeup_04"));
+    assert!(wrapper.contains("armor_loadout_family_closeup_05"));
+    assert!(wrapper.contains("armor_loadout_family_closeup_06"));
+    assert!(wrapper.contains("weapon_family_closeup_04"));
+    assert!(wrapper.contains("weapon_family_closeup_05"));
+    assert!(wrapper.contains("weapon_family_closeup_06"));
+    assert!(wrapper.contains("weapon_family_closeup_07"));
+    assert!(wrapper.contains("weapon_family_closeup_08"));
+    assert!(wrapper.contains("gameplay_distance_fighter_loadout_family_03"));
+    assert!(wrapper.contains("gameplay_distance_fighter_loadout_family_04"));
+    assert!(wrapper.contains("gameplay_distance_fighter_loadout_family_05"));
+    assert!(wrapper.contains("gameplay_distance_fighter_loadout_family_06"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_03"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_04"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_05"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_06"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_07"));
+    assert!(wrapper.contains("gameplay_distance_weapon_family_08"));
+
+    // Large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+}
