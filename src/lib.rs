@@ -15,6 +15,7 @@ mod goal_command;
 mod hud_truth;
 mod input_artifacts;
 mod json;
+mod local_game;
 mod material_artifacts;
 mod native_hud_menu_flow;
 mod replay_bundle;
@@ -62,6 +63,10 @@ pub use hud_truth::{
     HUD_NATIVE_FLOW_IDS, HUD_TRUTH_VIEW_SCHEMA,
 };
 pub use input_artifacts::write_input_artifacts;
+pub use local_game::{
+    write_local_game_artifacts, GameState, GameStateEntry, LocalGameConfig, LocalGameRun,
+    FIGHT_FILM_VIEW_SCHEMA, LOCAL_GAME_SCHEMA, SCRIPTED_INPUT_MANIFEST_SCHEMA,
+};
 pub use material_artifacts::write_pbr_material_artifacts;
 pub use native_hud_menu_flow::{
     build_native_hud_menu_flow_model, drive_native_hud_menu_flow,

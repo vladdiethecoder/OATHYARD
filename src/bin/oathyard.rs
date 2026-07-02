@@ -7,10 +7,11 @@ use oathyard::{
     write_ai_duel_artifacts, write_ai_sweep_artifacts, write_animation_state_machine_artifacts,
     write_artifacts, write_audio_device_smoke_artifacts, write_audio_mixer_artifacts,
     write_audio_vfx_artifacts, write_contact_matrix_artifacts, write_gamepad_smoke_artifacts,
-    write_input_artifacts, write_match_artifacts, write_negative_input_audit_artifacts,
-    write_pbr_material_artifacts, write_performance_summary, write_presentation_bricks_artifacts,
-    write_replay_export_bundle, write_runtime_settings_artifacts, write_truth_edge_audit_artifacts,
-    write_truth_stress_artifacts, GoalArtifactSpec, OathError,
+    write_input_artifacts, write_local_game_artifacts, write_match_artifacts,
+    write_negative_input_audit_artifacts, write_pbr_material_artifacts, write_performance_summary,
+    write_presentation_bricks_artifacts, write_replay_export_bundle,
+    write_runtime_settings_artifacts, write_truth_edge_audit_artifacts,
+    write_truth_stress_artifacts, GoalArtifactSpec, LocalGameConfig, OathError,
 };
 
 fn main() {
@@ -802,6 +803,38 @@ fn real_main() -> Result<(), OathError> {
             println!("final_state_hash={}", result.final_state_hash);
             Ok(())
         }
+        "play-local" => {
+            let mut out: Option<PathBuf> = None;
+            while let Some(arg) = args.next() {
+                match arg.as_str() {
+                    "--out" => {
+                        out = Some(PathBuf::from(args.next().ok_or_else(|| {
+                            OathError::Parse("--out requires a path".to_string())
+                        })?));
+                    }
+                    other => {
+                        return Err(OathError::Parse(format!(
+                            "unknown play-local argument '{other}'"
+                        )));
+                    }
+                }
+            }
+            let out = out.unwrap_or_else(|| PathBuf::from("artifacts/local_game/latest"));
+            let result = write_local_game_artifacts(&out, LocalGameConfig::default())?;
+            println!("OATHYARD local working-game path complete");
+            println!("scenario={}", result.result.scenario_id);
+            println!("out={}", out.display());
+            println!("plan_cycles={}", result.plan_cycles);
+            println!("final_state_hash={}", result.result.final_state_hash);
+            println!(
+                "local_playable_game_ready={}",
+                result.local_playable_game_ready
+            );
+            println!(
+                "owner_visual_acceptance=false public_demo_ready=false release_candidate_ready=false"
+            );
+            Ok(())
+        }
         "--help" | "-h" | "help" => {
             println!("{}", usage());
             Ok(())
@@ -857,6 +890,7 @@ fn usage() -> &'static str {
   oathyard audio-device-smoke --scenario <path> --out <dir>
   oathyard animation-state-machine --scenario <path> --out <dir>
   oathyard presentation-bricks --scenario <path> --out <dir>
+  oathyard play-local --out <dir>
 
 launch env:
   OATHYARD_LAUNCH_OUT=<dir> selects no-args artifact path
