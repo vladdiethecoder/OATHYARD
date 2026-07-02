@@ -146,6 +146,14 @@ fn scene_sdf(p: vec3<f32>) -> vec4<f32> {
     let fighter_b = fighter_sdf(p, 1.0, 1.0 - guard);
     let contact_spark = sd_sphere(p - vec3<f32>(0.02, 0.42, -0.02), 0.08 + packet.seed.y * 0.04);
 
+    // Unit-049: UI panels for menu/select/loadout states
+    // These are thin SDF boxes positioned behind/above the arena, visible in menu camera modes.
+    // Material 7.0 = UI panel (emissive warm glow)
+    let ui_panel_main = sd_box(p - vec3<f32>(0.0, 1.6, -1.8), vec3<f32>(0.9, 0.25, 0.02));
+    let ui_panel_sub = sd_box(p - vec3<f32>(0.0, 1.2, -1.8), vec3<f32>(0.6, 0.12, 0.02));
+    let ui_panel_left = sd_box(p - vec3<f32>(-0.9, 0.9, -1.6), vec3<f32>(0.25, 0.4, 0.02));
+    let ui_panel_right = sd_box(p - vec3<f32>(0.9, 0.9, -1.6), vec3<f32>(0.25, 0.4, 0.02));
+
     var d = floor_val;
     var mat = 1.0;
     if (ring < d) { d = ring; mat = 2.0; }
@@ -155,6 +163,10 @@ fn scene_sdf(p: vec3<f32>) -> vec4<f32> {
     if (fighter_a < d) { d = fighter_a; mat = 4.0; }
     if (fighter_b < d) { d = fighter_b; mat = 4.0; }
     if (contact_spark < d) { d = contact_spark; mat = 6.0; }
+    if (ui_panel_main < d) { d = ui_panel_main; mat = 7.0; }
+    if (ui_panel_sub < d) { d = ui_panel_sub; mat = 7.0; }
+    if (ui_panel_left < d) { d = ui_panel_left; mat = 7.0; }
+    if (ui_panel_right < d) { d = ui_panel_right; mat = 7.0; }
     return vec4<f32>(d, mat, 0.0, 0.0);
 }
 
@@ -274,7 +286,11 @@ fn sdf_material_color(mat: f32, p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
     if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.32, 0.28, 0.24)); } // stone
     if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.72, 0.40, 0.28)); } // skin/fighter
     if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.78, 0.76, 0.82)); } // blade
-    return vec3<f32>(1.0, 0.48, 0.12); // accent
+    if (mat < 6.5) { return vec3<f32>(1.0, 0.48, 0.12); } // accent
+    // Unit-049: UI panel material — emissive warm glow with subtle pattern
+    let ui_uv = fract(vec2<f32>(p.x * 3.0 + p.z * 2.0, p.y * 4.0));
+    let ui_line = smoothstep(0.02, 0.0, abs(fract(p.y * 8.0) - 0.5)) * 0.15;
+    return vec3<f32>(0.42, 0.38, 0.32) + vec3<f32>(ui_line * 0.6, ui_line * 0.4, ui_line * 0.2);
 }
 
 @fragment

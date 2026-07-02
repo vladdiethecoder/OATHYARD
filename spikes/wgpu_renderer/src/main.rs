@@ -355,6 +355,10 @@ fn real_main() -> Result<(), String> {
             "fog_atmosphere": true,
             "tone_mapping": true,
             "event_keyed_contact_bloom": true,
+            "triplanar_procedural_pbr": true,
+            "skeletal_animation_pose_uniform": true,
+            "presentation_bricks_motion_system": true,
+            "in_scene_ui_panels": true,
             "debug_text_overlay": false
         },
         "presentation_truth_isolation_passed": false,
