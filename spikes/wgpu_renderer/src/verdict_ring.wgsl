@@ -23,6 +23,25 @@ struct MeshMaterial {
 @group(0) @binding(2)
 var<uniform> mesh_material: MeshMaterial;
 
+// Unit-049: Pose uniform for procedural skeletal animation
+struct PoseUniform {
+    pose_active: f32,
+    pose_time: f32,
+    _pad: vec2<f32>,
+    // Each vec4 holds 4 bone values (16-byte aligned for uniform address space)
+    bone_offset_x: vec4<f32>,  // bones 0-3
+    bone_offset_x2: vec4<f32>, // bones 4-7
+    bone_offset_y: vec4<f32>,
+    bone_offset_y2: vec4<f32>,
+    bone_offset_z: vec4<f32>,
+    bone_offset_z2: vec4<f32>,
+    bone_yaw: vec4<f32>,
+    bone_yaw2: vec4<f32>,
+}
+
+@group(0) @binding(3)
+var<uniform> pose: PoseUniform;
+
 struct VertexOut {
     @builtin(position) position: vec4<f32>,
     @location(0) uv: vec2<f32>,
@@ -297,7 +316,7 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
     return vec4<f32>(color, 1.0);
 }
 
-// Unit-049: Mesh vertex shader with world_pos passthrough for triplanar PBR
+// Unit-049: Mesh vertex shader with procedural skeletal animation + triplanar PBR
 @vertex
 fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     let ro = camera.eye.xyz;
@@ -308,13 +327,57 @@ fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     let aspect = 1920.0 / 1080.0;
     let fov = camera.eye.w;
 
+    var pos = input.position;
+
+    // Unit-049: Procedural skeletal displacement via position-based bone assignment.
+    // Vertices are partitioned by Y into body regions, then bone offsets/yaw are applied.
+    // This is presentation-only — no truth mutation.
+    if (pose.pose_active > 0.5) {
+        let py = input.position.y;
+
+        // Determine bone region weights based on Y position
+        // Assumes normalized mesh height ~[-0.5, 1.2]
+        let w_head = smoothstep(0.9, 1.0, py);
+        let w_spine = smoothstep(0.3, 0.6, py) * (1.0 - w_head);
+        let w_arm_r = smoothstep(0.4, 0.7, py) * (1.0 - smoothstep(0.9, 1.0, py)) * step(0.0, input.position.x);
+        let w_arm_l = smoothstep(0.4, 0.7, py) * (1.0 - smoothstep(0.9, 1.0, py)) * step(input.position.x, 0.0);
+        let w_leg_r = (1.0 - smoothstep(0.2, 0.4, py)) * step(0.0, input.position.x);
+        let w_leg_l = (1.0 - smoothstep(0.2, 0.4, py)) * step(input.position.x, 0.0);
+
+        // Accumulate bone offsets weighted by region membership
+        var offset = vec3<f32>(0.0);
+        offset.x = pose.bone_offset_x[2] * w_head + pose.bone_offset_x[1] * w_spine
+                 + pose.bone_offset_x[3] * w_arm_r + pose.bone_offset_x2[0] * w_arm_l
+                 + pose.bone_offset_x2[1] * w_leg_r + pose.bone_offset_x2[2] * w_leg_l;
+        offset.y = pose.bone_offset_y[2] * w_head + pose.bone_offset_y[1] * w_spine
+                 + pose.bone_offset_y[3] * w_arm_r + pose.bone_offset_y2[0] * w_arm_l
+                 + pose.bone_offset_y2[1] * w_leg_r + pose.bone_offset_y2[2] * w_leg_l;
+        offset.z = pose.bone_offset_z[2] * w_head + pose.bone_offset_z[1] * w_spine
+                 + pose.bone_offset_z[3] * w_arm_r + pose.bone_offset_z2[0] * w_arm_l
+                 + pose.bone_offset_z2[1] * w_leg_r + pose.bone_offset_z2[2] * w_leg_l;
+
+        // Accumulate yaw rotations
+        let yaw = pose.bone_yaw[2] * w_head + pose.bone_yaw[1] * w_spine
+                + pose.bone_yaw[3] * w_arm_r + pose.bone_yaw2[0] * w_arm_l
+                + pose.bone_yaw2[1] * w_leg_r + pose.bone_yaw2[2] * w_leg_l;
+        let yc = cos(yaw);
+        let ys = sin(yaw);
+
+        // Apply yaw rotation around Y axis, then translate
+        pos = vec3<f32>(
+            yc * input.position.x + ys * input.position.z + offset.x,
+            input.position.y + offset.y,
+            -ys * input.position.x + yc * input.position.z + offset.z,
+        );
+    }
+
     let angle = -0.42 + packet.seed.x * 0.26;
     let c = cos(angle);
     let s = sin(angle);
     let world_pos = vec3<f32>(
-        c * input.position.x + s * input.position.z,
-        input.position.y,
-        -s * input.position.x + c * input.position.z,
+        c * pos.x + s * pos.z,
+        pos.y,
+        -s * pos.x + c * pos.z,
     );
 
     let rel = world_pos - ro;

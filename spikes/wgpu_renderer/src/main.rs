@@ -33,6 +33,85 @@ struct MeshMaterial {
     tint_a: f32,
 }
 
+// Unit-049: Pose uniform for procedural skeletal animation.
+// 8 bones, packed into pairs of [f32; 4] to match WGSL vec4 alignment.
+const MAX_BONES: usize = 8;
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct PoseUniform {
+    pose_active: f32,   // 1.0 if animation pose should be applied, 0.0 = bind pose
+    pose_time: f32,     // normalized 0..1 phase within the clip
+    _pad: [f32; 2],
+    // bones 0-3 packed into vec4, bones 4-7 into second vec4
+    bone_offset_x: [f32; 4],
+    bone_offset_x2: [f32; 4],
+    bone_offset_y: [f32; 4],
+    bone_offset_y2: [f32; 4],
+    bone_offset_z: [f32; 4],
+    bone_offset_z2: [f32; 4],
+    bone_yaw: [f32; 4],
+    bone_yaw2: [f32; 4],
+}
+
+fn pose_for_clip(clip_id: &str) -> PoseUniform {
+    let mut pose = PoseUniform {
+        pose_active: 1.0,
+        pose_time: 0.5,
+        _pad: [0.0, 0.0],
+        bone_offset_x: [0.0; 4],
+        bone_offset_x2: [0.0; 4],
+        bone_offset_y: [0.0; 4],
+        bone_offset_y2: [0.0; 4],
+        bone_offset_z: [0.0; 4],
+        bone_offset_z2: [0.0; 4],
+        bone_yaw: [0.0; 4],
+        bone_yaw2: [0.0; 4],
+    };
+    // Bone indices: 0=root, 1=spine, 2=head, 3=right_arm, 4=left_arm, 5=right_leg, 6=left_leg
+    match clip_id {
+        "idle" => {
+            pose.bone_offset_y[1] = 0.008; // spine
+            pose.bone_offset_y[2] = 0.005; // head
+        }
+        "walk" => {
+            pose.bone_offset_z2[1] = 0.02;  // right leg (index 5 → bone_offset_z2[1])
+            pose.bone_offset_z2[2] = -0.02; // left leg (index 6 → bone_offset_z2[2])
+            pose.bone_yaw2[1] = 0.1;
+            pose.bone_yaw2[2] = -0.1;
+        }
+        "guard_pose" => {
+            pose.bone_yaw[3] = -0.3;  // right arm
+            pose.bone_yaw2[0] = 0.3;  // left arm
+            pose.bone_offset_y[3] = 0.02;
+            pose.bone_offset_y2[0] = 0.02;
+        }
+        "attack" => {
+            pose.bone_yaw[3] = -0.6;  // right arm swinging
+            pose.bone_offset_z[3] = 0.03;
+            pose.bone_yaw[1] = 0.15;  // torso twist
+        }
+        _ => {
+            pose.pose_active = 0.0;
+        }
+    }
+    pose
+}
+
+fn clip_id_for_capture(capture_id: &str) -> &'static str {
+    match capture_id {
+        "boot_main_menu" => "idle",
+        "fighter_select" => "idle",
+        "loadout_select" => "guard_pose",
+        "fighter_closeup_01" | "fighter_select" => "idle",
+        "gameplay_distance_fighter_weapon_01" | "gameplay_distance_fighter_weapon_seed" => "walk",
+        "gameplay_distance_fighter_loadout_family_01" | "gameplay_distance_fighter_loadout_seed" => "walk",
+        "pre_contact_frame" | "pre_contact_frame_seed" => "attack",
+        "contact_frame" | "contact_frame_seed" => "attack",
+        "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => "attack",
+        _ => "idle",
+    }
+}
+
 struct CameraMode {
     eye: [f32; 3],
     look_at: [f32; 3],
@@ -198,7 +277,7 @@ fn real_main() -> Result<(), String> {
         .map(load_runtime_mesh)
         .collect::<Result<Vec<_>, _>>()?;
     let seed = seed_uniforms(&packet_json, &capture_id, &candidate_assets);
-    let render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode))?;
+    let render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode, &capture_id))?;
     let file_stem = capture_file_stem.unwrap_or_else(|| {
         if capture_id == DEFAULT_CAPTURE_FILE_STEM || capture_id == DEFAULT_CAPTURE_FILE_NAME {
             DEFAULT_CAPTURE_FILE_STEM.to_string()
@@ -953,6 +1032,7 @@ async fn render_wgpu_frame(
     seed: [f32; 4],
     runtime_meshes: &[RuntimeMesh],
     camera_mode: &str,
+    capture_id: &str,
 ) -> Result<RenderResult, String> {
     let mut instance_desc = wgpu::InstanceDescriptor::new_without_display_handle();
     instance_desc.backends = wgpu::Backends::VULKAN;
@@ -1047,6 +1127,18 @@ async fn render_wgpu_frame(
     });
     queue.write_buffer(&mesh_material_buffer, 0, mesh_material_bytes);
 
+    // Unit-049: Pose uniform for skeletal animation
+    let clip = clip_id_for_capture(capture_id);
+    let pose = pose_for_clip(clip);
+    let pose_bytes = bytemuck::bytes_of(&pose);
+    let pose_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("oathyard pose uniform"),
+        size: pose_bytes.len() as u64,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    queue.write_buffer(&pose_buffer, 0, pose_bytes);
+
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("oathyard packet bind group layout"),
         entries: &[
@@ -1082,6 +1174,17 @@ async fn render_wgpu_frame(
                 },
                 count: None,
             },
+            // Unit-049: Pose uniform as binding 3
+            wgpu::BindGroupLayoutEntry {
+                binding: 3,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
         ],
     });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -1099,6 +1202,10 @@ async fn render_wgpu_frame(
             wgpu::BindGroupEntry {
                 binding: 2,
                 resource: mesh_material_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 3,
+                resource: pose_buffer.as_entire_binding(),
             },
         ],
     });
