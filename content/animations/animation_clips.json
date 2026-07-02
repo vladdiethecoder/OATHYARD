@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0.0",
+  "animation_clips": {
+    "idle": {
+      "duration": 3.0,
+      "bones": {
+        "spine": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]},
+            {"time": 1.5, "translation": [0.0, 0.02, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]},
+            {"time": 3.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]}
+          ]
+        },
+        "head": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.05, 0.0, 0.9987]},
+            {"time": 1.0, "translation": [0.0, 0.01, 0.0], "rotation": [0.0, -0.03, 0.0, 0.9995]},
+            {"time": 2.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.02, 0.0, 0.9998]},
+            {"time": 3.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.05, 0.0, 0.9987]}
+          ]
+        },
+        "left_arm": {
+          "keyframes": [
+            {"time": 0.0, "translation": [-0.1, 0.3, 0.0], "rotation": [0.0, 0.0, -0.1, 0.995]},
+            {"time": 1.5, "translation": [-0.1, 0.32, 0.0], "rotation": [0.0, 0.0, -0.12, 0.9927]},
+            {"time": 3.0, "translation": [-0.1, 0.3, 0.0], "rotation": [0.0, 0.0, -0.1, 0.995]}
+          ]
+        },
+        "right_arm": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.1, 0.3, 0.0], "rotation": [0.0, 0.0, 0.1, 0.995]},
+            {"time": 1.5, "translation": [0.1, 0.32, 0.0], "rotation": [0.0, 0.0, 0.12, 0.9927]},
+            {"time": 3.0, "translation": [0.1, 0.3, 0.0], "rotation": [0.0, 0.0, 0.1, 0.995]}
+          ]
+        }
+      }
+    },
+    "walk": {
+      "duration": 1.0,
+      "bones": {
+        "spine": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.03, 0.9995]},
+            {"time": 0.5, "translation": [0.0, 0.05, 0.1], "rotation": [0.0, 0.1, 0.0, 0.995]},
+            {"time": 1.0, "translation": [0.0, 0.0, 0.2], "rotation": [0.0, 0.0, -0.03, 0.9995]}
+          ]
+        },
+        "left_leg": {
+          "keyframes": [
+            {"time": 0.0, "translation": [-0.08, -0.4, 0.0], "rotation": [0.0, 0.0, 0.2, 0.98]},
+            {"time": 0.5, "translation": [-0.08, -0.38, 0.1], "rotation": [0.0, 0.0, 0.05, 0.9987]},
+            {"time": 1.0, "translation": [-0.08, -0.4, 0.2], "rotation": [0.0, 0.0, -0.2, 0.98]}
+          ]
+        },
+        "right_leg": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.08, -0.4, 0.0], "rotation": [0.0, 0.0, -0.2, 0.98]},
+            {"time": 0.5, "translation": [0.08, -0.42, 0.1], "rotation": [0.0, 0.0, -0.05, 0.9987]},
+            {"time": 1.0, "translation": [0.08, -0.4, 0.2], "rotation": [0.0, 0.0, 0.2, 0.98]}
+          ]
+        }
+      }
+    },
+    "attack_slash": {
+      "duration": 0.6,
+      "bones": {
+        "right_arm": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.1, 0.3, 0.0], "rotation": [0.0, 0.0, 0.1, 0.995]},
+            {"time": 0.2, "translation": [0.15, 0.4, 0.0], "rotation": [0.0, 0.0, 0.8, 0.6]},
+            {"time": 0.4, "translation": [0.05, 0.5, 0.15], "rotation": [0.0, 0.0, 1.0, 0.0]},
+            {"time": 0.6, "translation": [0.1, 0.35, 0.2], "rotation": [0.0, 0.0, 0.7, 0.7141]}
+          ]
+        },
+        "spine": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]},
+            {"time": 0.3, "translation": [0.02, 0.05, 0.05], "rotation": [0.1, 0.0, 0.0, 0.995]},
+            {"time": 0.6, "translation": [0.0, 0.0, 0.1], "rotation": [0.0, 0.05, 0.0, 0.9987]}
+          ]
+        }
+      }
+    },
+    "guard": {
+      "duration": 0.3,
+      "bones": {
+        "left_arm": {
+          "keyframes": [
+            {"time": 0.0, "translation": [-0.1, 0.3, 0.0], "rotation": [0.0, 0.0, -0.1, 0.995]},
+            {"time": 0.3, "translation": [-0.15, 0.5, 0.0], "rotation": [0.0, 0.0, -0.9, 0.4358]}
+          ]
+        },
+        "right_arm": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.1, 0.3, 0.0], "rotation": [0.0, 0.0, 0.1, 0.995]},
+            {"time": 0.3, "translation": [0.15, 0.5, 0.0], "rotation": [0.0, 0.0, 0.9, 0.4358]}
+          ]
+        },
+        "head": {
+          "keyframes": [
+            {"time": 0.0, "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]},
+            {"time": 0.3, "translation": [0.0, 0.05, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]}
+          ]
+        }
+      }
+    }
+  }
+}

@@ -15,7 +15,6 @@ const BACKEND_ID: &str = "wgpu-vulkan-offscreen-production-renderer-spike-v1";
 const DEFAULT_CAPTURE_FILE_STEM: &str = "production_renderer_wgpu_spike_1920x1080";
 const DEFAULT_CAPTURE_FILE_NAME: &str = "production_renderer_wgpu_spike_1920x1080.png";
 const SHADER: &str = include_str!("verdict_ring.wgsl");
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct CameraUniform {
@@ -23,10 +22,66 @@ struct CameraUniform {
     look_at: [f32; 4],
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct MeshMaterial {
+    material_type: f32,
+    _pad: [f32; 3],    // align tint to offset 16 (WGSL vec4 alignment)
+    tint_r: f32,
+    tint_g: f32,
+    tint_b: f32,
+    tint_a: f32,
+}
+
 struct CameraMode {
     eye: [f32; 3],
     look_at: [f32; 3],
     fov_radians: f32,
+}
+
+fn material_for_mesh(asset_id: &str) -> MeshMaterial {
+    match asset_id {
+        id if id.contains("longsword") => MeshMaterial { 
+            material_type: 0.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.78, 
+            tint_g: 0.76, 
+            tint_b: 0.82, 
+            tint_a: 1.0 
+        },
+        id if id.contains("gambeson") => MeshMaterial { 
+            material_type: 1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.55, 
+            tint_g: 0.35, 
+            tint_b: 0.22, 
+            tint_a: 1.0 
+        },
+        id if id.contains("fighter") => MeshMaterial { 
+            material_type: 4.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.72, 
+            tint_g: 0.40, 
+            tint_b: 0.28, 
+            tint_a: 1.0 
+        },
+        id if id.contains("witness_stone") => MeshMaterial { 
+            material_type: 3.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.38, 
+            tint_g: 0.36, 
+            tint_b: 0.42, 
+            tint_a: 1.0 
+        },
+        _ => MeshMaterial { 
+            material_type: 0.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.62, 
+            tint_g: 0.58, 
+            tint_b: 0.54, 
+            tint_a: 1.0 
+        },
+    }
 }
 
 fn camera_for_mode(mode: &str) -> CameraMode {
@@ -793,6 +848,7 @@ struct GpuMeshResource {
     index_buffer: wgpu::Buffer,
     index_count: u32,
     material_bind_group: wgpu::BindGroup,
+    mesh_material: MeshMaterial,
     _base_color_texture: wgpu::Texture,
     _normal_texture: wgpu::Texture,
     _orm_texture: wgpu::Texture,
@@ -973,6 +1029,24 @@ async fn render_wgpu_frame(
     });
     queue.write_buffer(&camera_buffer, 0, camera_bytes);
 
+    // Unit-049: MeshMaterial uniform (default neutral tint, works for all mesh types)
+    let mesh_material = MeshMaterial {
+        material_type: 0.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.62,
+        tint_g: 0.58,
+        tint_b: 0.54,
+        tint_a: 1.0,
+    };
+    let mesh_material_bytes = bytemuck::bytes_of(&mesh_material);
+    let mesh_material_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("oathyard mesh material uniform"),
+        size: mesh_material_bytes.len() as u64,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    queue.write_buffer(&mesh_material_buffer, 0, mesh_material_bytes);
+
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("oathyard packet bind group layout"),
         entries: &[
@@ -997,6 +1071,17 @@ async fn render_wgpu_frame(
                 },
                 count: None,
             },
+            // Unit-049: MeshMaterial uniform as binding 2
+            wgpu::BindGroupLayoutEntry {
+                binding: 2,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
         ],
     });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -1010,6 +1095,10 @@ async fn render_wgpu_frame(
             wgpu::BindGroupEntry {
                 binding: 1,
                 resource: camera_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: mesh_material_buffer.as_entire_binding(),
             },
         ],
     });
@@ -1177,6 +1266,7 @@ async fn render_wgpu_frame(
                     index_buffer,
                     index_count: mesh.indices.len() as u32,
                     material_bind_group,
+                    mesh_material: material_for_mesh(&mesh.mesh_asset_id),
                     _base_color_texture: base_color_texture,
                     _normal_texture: normal_texture,
                     _orm_texture: orm_texture,
@@ -1226,8 +1316,13 @@ async fn render_wgpu_frame(
         pass.draw(0..3, 0..1);
         if let Some((mesh_pipeline, buffers)) = &mesh_resources {
             pass.set_pipeline(mesh_pipeline);
-            pass.set_bind_group(0, &bind_group, &[]);
+            // Unit-049: per-mesh material upload via queue.write_buffer before each draw
             for resource in buffers {
+                if let Some(material) = Some(&resource.mesh_material) {
+                    let bytes = bytemuck::bytes_of(material);
+                    queue.write_buffer(&mesh_material_buffer, 0, bytes);
+                }
+                pass.set_bind_group(0, &bind_group, &[]);
                 pass.set_bind_group(1, &resource.material_bind_group, &[]);
                 pass.set_vertex_buffer(0, resource.vertex_buffer.slice(..));
                 pass.set_index_buffer(resource.index_buffer.slice(..), wgpu::IndexFormat::Uint32);

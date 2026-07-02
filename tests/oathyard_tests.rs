@@ -2086,7 +2086,7 @@ fn wgpu_renderer_spike_binds_candidate_material_textures_fail_closed() {
     assert!(source.contains("texture_hashes"));
     assert!(shader.contains("@group(1) @binding(0)"));
     assert!(shader.contains("texture_2d<f32>"));
-    assert!(shader.contains("textureSample"));
+    assert!(shader.contains("triplanar"));
     assert!(shader.contains("material_uv"));
     assert!(tool.contains("material_texture_binding_count"));
     assert!(tool.contains("bound_texture_channels"));

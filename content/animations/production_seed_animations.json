@@ -1,0 +1,40 @@
+{
+  "schema": "oathyard.production_seed_animations.v1",
+  "animation_system": "MotionBricks-inspired PresentationBricks",
+  "source": "src/animation_state_machine.rs::write_presentation_bricks_artifacts",
+  "description": "Animation is derived from truth-after-hash replay data, not hand-authored keyframes. PresentationBricks consumes action labels, phase events, contact events, and capability deltas to produce clip IDs, additive reactions, and a retargeting bridge mapping 16 truth joints to 20 presentation bones (including grip_r and grip_l).",
+  "truth_mutation": false,
+  "truth_isolated": true,
+  "clip_library": [
+    {"id": "idle", "source": "observe/plan phase event", "additive": "observe_breath, planning_attention"},
+    {"id": "walk", "source": "step/pivot action label", "additive": "footfall_shift, turn_in_place"},
+    {"id": "guard_pose", "source": "guard/parry/brace action label", "additive": "raised_guard, parry_reaction, brace_root"},
+    {"id": "attack", "source": "cut/thrust/bash/hook_bind/grab/shove/kick action label", "additive": "cut_arc, thrust_line, shield_or_body_bash, hook_bind_strain, grappling_reach, push_extension, leg_attack_extension"},
+    {"id": "idle", "source": "recover action label", "additive": "recovery_settle"}
+  ],
+  "retargeting_bridge": {
+    "truth_joint_count": 16,
+    "presentation_bone_count": 20,
+    "grip_frames": ["grip_r (derived from wrist_r)", "grip_l (derived from wrist_l)"],
+    "transform_type": "translation_rotation_integer_mm"
+  },
+  "presentation_brick_primitives": [
+    {"name": "locomotion", "consumes": "truth poses, step/pivot/recover action labels, capability balance state"},
+    {"name": "guard_transition", "consumes": "guard/parry/brace action labels and facing direction"},
+    {"name": "weapon_handling", "consumes": "weapon id, action labels, grip capability, truth joint mapping"},
+    {"name": "bind_hook", "consumes": "contact event material result and hook/bind action labels"},
+    {"name": "stumble", "consumes": "balance capability delta and contact events"},
+    {"name": "collapse", "consumes": "severe balance loss or injury events"},
+    {"name": "recovery", "consumes": "capability recovery and turn boundary"},
+    {"name": "injury_flinch", "consumes": "injury/anatomy result from contact events"},
+    {"name": "grappling", "consumes": "grab/shove/hook_bind action labels"},
+    {"name": "fight_film_camera", "consumes": "contact events, turn transitions, replay timeline"}
+  ],
+  "runtime_artifact_path": "artifacts/verification/<timestamp>/presentation_bricks/presentation_bricks_sequence.json",
+  "notes": [
+    "PresentationBricks artifacts are generated per-replay by the truth engine binary",
+    "The renderer reads the sequence JSON to select clip IDs per frame",
+    "Procedural pose offsets are applied in the vertex shader based on clip ID",
+    "No NVIDIA MotionBricks SDK is claimed; this is an internal MotionBricks-inspired API"
+  ]
+}

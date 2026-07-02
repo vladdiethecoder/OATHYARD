@@ -56,6 +56,16 @@ packet = {
 (out / 'post_hash_presentation_packet.json').write_text(json.dumps(packet, indent=2, sort_keys=True) + '\n', encoding='utf-8')
 PY
 
+# Unit-049: Generate PresentationBricks (MotionBricks-inspired) animation sequence from truth-after-hash data.
+# This is presentation-only and must not mutate truth.
+# The renderer consumes presentation_bricks_sequence.json to drive procedural pose offsets.
+run_log "$out/presentation_bricks.log" ./target/debug/oathyard presentation-bricks --scenario "$scenario" --out "$out/presentation_bricks"
+if [[ -f "$out/presentation_bricks/presentation_bricks_sequence.json" ]]; then
+  echo "PresentationBricks animation sequence generated: $out/presentation_bricks/presentation_bricks_sequence.json"
+else
+  echo "WARNING: PresentationBricks sequence not generated; captures will use default poses"
+fi
+
 asset_manifest_sha="$(python3 - "$candidate_asset_manifest" <<'PY'
 import hashlib, sys
 from pathlib import Path
