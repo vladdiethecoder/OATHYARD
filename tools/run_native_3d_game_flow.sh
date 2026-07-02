@@ -54,6 +54,7 @@ fi
 # Step 4: Render wgpu spine (if not pre-rendered)
 if [ -n "$renderer_spine" ] && [ -d "$renderer_spine" ]; then
     echo "--- Step 4: Using pre-rendered spine from $renderer_spine ---"
+    mkdir -p "$out/renderer_spine"
     cp -r "$renderer_spine"/* "$out/renderer_spine/" 2>/dev/null || true
 else
     echo "--- Step 4: Rendering wgpu spine ---"
