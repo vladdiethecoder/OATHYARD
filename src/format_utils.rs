@@ -37,14 +37,6 @@ pub(crate) fn json_quote(value: &str) -> String {
     out
 }
 
-pub(crate) fn xml_escape(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-}
-
 pub(crate) fn comma(index: usize, len: usize) -> &'static str {
     if index < len {
         ","

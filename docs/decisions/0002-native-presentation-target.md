@@ -2,19 +2,19 @@
 
 ## Decision
 
-OATHYARD keeps the current dependency-light raw X11/XWayland + software PPM renderer as the local verification backend while defining a stricter production native renderer target.
+OATHYARD keeps the current dependency-light truth/replay/status verification backend while defining a stricter production native renderer target.
 
 No SDL, GLFW, Vulkan, OpenGL abstraction, engine framework, or browser presentation dependency is adopted by this decision. The next production renderer implementation must either deepen the current dependency-zero native path or introduce a backend through a separate ADR with measured build impact, license surface, capture proof, input implications, and deterministic truth-boundary proof.
 
 ## Current Evidence / Boundary
 
-Current status is **3D evidence present, product 3D gameplay not complete**. The current artifacts are local renderer evidence: raw X11/XWayland surfaces, software PPM captures, runtime glTF geometry with nonzero Z depth, all-six-family roster 3D showcase frames, and software-rasterized filled-triangle previews after truth hashes. They prove that 3D source geometry exists and that local presentation probes can consume it; they do not prove a continuous player-facing 3D gameplay renderer.
+Current status is **3D source geometry present, product 3D gameplay renderer not complete**. The current artifacts are nonvisual status evidence plus runtime glTF geometry with nonzero Z depth. They prove that 3D source geometry exists and that presentation probes can consume truth after hashes; they do not prove a continuous player-facing 3D gameplay renderer or accepted visual evidence.
 
 Current machine-readable boundary fields:
 
 - `game_is_3d` must be true when runtime glTF 3D evidence is present.
 - `product_3d_gameplay_complete` must remain false until the production renderer gate is met.
-- `continuous_player_facing_3d_render_loop` is now `true` in the native combat render manifest: the same X11/XWayland runtime path renders a 120-frame player-facing loop across menu, select, planning, combat, and replay screens with timing recorded outside truth and the truth hash verified unchanged. `product_3d_gameplay_complete` remains false until full production fidelity, camera parity, and owner visual acceptance are met.
+- `continuous_player_facing_3d_render_loop` must remain false until a native 3D renderer/camera path emits manifest-backed captures across menu, select, planning, combat, and replay screens with timing recorded outside truth and the truth hash verified unchanged. `product_3d_gameplay_complete` remains false until full production fidelity, camera parity, and owner visual acceptance are met.
 
 The local environment audit records:
 
@@ -23,10 +23,10 @@ The local environment audit records:
 - `vulkaninfo` and `glxinfo` commands are available as runtime/tool probes.
 - `DISPLAY` and `WAYLAND_DISPLAY` are set on the current Linux/Wayland host.
 
-The current native artifacts prove a local presentation path:
+The current native artifacts prove only a local presentation boundary, not accepted visual evidence:
 
-- native roster 3D showcase PPM frames, report, manifest, and contact sheet covering all six default fighter/loadout families rendered from runtime glTF after content hashes;
-- native combat PPM overview, state frames, motion frames, playback-loop final capture, 120-frame truth-rate live loop sample captures, 120-frame continuous player-facing native loop covering menu/select/planning/combat/replay screens through the same X11/XWayland runtime path with presentation-only timing, third-person and first-person software-rasterized 3D mesh viewport PPMs, a 21-frame replay-derived software 3D mesh sequence using depth-sorted filled runtime glTF triangles after truth hashes, visual audit, contact sheet, and integer oblique projection of source-backed 3D runtime glTF geometry with nonzero Z depth;
+- native roster status manifest/report covering all six default fighter/loadout families from runtime glTF after content hashes;
+- native combat status manifest/report consuming replay data after hashes and blocking visual output until a native 3D renderer/camera path exists;
 - truth-after-hash read-only renderer boundary;
 - public-demo-ready and release-candidate-ready remain false.
 
@@ -41,7 +41,7 @@ To count as production 3D gameplay / production renderer complete, OATHYARD must
 - first-person, third-person, and fight-film camera parity where the same truth events remain inspectable;
 - source-backed 3D arena, fighter, weapon, armor, contact, injury, VFX, and UI assets loaded through validated manifests;
 - readable hit, bind, guard, stagger, collapse, injury, recovery, material, and frame-cost states;
-- deterministic capture tooling that can write PPM/PNG or another documented local artifact without mutating truth;
+- deterministic capture tooling that can write manifest-backed native 3D renderer/engine captures without mutating truth;
 - 1280x720, 1280x800, and desktop-window readability evidence;
 - frame timing and startup measurements outside authoritative truth;
 - package smoke that launches the renderer through no-argument executable and desktop-entry paths;
@@ -56,10 +56,9 @@ Renderer, UI, camera, VFX, and audio are presentation consumers only. They may r
 
 Current accepted local verification backend:
 
-- raw X11/XWayland surface creation;
-- software PPM frame generation;
-- deterministic report/manifest/contact-sheet artifacts;
-- no external graphics runtime dependency beyond system X11 surfaces.
+- deterministic truth/replay/status reports and manifests;
+- native 3D renderer capture remains blocked until the backend emits captures with renderer/asset/camera/replay metadata and `truth_mutation=false`;
+- fallback non-3D visual output is not accepted by audits, bundles, or visual verification.
 
 Rejected for immediate adoption in this ADR:
 

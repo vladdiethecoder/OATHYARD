@@ -1,0 +1,89 @@
+#usda 1.0
+(
+    defaultPrim = "ROUND_SHIELD"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "round_shield"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "ROUND_SHIELD"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "620mm round chalk-red offhand shield with raised iron boss, reinforced rim, back grip, leather straps, and blunt-bind-cover contact semantics"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "blunt_bind_cover"
+        int oathyard:length_mm = 620
+    }
+
+    def Mesh "round_chalk_red_disc"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.000, 0.000, 0.310), (0.219, 0.000, 0.219), (0.310, 0.000, 0.000), (0.219, 0.000, -0.219),
+            (0.000, 0.000, -0.310), (-0.219, 0.000, -0.219), (-0.310, 0.000, 0.000), (-0.219, 0.000, 0.219),
+            (0.000, 0.040, 0.300), (-0.212, 0.040, 0.212), (-0.300, 0.040, 0.000), (-0.212, 0.040, -0.212),
+            (0.000, 0.040, -0.300), (0.212, 0.040, -0.212), (0.300, 0.040, 0.000), (0.212, 0.040, 0.212)
+        ]
+        int[] faceVertexCounts = [8, 8, 4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 8, 15, 1, 1, 15, 14, 2, 2, 14, 13, 3, 3, 13, 12, 4, 4, 12, 11, 5, 5, 11, 10, 6, 6, 10, 9, 7, 7, 9, 8, 0]
+        uniform token[] primvars:oathyard_material = ["chalk_red_painted_wood_over_ash_core"]
+        uniform token[] primvars:oathyard_contact = ["broad_cover_surface", "glancing_deflect_face", "bind_cover_plane", "bash_face"]
+    }
+
+    def Mesh "forged_iron_rim"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.000, -0.006, 0.332), (0.235, -0.006, 0.235), (0.332, -0.006, 0.000), (0.235, -0.006, -0.235),
+            (0.000, -0.006, -0.332), (-0.235, -0.006, -0.235), (-0.332, -0.006, 0.000), (-0.235, -0.006, 0.235),
+            (0.000, 0.056, 0.332), (-0.235, 0.056, 0.235), (-0.332, 0.056, 0.000), (-0.235, 0.056, -0.235),
+            (0.000, 0.056, -0.332), (0.235, 0.056, -0.235), (0.332, 0.056, 0.000), (0.235, 0.056, 0.235)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 8, 15, 1, 1, 15, 14, 2, 2, 14, 13, 3, 3, 13, 12, 4, 4, 12, 11, 5, 5, 11, 10, 6, 6, 10, 9, 7, 7, 9, 8, 0]
+        uniform token[] primvars:oathyard_material = ["dark_iron_rim_with_worn_edges"]
+        uniform token[] primvars:oathyard_contact = ["rim_bind_catch", "rim_bash_edge", "weapon_deflection_ring"]
+    }
+
+    def Mesh "raised_boss_and_rivets"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.000, 0.050, 0.102), (0.072, 0.050, 0.072), (0.102, 0.050, 0.000), (0.072, 0.050, -0.072),
+            (0.000, 0.050, -0.102), (-0.072, 0.050, -0.072), (-0.102, 0.050, 0.000), (-0.072, 0.050, 0.072),
+            (0.000, 0.094, 0.000),
+            (0.000, 0.062, 0.185), (0.185, 0.062, 0.000), (0.000, 0.062, -0.185), (-0.185, 0.062, 0.000)
+        ]
+        int[] faceVertexCounts = [3, 3, 3, 3, 3, 3, 3, 3, 4]
+        int[] faceVertexIndices = [0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4, 8, 4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8, 9, 10, 11, 12]
+        uniform token[] primvars:oathyard_material = ["polished_iron_boss_and_rivets"]
+        uniform token[] primvars:oathyard_contact = ["central_boss_bash", "boss_deflect", "rivet_binding_obstacles"]
+    }
+
+    def Mesh "back_grip_and_straps"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.045, -0.060, -0.190), (0.045, -0.060, -0.190), (0.045, -0.060, 0.190), (-0.045, -0.060, 0.190),
+            (-0.036, -0.020, -0.180), (0.036, -0.020, -0.180), (0.036, -0.020, 0.180), (-0.036, -0.020, 0.180),
+            (-0.220, -0.050, -0.070), (0.220, -0.050, -0.070), (0.220, -0.050, -0.025), (-0.220, -0.050, -0.025),
+            (-0.220, -0.050, 0.025), (0.220, -0.050, 0.025), (0.220, -0.050, 0.070), (-0.220, -0.050, 0.070)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 8, 9, 10, 11, 12, 15, 14, 13, 11, 10, 13, 12]
+        uniform token[] primvars:oathyard_material = ["dark_leather_straps_and_ash_grip"]
+        uniform token[] primvars:oathyard_contact = ["offhand_grip_frame", "strap_failure_candidate", "back_hand_clearance"]
+    }
+}

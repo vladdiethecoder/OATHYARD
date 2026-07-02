@@ -28,7 +28,7 @@ skip_suffixes = {
     ".jpeg",
     ".o",
     ".png",
-    ".ppm",
+
     ".rlib",
     ".so",
     ".tar",
@@ -49,7 +49,7 @@ text_suffixes = {
     ".rs",
     ".sha256",
     ".sh",
-    ".svg",
+
     ".toml",
     ".txt",
 }

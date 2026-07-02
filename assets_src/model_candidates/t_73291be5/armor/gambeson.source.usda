@@ -1,0 +1,86 @@
+#usda 1.0
+(
+    defaultPrim = "GAMBESON"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "gambeson"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "GAMBESON"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "quilted linen gambeson armor source, torso skirt and sleeves with cord ties, coverage/gap/deformation metadata only, no truth authority"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:armor_material = "quilted_linen"
+        string oathyard:armor_pieces = "torso_skirt,sleeves"
+        string oathyard:armor_straps = "cord_ties"
+        bool oathyard:truth_mutation = 0
+    }
+
+    def Scope "armor_contract"
+    {
+        customData = {
+            string oathyard:armor_physics_contract = "pieces,mass,inertia,coverage,gaps,deformation,deflection,blunt_transfer,binding,damage,detachment"
+            string oathyard:truth_collision_status = "not_authoritative_candidate_visual_source"
+            string oathyard:runtime_validation_needed = "external_geometry_validation,material_texture_uv_completion,rig_truth_contact_profile_validation,native_renderer_capture_matrix,owner_visual_acceptance"
+        }
+    }
+
+    def Mesh "quilted_torso_skirt_blockout"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.235, 0.780, -0.120), (0.235, 0.780, -0.135), (0.215, 1.365, -0.155), (-0.215, 1.365, -0.125),
+            (-0.230, 0.780, 0.120), (0.230, 0.780, 0.105), (0.205, 1.350, 0.085), (-0.205, 1.355, 0.110),
+            (-0.270, 0.600, -0.105), (0.270, 0.600, -0.120), (0.235, 0.780, -0.135), (-0.235, 0.780, -0.120),
+            (-0.260, 0.600, 0.115), (0.260, 0.600, 0.098), (0.230, 0.780, 0.105), (-0.230, 0.780, 0.120)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["layered_quilted_linen_torso", "blood_wash_absorbent_cloth_candidate"]
+        uniform token[] primvars:oathyard_contact = ["torso_coverage_visual", "skirt_overlap_visual", "non_authoritative_armor_source"]
+    }
+
+    def Mesh "stitched_padding_channels"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.205, 1.265, -0.166), (0.205, 1.265, -0.180), (0.205, 1.295, -0.181), (-0.205, 1.295, -0.166),
+            (-0.205, 1.145, -0.160), (0.205, 1.145, -0.174), (0.205, 1.175, -0.175), (-0.205, 1.175, -0.160),
+            (-0.205, 1.025, -0.154), (0.205, 1.025, -0.168), (0.205, 1.055, -0.169), (-0.205, 1.055, -0.154),
+            (-0.205, 0.905, -0.148), (0.205, 0.905, -0.162), (0.205, 0.935, -0.163), (-0.205, 0.935, -0.148),
+            (-0.185, 0.705, -0.142), (0.185, 0.705, -0.154), (0.185, 0.735, -0.155), (-0.185, 0.735, -0.142)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        uniform token[] primvars:oathyard_material = ["raised_stitched_quilt_channels"]
+        uniform token[] primvars:oathyard_contact = ["padding_channel_visual", "deformation_baffle_hint", "not_truth_collision"]
+    }
+
+    def Mesh "sleeves_and_cord_ties"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.205, 1.335, -0.140), (0.285, 1.325, -0.148), (0.430, 0.940, -0.128), (0.350, 0.945, -0.118),
+            (-0.285, 1.325, -0.110), (-0.205, 1.335, -0.100), (-0.350, 0.945, -0.095), (-0.430, 0.940, -0.105),
+            (-0.245, 1.215, -0.168), (-0.305, 1.205, -0.175), (-0.300, 1.170, -0.172), (-0.240, 1.180, -0.164),
+            (0.240, 1.180, -0.176), (0.300, 1.170, -0.184), (0.305, 1.205, -0.187), (0.245, 1.215, -0.180)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 13, 14, 15]
+        uniform token[] primvars:oathyard_material = ["quilted_linen_sleeves", "dark_cord_ties"]
+        uniform token[] primvars:oathyard_contact = ["sleeve_coverage_visual", "strap_binding_visual", "gap_marker_candidate"]
+    }
+}

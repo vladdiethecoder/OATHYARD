@@ -32,11 +32,8 @@ MANIFEST_PATH = PKG_ROOT / "model_candidate_manifest.json"
 SOURCE_MANIFEST_PATH = SRC_ROOT / "model_source_manifest.json"
 VALIDATION_JSON = VALIDATION_DIR / "model_candidate_animation_ready_validation.json"
 VALIDATION_REPORT = VALIDATION_DIR / "model_candidate_animation_ready_validation_report.md"
-CONTACT_SHEET = ART_ROOT / "model_candidate_contact_sheet.png"
-CONTACT_LEGEND = ART_ROOT / "model_candidate_contact_sheet_legend.md"
 MOTION_JSON = MOTION_DIR / "fighter_motion_evidence.json"
 MOTION_REPORT = MOTION_DIR / "fighter_motion_evidence_report.md"
-MOTION_SVG = MOTION_DIR / "fighter_motion_evidence.svg"
 HANDOFF_PATH = ART_ROOT / "ANIMATION_READY_REPAIR_HANDOFF.md"
 
 CANONICAL_TRUTH_JOINTS = [
@@ -832,43 +829,6 @@ def fill_tri(pix, p0, p1, p2, color):
             if w0 >= -0.01 and w1 >= -0.01 and w2 >= -0.01: pix[y][x] = color
 
 
-def render_contact_sheet(builders, entries):
-    cell_w, cell_h, cols = 250, 210, 6
-    rows = math.ceil(len(builders) / cols); width, height = cols * cell_w, rows * cell_h
-    pix = [[(236, 228, 210) for _ in range(width)] for _ in range(height)]
-    for idx, (builder, entry) in enumerate(zip(builders, entries), start=1):
-        col, row = (idx - 1) % cols, (idx - 1) // cols
-        ox, oy = col * cell_w, row * cell_h
-        for x in range(ox, ox + cell_w):
-            pix[oy][x] = (30, 29, 25); pix[min(height - 1, oy + cell_h - 1)][x] = (30, 29, 25)
-        for y in range(oy, oy + cell_h):
-            pix[y][ox] = (30, 29, 25); pix[y][min(width - 1, ox + cell_w - 1)] = (30, 29, 25)
-        # This generator builds arena floors in the X/Y plane with Z as height/depth.
-        # Top-view contact-sheet projection must therefore use X/Y as the visible axes;
-        # using X/Z collapses arenas into thin lines and creates false visual-corruption evidence.
-        coords = [(p[0], p[1], p[2]) for p in builder.positions]
-        xs, ys = [c[0] for c in coords], [c[1] for c in coords]
-        minx, maxx, miny, maxy = min(xs), max(xs), min(ys), max(ys)
-        scale = min((cell_w - 32) / max(maxx - minx, 0.001), (cell_h - 34) / max(maxy - miny, 0.001))
-        cx, cy = ox + cell_w / 2, oy + cell_h / 2 + 8
-        def project(i):
-            x, y, depth = coords[i]
-            return (cx + (x - (minx + maxx) / 2) * scale, cy - (y - (miny + maxy) / 2) * scale, depth)
-        tris = []
-        for mat in builder.material_order:
-            color = tuple(int(c * 255) for c in PALETTE.get(mat, (0.5, 0.5, 0.5)))
-            indices = builder.groups[mat]; step = max(1, (len(indices) // 3) // 3000)
-            for t in range(0, len(indices), 3 * step):
-                if t + 2 >= len(indices): continue
-                a, b, c = indices[t], indices[t + 1], indices[t + 2]
-                pa, pb, pc = project(a), project(b), project(c)
-                tris.append(((pa[2] + pb[2] + pc[2]) / 3, color, (pa[0], pa[1]), (pb[0], pb[1]), (pc[0], pc[1])))
-        tris.sort(key=lambda item: item[0])
-        for _depth, color, pa, pb, pc in tris: fill_tri(pix, pa, pb, pc, color)
-    write_png_rgb(CONTACT_SHEET, width, height, pix)
-    CONTACT_LEGEND.write_text("# OATHYARD model-candidate contact sheet legend\n\n" + "\n".join(f"{i}. `{e['id']}` — {e['kind']} — `{e['runtime_gltf']}`" for i, e in enumerate(entries, 1)) + "\n", encoding="utf-8")
-
-
 def validate_package(manifest):
     failures = []
     package_checks = {
@@ -925,29 +885,11 @@ def write_motion_evidence(validation):
         lines.append(f"| `{m['id']}` | {clips.get('idle', {}).get('channels', 0)} | {clips.get('walk', {}).get('channels', 0)} | {clips.get('attack', {}).get('channels', 0)} | {m['joint_hierarchy_edges']} | {m['joint_nodes_with_trs_or_matrix']} | {m['unique_inverse_bind_matrix_count']} | {m['one_hot_weight_vertices']}/{m['vertex_count']} | {blended_ok}/{len(CRITICAL_BLEND_JOINTS)} |")
     lines.append("\nReadiness flags remain false. This is structural glTF motion evidence, not owner/native-renderer acceptance.")
     MOTION_REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    width, row_h, header_h = 980, 54, 70
-    height = header_h + row_h * len(fighters) + 50
-    svg = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">', '<rect width="100%" height="100%" fill="#18140f"/>', '<text x="24" y="34" font-family="monospace" font-size="22" fill="#f2e6c9">OATHYARD fighter glTF motion evidence: idle / walk / attack clips present</text>', '<text x="24" y="58" font-family="monospace" font-size="13" fill="#c9b891">green = required clip/channels + non-placeholder rig/weights; readiness flags remain false</text>']
-    xs = [24, 300, 420, 540, 660, 810]
-    for x, h in zip(xs, ["fighter", "idle", "walk", "attack", "hierarchy", "blend joints"]): svg.append(f'<text x="{x}" y="86" font-family="monospace" font-size="13" fill="#d8ccb5">{h}</text>')
-    y = 105
-    for m in fighters:
-        svg.append(f'<text x="24" y="{y+24}" font-family="monospace" font-size="14" fill="#f2e6c9">{m["id"]}</text>')
-        for i, clip in enumerate(REQUIRED_CLIPS):
-            cm = m["clips"].get(clip, {}); ok = cm.get("channels", 0) > 0 and cm.get("nonstatic_channels", 0) > 0
-            fill = "#2d8f55" if ok else "#8f2d2d"; x = 300 + i * 120
-            svg.append(f'<rect x="{x}" y="{y}" width="82" height="32" rx="5" fill="{fill}"/><text x="{x+10}" y="{y+21}" font-family="monospace" font-size="13" fill="#f8f0df">{cm.get("channels", 0)} ch</text>')
-        hok = m["joint_hierarchy_edges"] >= len(CANONICAL_TRUTH_JOINTS) - 1 and m["unique_inverse_bind_matrix_count"] > 1
-        fill = "#2d8f55" if hok else "#8f2d2d"; svg.append(f'<rect x="660" y="{y}" width="110" height="32" rx="5" fill="{fill}"/><text x="670" y="{y+21}" font-family="monospace" font-size="13" fill="#f8f0df">{m["joint_hierarchy_edges"]} edges</text>')
-        blended_ok = sum(1 for c in m["blended_critical_joint_vertex_counts"].values() if c > 0); bok = blended_ok == len(CRITICAL_BLEND_JOINTS) and m["one_hot_weight_vertices"] == 0
-        fill = "#2d8f55" if bok else "#8f2d2d"; svg.append(f'<rect x="810" y="{y}" width="120" height="32" rx="5" fill="{fill}"/><text x="820" y="{y+21}" font-family="monospace" font-size="13" fill="#f8f0df">{blended_ok}/{len(CRITICAL_BLEND_JOINTS)}</text>')
-        y += row_h
-    svg.append('</svg>')
-    MOTION_SVG.write_text("\n".join(svg) + "\n", encoding="utf-8")
+
 
 
 def write_handoff(validation):
-    lines = ["# OATHYARD t_73291be5 animation-ready repair handoff", "", f"Repair task: `{REPAIR_TASK}`", "", "## Runtime package", "", f"- Candidate manifest: `{MANIFEST_PATH}`", f"- Runtime package dir: `{PKG_ROOT}`", f"- Artifact dir: `{ART_ROOT}`", f"- Animation-ready validation JSON: `{VALIDATION_JSON}`", f"- Animation-ready validation report: `{VALIDATION_REPORT}`", f"- Contact sheet: `{CONTACT_SHEET}`", f"- Motion evidence JSON: `{MOTION_JSON}`", f"- Motion evidence report: `{MOTION_REPORT}`", f"- Motion evidence SVG: `{MOTION_SVG}`", "", "## What changed from the QA blocker", "", "- Regenerated/published the missing repo-owned runtime package and artifact directory at the expected OATHYARD paths.", "- Added joint parent-child hierarchy and bind-pose TRS to all six fighter glTFs.", "- Added per-joint inverse bind matrices instead of identity placeholders.", "- Added <=4 influence blended skin weights spanning shoulders, elbows, hips, knees, and ankles.", "- Added glTF animation clips named `idle`, `walk`, and `attack` with non-static sampled channels for every fighter.", "", "## Explicit non-claims", "", "Public demo readiness, release candidate readiness, owner visual acceptance, truth authority, external Khronos validation, Blender/DCC round-trip, and native renderer animation capture remain false/not claimed.", "", f"Validation status: `{'PASSED' if validation['passed'] else 'FAILED'}`"]
+    lines = ["# OATHYARD t_73291be5 animation-ready repair handoff", "", f"Repair task: `{REPAIR_TASK}`", "", "## Runtime package", "", f"- Candidate manifest: `{MANIFEST_PATH}`", f"- Runtime package dir: `{PKG_ROOT}`", f"- Artifact dir: `{ART_ROOT}`", f"- Animation-ready validation JSON: `{VALIDATION_JSON}`", f"- Animation-ready validation report: `{VALIDATION_REPORT}`", f"- Motion evidence JSON: `{MOTION_JSON}`", f"- Motion evidence report: `{MOTION_REPORT}`", "", "## What changed from the QA blocker", "", "- Regenerated/published the missing repo-owned runtime package and artifact directory at the expected OATHYARD paths.", "- Added joint parent-child hierarchy and bind-pose TRS to all six fighter glTFs.", "- Added per-joint inverse bind matrices instead of identity placeholders.", "- Added <=4 influence blended skin weights spanning shoulders, elbows, hips, knees, and ankles.", "- Added glTF animation clips named `idle`, `walk`, and `attack` with non-static sampled channels for every fighter.", "", "## Explicit non-claims", "", "Public demo readiness, release candidate readiness, owner visual acceptance, truth authority, external Khronos validation, Blender/DCC round-trip, and native renderer animation capture remain false/not claimed.", "", f"Validation status: `{'PASSED' if validation['passed'] else 'FAILED'}`"]
     if validation.get("failures"):
         lines.extend(["", "## Failures"]); lines.extend(f"- {f}" for f in validation["failures"])
     HANDOFF_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -959,19 +901,18 @@ def main():
     ensure_dirs()
     assets = gather_assets(); builders = []; manifest_entries = []; source_manifest_entries = []
     for asset in assets:
-        b = build_asset(asset); builders.append(b); bk = budget_kind(asset["id"], asset["kind"]); source_rel_tmp = f"assets_src/model_candidates/{RUN_ID}/{asset['category']}/{asset['id']}.model_source.json"
+        b = build_asset(asset); builders.append(b); bk = budget_kind(asset["id"], asset["kind"]); source_rel_tmp = f"assets/source/model_candidates/{RUN_ID}/{asset['category']}/{asset['id']}.model_source.json"
         output = write_gltf(b, source_rel_tmp, BUDGETS[bk]); source_path = write_source_spec(asset, b, BUDGETS[bk], output)
         entry = {"id": asset["id"], "kind": asset["kind"], "category": asset["category"], "budget_kind": bk, "source": source_path.relative_to(ROOT).as_posix(), "source_abs": source_path.as_posix(), "runtime_gltf": output["gltf"].relative_to(ROOT).as_posix(), "runtime_gltf_abs": output["gltf"].as_posix(), "runtime_bin": output["bin"].relative_to(ROOT).as_posix(), "textures": [p.relative_to(ROOT).as_posix() for p in output["textures"]], "triangles": output["triangles"], "vertices": output["vertices"], "materials": output["materials"], "primitives": output["primitives"], "bounds_min": [round(v, 6) for v in output["bounds_min"]], "bounds_max": [round(v, 6) for v in output["bounds_max"]], "sha256": {"source": sha256_file(source_path), "gltf": sha256_file(output["gltf"]), "bin": sha256_file(output["bin"]), "textures": {p.name: sha256_file(p) for p in output["textures"]}}, "truth_authoritative": False, "public_demo_ready": False, "release_candidate_ready": False, "owner_visual_acceptance": False}
         if asset["kind"] == "fighter": entry["animation_ready_repair"] = {"kanban_task": REPAIR_TASK, "required_clips": REQUIRED_CLIPS, "motion_proof_status": "glTF animation channels present; native/DCC/owner acceptance not claimed"}
         manifest_entries.append(entry); source_manifest_entries.append({k: entry[k] for k in ["id", "kind", "source", "triangles", "sha256"]})
-    manifest = {"schema": "oathyard.model_candidate_manifest.v2", "product": "OATHYARD", "kanban_task": RUN_ID, "repair_task": REPAIR_TASK, "source_basis": ["docs/design/ART_DIRECTION_BRIEF.md", "content/oathyard_content.manifest", "assets_src/fighters/traditions.oysrc", "assets_src/weapons/weapons.oysrc", "assets_src/armor/armor.oysrc", "assets_src/arenas/arenas.oysrc"], "provenance": "repo_owned_original_procedural_model_candidate", "truth_authoritative": False, "public_demo_ready": False, "release_candidate_ready": False, "owner_visual_acceptance": False, "external_khronos_validation_claimed": False, "animation_ready_repair": {"kanban_task": REPAIR_TASK, "scope": "fighter skeleton hierarchy, bind pose, blended skin weights, and idle/walk/attack glTF animation clips", "not_claimed": ["owner visual acceptance", "public demo readiness", "release candidate readiness", "external Khronos validation", "Blender/DCC round trip", "native renderer animation capture"]}, "entries": manifest_entries}
+    manifest = {"schema": "oathyard.model_candidate_manifest.v2", "product": "OATHYARD", "kanban_task": RUN_ID, "repair_task": REPAIR_TASK, "source_basis": ["docs/design/ART_DIRECTION_BRIEF.md", "content/oathyard_content.manifest", "assets/source/oysrc/traditions.oysrc", "assets/source/oysrc/weapons.oysrc", "assets/source/oysrc/armor.oysrc", "assets/source/oysrc/arenas.oysrc"], "provenance": "repo_owned_original_procedural_model_candidate", "truth_authoritative": False, "public_demo_ready": False, "release_candidate_ready": False, "owner_visual_acceptance": False, "external_khronos_validation_claimed": False, "animation_ready_repair": {"kanban_task": REPAIR_TASK, "scope": "fighter skeleton hierarchy, bind pose, blended skin weights, and idle/walk/attack glTF animation clips", "not_claimed": ["owner visual acceptance", "public demo readiness", "release candidate readiness", "external Khronos validation", "Blender/DCC round trip", "native renderer animation capture"]}, "entries": manifest_entries}
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     source_manifest = {"schema": "oathyard.model_candidate_source_manifest.v2", "product": "OATHYARD", "kanban_task": RUN_ID, "repair_task": REPAIR_TASK, "entries": source_manifest_entries, "not_claimed": ["owner visual acceptance", "public demo readiness", "release candidate readiness", "external Khronos validation", "Blender/DCC round trip", "native renderer animation capture"]}
     SOURCE_MANIFEST_PATH.write_text(json.dumps(source_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    render_contact_sheet(builders, manifest_entries)
     validation = validate_package(manifest)
     write_motion_evidence(validation); write_handoff(validation)
-    print(json.dumps({"passed": validation["passed"], "runtime_package_dir": PKG_ROOT.as_posix(), "artifact_dir": ART_ROOT.as_posix(), "validation_json": VALIDATION_JSON.as_posix(), "motion_evidence_json": MOTION_JSON.as_posix(), "motion_evidence_svg": MOTION_SVG.as_posix(), "failures": validation["failures"]}, indent=2, sort_keys=True))
+    print(json.dumps({"passed": validation["passed"], "runtime_package_dir": PKG_ROOT.as_posix(), "artifact_dir": ART_ROOT.as_posix(), "validation_json": VALIDATION_JSON.as_posix(), "motion_evidence_json": MOTION_JSON.as_posix(), "failures": validation["failures"]}, indent=2, sort_keys=True))
     return 0 if validation["passed"] else 1
 
 

@@ -102,7 +102,7 @@ record("layer_truth_forbidden_present", "runtime_authoritative_truth` is forbidd
 
 adr_text = "\n\n".join((root / p).read_text(encoding="utf-8") if (root / p).is_file() else "" for p in required_docs[1:])
 for token in [
-    "current_fidelity_tier: Tier 0 / debug-local verification",
+    "current_fidelity_tier: V0.5 candidate_asset_preview plus Tier 0 debug-local verification",
     "runtime_authoritative_truth",
     "PresentationBricks",
     "OpenUSD or equivalent",

@@ -1,0 +1,84 @@
+#usda 1.0
+(
+    defaultPrim = "ASH_SPEAR"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "ash_spear"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "ASH_SPEAR"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "long ash-wood spear with leaf-shaped steel head, socket collar, butt spike, bracing grip bands, and pierce/brace/blunt contact semantics"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "pierce_brace_blunt"
+        int oathyard:length_mm = 2120
+    }
+
+    def Mesh "ash_wood_long_shaft"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.030, 0.000, -0.900), (0.030, 0.000, -0.900), (0.030, 0.000, 0.870), (-0.030, 0.000, 0.870),
+            (-0.024, 0.048, -0.900), (0.024, 0.048, -0.900), (0.024, 0.048, 0.870), (-0.024, 0.048, 0.870)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        uniform token[] primvars:oathyard_material = ["sealed_ash_wood_grain"]
+        uniform token[] primvars:oathyard_contact = ["shaft_brace_surface", "blunt_shaft_check"]
+    }
+
+    def Mesh "leaf_head_steel"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.052, 0.000, 0.860), (0.052, 0.000, 0.860), (0.035, 0.000, 1.020), (0.000, 0.000, 1.165), (-0.035, 0.000, 1.020),
+            (-0.033, 0.022, 0.870), (0.033, 0.022, 0.870), (0.024, 0.022, 1.010), (0.000, 0.022, 1.150), (-0.024, 0.022, 1.010)
+        ]
+        int[] faceVertexCounts = [5, 5, 4, 4, 4, 4, 3, 3]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 9, 8, 7, 6, 0, 5, 6, 1, 1, 6, 7, 2, 2, 7, 8, 3, 4, 3, 8, 9, 4, 9, 5, 0, 3, 8, 9]
+        uniform token[] primvars:oathyard_material = ["bright_leaf_steel_edge_worn"]
+        uniform token[] primvars:oathyard_contact = ["piercing_tip", "leaf_cutting_edge", "central_ridge"]
+    }
+
+    def Mesh "socket_collar_and_lugs"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.060, 0.000, 0.780), (0.060, 0.000, 0.780), (0.052, 0.000, 0.885), (-0.052, 0.000, 0.885),
+            (-0.050, 0.050, 0.785), (0.050, 0.050, 0.785), (0.044, 0.050, 0.878), (-0.044, 0.050, 0.878),
+            (-0.120, 0.020, 0.805), (-0.060, 0.020, 0.850), (0.060, 0.020, 0.850), (0.120, 0.020, 0.805)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 3, 3]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0, 8, 9, 3, 2, 10, 11]
+        uniform token[] primvars:oathyard_material = ["darkened_steel_socket"]
+        uniform token[] primvars:oathyard_contact = ["brace_lug", "bind_collar"]
+    }
+
+    def Mesh "butt_spike_and_grip_bands"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.040, 0.000, -1.000), (0.040, 0.000, -1.000), (0.028, 0.000, -0.900), (-0.028, 0.000, -0.900),
+            (-0.032, 0.044, -0.990), (0.032, 0.044, -0.990), (0.022, 0.044, -0.905), (-0.022, 0.044, -0.905),
+            (-0.040, 0.000, -0.220), (0.040, 0.000, -0.220), (0.040, 0.000, -0.140), (-0.040, 0.000, -0.140),
+            (-0.032, 0.050, -0.218), (0.032, 0.050, -0.218), (0.032, 0.050, -0.142), (-0.032, 0.050, -0.142)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10, 10, 14, 15, 11]
+        uniform token[] primvars:oathyard_material = ["steel_butt_spike", "dark_leather_brace_band"]
+        uniform token[] primvars:oathyard_contact = ["butt_blunt_puncture", "brace_hand_reference"]
+    }
+}

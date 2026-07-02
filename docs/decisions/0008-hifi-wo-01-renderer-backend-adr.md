@@ -7,7 +7,7 @@ Work order: HIFI-WO-01 from `docs/roadmap/HIGH_FIDELITY_PRODUCTION_WORK_ORDERS.m
 
 ## Decision
 
-OATHYARD will execute HIFI-WO-01 with a dependency-zero raw X11/GLX/OpenGL continuous player-facing native 3D loop spike under `spikes/renderer/002-raw-opengl-player-loop/`.
+OATHYARD will execute HIFI-WO-01 with a dependency-zero blocked native-renderer status/GLX/OpenGL continuous player-facing native 3D loop spike under `spikes/renderer/002-raw-opengl-player-loop/`.
 
 This ADR does not adopt OpenGL, Vulkan, SDL, GLFW, Unity, Unreal, Godot, a browser renderer, or any other backend into production runtime or packaging. It authorizes a disposable spike to measure whether the raw native path can route player-facing screens, cameras, replay-derived truth data, deterministic 1920x1080+ capture, input/audio boundaries, and package impact without adding project dependencies or mutating authoritative truth.
 
@@ -27,10 +27,10 @@ store_readiness: false
 ## Canon and acceptance basis reviewed
 
 - `docs/design/GAME_CANON.md`: renderer/UI/audio/camera consume fixed 120 Hz deterministic truth only after hashes; no presentation writes into gameplay truth.
-- `docs/design/DEMO_SCOPE.md`: raw X11/SVG/PPM/low-poly evidence is local verification only and cannot satisfy high-fidelity product presentation.
+- `docs/design/DEMO_SCOPE.md`: blocked native-renderer status/non-native diagram/non-native frame/low-poly evidence is local verification only and cannot satisfy high-fidelity product presentation.
 - `ACCEPTANCE_MAP.md`: local package gate and high-fidelity production gate are separate; external readiness flags remain false.
 - `docs/decisions/0007-high-fidelity-production-target.md`: high-fidelity target requires continuous native 3D renderer or legally available engine integration plus PBR/equivalent assets, 1920x1080+ captures, benchmark review, and owner visual acceptance.
-- `docs/decisions/0002-native-presentation-target.md`: current raw X11/PPM path is local evidence; backend adoption requires measured ADR and truth-boundary proof.
+- `docs/decisions/0002-native-presentation-target.md`: current blocked native-renderer status/non-native frame path is local evidence; backend adoption requires measured ADR and truth-boundary proof.
 - `docs/decisions/0005-renderer-toolchain-spike-path.md`: raw OpenGL is the smallest measured next spike because `x11`, `egl`, and `gl` metadata are available while `vulkan`, `sdl2`, and `glfw3` pkg-config metadata are absent.
 - `docs/decisions/0006-raw-opengl-native-loop-spike-result.md`: previous raw OpenGL loop validated context/capture feasibility only; visuals remained debug/diagnostic and were not product evidence.
 
@@ -38,7 +38,7 @@ store_readiness: false
 
 | Candidate | Current measurement | Decision for this slice |
 | --- | --- | --- |
-| Dependency-zero raw X11/GLX/OpenGL spike | `pkg-config --modversion x11 gl egl` reported `1.8.13`, `1.2`, `1.5`; `glxinfo -B` reported direct rendering on display `:0` and OpenGL/Mesa renderer metadata; previous spike rendered 22 glTF assets and 1920x1080 PPM. | Use only as disposable HIFI-WO-01 spike. No production/package adoption. |
+| Dependency-zero blocked native-renderer status/GLX/OpenGL spike | `pkg-config --modversion x11 gl egl` reported `1.8.13`, `1.2`, `1.5`; `glxinfo -B` reported direct rendering on display `:0` and OpenGL/Mesa renderer metadata; previous spike rendered 22 glTF assets and 1920x1080 non-native frame. | Use only as disposable HIFI-WO-01 spike. No production/package adoption. |
 | Vulkan/direct-loader path | `vulkaninfo --summary` previously showed runtime-capable GPUs, but `pkg-config --modversion vulkan` currently fails. | Blocked for adoption until a separate direct-loader/header spike records license/build/package/capture impact. |
 | SDL2 / GLFW | `pkg-config --modversion sdl2 glfw3` currently fails. | Do not adopt; missing local metadata and adds unmeasured window/input dependency. |
 | Unity / Unreal / Godot | Forbidden for this slice by work order and AGENTS rules unless owner approves a new ADR. | Rejected for this slice. |
@@ -97,7 +97,7 @@ The authorized spike must provide:
 - camera-mode metadata for `third_person_verdict_ring`, `first_person_guard_line`, and `fight_film_orbit` over the same verified replay/content hashes;
 - current runtime glTF geometry loaded from `assets/runtime_manifest.json` with nonzero-Z assets;
 - replay verification before the render/capture path and again after capture;
-- at least one current-run 1920x1080+ PPM capture, not an upscale;
+- at least one current-run 1920x1080+ non-native frame capture, not an upscale;
 - frame timing measured outside authoritative truth;
 - manifest fields proving `truth_mutation: false`, `project_dependency_adopted: false`, `production_renderer_complete: false`, `owner_visual_acceptance_claimed: false`, `public_demo_ready: false`, and `release_candidate_ready: false`.
 
@@ -140,7 +140,7 @@ Audio remains unchanged:
 
 ## Capture impact
 
-The spike capture path writes local PPM files from the current OpenGL framebuffer. PPM captures remain local evidence only. They do not prove high-fidelity product presentation, owner visual acceptance, public demo readiness, release-candidate readiness, legal clearance, trademark clearance, or store readiness.
+The spike capture path writes local non-native frame files from the current OpenGL framebuffer. non-native frame captures remain local evidence only. They do not prove high-fidelity product presentation, owner visual acceptance, public demo readiness, release-candidate readiness, legal clearance, trademark clearance, or store readiness.
 
 The 1920x1080 capture requirement for HIFI-WO-01 is a current-run technical proof requirement; it is not high-fidelity visual acceptance by itself.
 

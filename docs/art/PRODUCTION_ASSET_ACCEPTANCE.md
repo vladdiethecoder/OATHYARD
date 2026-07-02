@@ -1,7 +1,7 @@
 # Production Asset Acceptance
 
 Status: Active fail-closed checklist.
-Date: 2026-06-30
+Date: 2026-07-02
 
 ## Universal production asset requirements
 
@@ -21,6 +21,10 @@ Every production asset must have:
 - truth-boundary classification.
 
 Candidate-only, placeholder, unlicensed, unrigged, untextured, non-loaded, or debug-only assets must not be listed as production-ready.
+
+The generated asset audit must also emit a machine-readable state/blocker packet for every candidate asset. Required current packet files are `generated_asset_audit.{json,md,csv}`, `blocked_asset_evidence.md`, `asset_state_summary.md`, `generated_asset_quarantine_manifest.json`, and `generated_asset_production_unblock_matrix.json` under the requested audit output directory and `artifacts/asset_audit/latest/`.
+
+Candidate material-channel presence is not production material acceptance. A candidate can have base/normal/ORM channels and still be blocked on production material quality, texture resolution, native production-renderer capture, package inclusion, owner acceptance, or license/commercial clearance.
 
 ## Fighter assets
 
@@ -92,7 +96,7 @@ Required:
 The acceptance packet must include outputs from:
 
 ```sh
-./tools/audit_rodin_assets.sh
+./tools/audit_generated_assets.sh
 ./tools/validate_assets.sh
 ./tools/render_asset_previews.sh
 ./tools/capture_high_fidelity_screens.sh
@@ -101,3 +105,5 @@ The acceptance packet must include outputs from:
 ```
 
 Owner visual acceptance, public-demo readiness, release-candidate readiness, legal clearance, trademark clearance, and store readiness remain false unless separately and explicitly evidenced.
+
+Current Unit-046 audit state remains fail-closed: 22 candidate/model assets audited, 22 quarantined, 22 candidate-only/license-pending, 0 production-ready, and 0 native production-renderer captures.

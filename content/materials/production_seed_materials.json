@@ -1,0 +1,42 @@
+{
+  "schema": "oathyard.production_seed_materials.v1",
+  "material_count": 4,
+  "materials": [
+    {
+      "asset_id": "longsword",
+      "channels": ["base_color", "normal", "orm"],
+      "base_color_texture": "assets/textures/production_seed/longsword_base.png",
+      "normal_texture": "assets/textures/production_seed/longsword_normal.png",
+      "orm_texture": "assets/textures/production_seed/longsword_orm.png",
+      "placeholder_textures": true,
+      "acceptance_state": "source_approved"
+    },
+    {
+      "asset_id": "witness_stone",
+      "channels": ["base_color", "normal", "orm"],
+      "base_color_texture": "assets/textures/production_seed/witness_stone_base.png",
+      "normal_texture": "assets/textures/production_seed/witness_stone_normal.png",
+      "orm_texture": "assets/textures/production_seed/witness_stone_orm.png",
+      "placeholder_textures": true,
+      "acceptance_state": "source_approved"
+    },
+    {
+      "asset_id": "gambeson",
+      "channels": ["base_color", "normal", "orm"],
+      "base_color_texture": "assets/textures/production_seed/gambeson_base.png",
+      "normal_texture": "assets/textures/production_seed/gambeson_normal.png",
+      "orm_texture": "assets/textures/production_seed/gambeson_orm.png",
+      "placeholder_textures": true,
+      "acceptance_state": "source_approved"
+    },
+    {
+      "asset_id": "fighter_mannequin",
+      "channels": ["base_color", "normal", "orm"],
+      "base_color_texture": "assets/textures/production_seed/fighter_mannequin_base.png",
+      "normal_texture": "assets/textures/production_seed/fighter_mannequin_normal.png",
+      "orm_texture": "assets/textures/production_seed/fighter_mannequin_orm.png",
+      "placeholder_textures": true,
+      "acceptance_state": "source_approved"
+    }
+  ]
+}

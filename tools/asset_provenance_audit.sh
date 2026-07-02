@@ -15,8 +15,10 @@ root = Path.cwd()
 
 runtime_manifest_path = root / "assets/runtime_manifest.json"
 content_manifest_path = root / "content/oathyard_content.manifest"
-model_source_manifest_path = root / "assets_src/model_candidates/t_73291be5/model_source_manifest.json"
+model_source_manifest_path = root / "assets/source/model_candidates/t_73291be5/model_source_manifest.json"
 provenance_doc_path = root / "assets_src/provenance.md"
+production_manifest_path = root / "assets/manifests/production_visual_manifest.json"
+candidate_manifest_path = root / "assets/manifests/production_candidate_visual_manifest.json"
 pipeline_path = root / "tools/asset_pipeline.py"
 
 checks = []
@@ -71,6 +73,15 @@ if not runtime_manifest_path.is_file() or not content_manifest_path.is_file():
 runtime_manifest = json.loads(runtime_manifest_path.read_text(encoding="utf-8"))
 runtime_entries = runtime_manifest.get("entries", [])
 content_sections = parse_content_manifest_sections(content_manifest_path)
+production_manifest = {}
+if production_manifest_path.is_file():
+    production_manifest = json.loads(production_manifest_path.read_text(encoding="utf-8"))
+    if production_manifest.get("production_candidate_manifest"):
+        candidate_manifest_path = root / str(production_manifest.get("production_candidate_manifest"))
+candidate_manifest = {}
+if candidate_manifest_path.is_file():
+    candidate_manifest = json.loads(candidate_manifest_path.read_text(encoding="utf-8"))
+candidate_entries = {str(entry.get("id", "")): entry for entry in candidate_manifest.get("entries", [])}
 
 # model_source_manifest is optional for older assets; only audit if present
 model_source_entries = []
@@ -79,7 +90,7 @@ if model_source_manifest_path.is_file():
     model_source_entries = model_source_manifest.get("entries", [])
 
 # ── Check 2: Every runtime manifest entry has required provenance fields ──
-required_runtime_fields = ["id", "kind", "source", "runtime_gltf", "runtime_mesh", "preview", "provenance", "hash"]
+required_runtime_fields = ["id", "kind", "source", "runtime_gltf", "runtime_mesh", "provenance", "hash"]
 for entry in runtime_entries:
     asset_id = entry.get("id", "<unknown>")
     for field in required_runtime_fields:
@@ -92,20 +103,42 @@ for entry in runtime_entries:
     source_path = root / source_rel if source_rel else None
     check(f"entry_{asset_id}_source_file_exists", source_path and source_path.is_file(), str(source_path))
 
-# ── Check 4: Runtime files exist (mesh, glTF, preview) ──
+# ── Check 4: Runtime files exist; visual preview evidence is candidate/native-capture metadata ──
+check(
+    "runtime_preview_optional_under_3d_only_policy",
+    True,
+    "Runtime preview files are optional under the 3D-only visual evidence policy; candidate/native capture metadata is audited separately",
+)
 for entry in runtime_entries:
     asset_id = entry.get("id", "<unknown>")
     runtime_mesh_rel = entry.get("runtime_mesh", "")
     runtime_gltf_rel = entry.get("runtime_gltf", "")
-    preview_rel = entry.get("preview", "")
 
     mesh_path = root / runtime_mesh_rel if runtime_mesh_rel else None
     gltf_path = root / runtime_gltf_rel if runtime_gltf_rel else None
-    preview_path = root / preview_rel if preview_rel else None
+    candidate_entry = candidate_entries.get(str(asset_id), {})
+    candidate_paths = []
+    candidate_preview_rel = candidate_entry.get("preview_render", {}).get("path", "") if candidate_entry else ""
+    if candidate_preview_rel:
+        candidate_paths.append(root / str(candidate_preview_rel))
+    candidate_captures = candidate_entry.get("in_engine_screenshot", {}).get("captures", {}) if candidate_entry else {}
+    if isinstance(candidate_captures, dict):
+        for capture_rel in candidate_captures.values():
+            if capture_rel:
+                candidate_paths.append(root / str(capture_rel))
 
     check(f"entry_{asset_id}_runtime_mesh_exists", mesh_path and mesh_path.is_file(), str(mesh_path))
     check(f"entry_{asset_id}_runtime_gltf_exists", gltf_path and gltf_path.is_file(), str(gltf_path))
-    check(f"entry_{asset_id}_preview_exists", preview_path and preview_path.is_file(), str(preview_path))
+    check(
+        f"entry_{asset_id}_candidate_visual_evidence_recorded",
+        bool(candidate_entry),
+        f"candidate manifest entry for {asset_id}",
+    )
+    check(
+        f"entry_{asset_id}_candidate_visual_evidence_file_valid",
+        any(path.is_file() for path in candidate_paths),
+        ", ".join(str(path) for path in candidate_paths) or f"no candidate visual evidence paths for {asset_id}",
+    )
 
 # ── Check 5: Declared hash matches recomputed source hash ──
 # The asset pipeline computes hash = sha256(source_text + "\n" + manifest_row)
@@ -216,8 +249,10 @@ manifest = {
     "schema": "oathyard.asset_provenance_audit.v1",
     "tool": "tools/asset_provenance_audit.sh",
     "passed": passed,
+    "runtime_preview_optional_under_3d_only_policy": True,
     "runtime_entry_count": len(runtime_entries),
     "model_source_entry_count": len(model_source_entries),
+    "candidate_visual_entry_count": len(candidate_entries),
     "failed_check_count": len(failures),
     "checks": checks,
 }
@@ -233,15 +268,17 @@ report = [
     f"Status: {'PASSED' if passed else 'FAILED'}",
     f"- Runtime entries audited: `{len(runtime_entries)}`",
     f"- Model source entries audited: `{len(model_source_entries)}`",
+    f"- Candidate visual entries audited: `{len(candidate_entries)}`",
     f"- Failed checks: `{len(failures)}`",
     "",
     "Scope: Every production asset must have source, provenance, license record, runtime export, manifest entry, hash, and validation. No placeholder, copied, scraped, unlicensed, or AI-derived-without-provenance assets may enter the production manifest.",
+    "Runtime preview files are optional under the 3D-only visual evidence policy; candidate/native capture evidence is audited through the production-candidate visual manifest without promoting visual readiness.",
     "",
     "Checks performed:",
     "1. Required provenance documents exist",
     "2. Every runtime entry has all required provenance fields",
     "3. Every entry's source file exists on disk",
-    "4. Runtime mesh, glTF, and preview files exist",
+    "4. Runtime mesh and glTF files exist; candidate/native visual evidence metadata exists",
     "5. Declared hash matches recomputed source hash (sha256 of source_text + manifest row)",
     "6. No entry uses forbidden provenance markers (placeholder/copied/scraped/unlicensed)",
     "7. Model source candidates have complete provenance fields",

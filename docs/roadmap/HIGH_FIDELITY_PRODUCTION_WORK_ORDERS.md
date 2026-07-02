@@ -28,7 +28,7 @@ Current accepted facts:
 - Truth runs fixed 120 Hz and remains deterministic integer/fixed-point gameplay state only.
 - Renderer, UI, audio, VFX, camera, settings, and fight-film systems consume truth only after authoritative hashes and never mutate truth.
 - There is no HP/stat shortcut path: no hit points, arbitrary damage numbers, armor points, DPS, crit chance, super meter, perks, unlock stats, or speed/damage bonuses as truth.
-- Current raw X11/XWayland, SVG, PPM, low-poly glTF, diagnostic contact sheets, and software-raster captures are local verification evidence only.
+- Current blocked native-renderer status, non-native diagram, non-native frame, low-poly glTF, diagnostic image rollups, and non-native local raster captures are local verification evidence only.
 - The current final-acceptance bundle may pass the local package-candidate gate while the high-fidelity native-PC 3D production visual gate remains failed/blocking.
 
 Readiness flags remain false in this work package:
@@ -104,7 +104,7 @@ Acceptance evidence:
 
 - `./tools/audit_truth.sh` passes after code-impacting implementation cards.
 - `./tools/audit_readiness.sh . artifacts/readiness/<card>` passes after readiness/status/doc changes.
-- No downstream card uses raw X11, PPM, low-poly glTF, diagnostic contact sheets, or metadata-only checks as high-fidelity product evidence.
+- No downstream card uses blocked native-renderer status, non-native frame, low-poly glTF, diagnostic image rollups, or metadata-only checks as high-fidelity product evidence.
 
 Forbidden shortcuts:
 
@@ -189,7 +189,7 @@ Exact deliverables:
    - package size delta;
    - explicit note that artifact generation throughput is not interactive product FPS.
 5. Pixel/visual review packet:
-   - contact sheet or image index for all captures;
+   - native 3D capture manifest/index for all captures;
    - failed-artifact triage file;
    - direct image inspection notes by `mediaqa` or owner.
 
@@ -243,7 +243,7 @@ Exact deliverables for each asset:
    - in-combat or in-selection context view;
    - 1920x1080+ where HIFI-WO-02 is available.
 5. QA criteria from `docs/design/ART_DIRECTION_BRIEF.md`:
-   - primary silhouette survives gameplay-distance contact sheet;
+   - primary silhouette survives gameplay-distance native 3D capture;
    - materials differentiated by geometry/normals/masks, not recolor alone;
    - functional negative space preserved;
    - fighter/loadout identity follows the per-asset revision targets.
@@ -292,7 +292,7 @@ Exact deliverables:
    - neutral material turntable or closeup;
    - in-arena lit context;
    - pre/post contact material change driven by replay trace;
-   - metal/leather/cloth/stone comparison sheet.
+   - metal/leather/cloth/stone native 3D comparison capture set.
 4. Truth-boundary proof:
    - material masks read contact/injury/material-solve events after hash;
    - material changes do not modify action costs, contacts, injuries, capability deltas, or replay hashes.
@@ -438,7 +438,7 @@ Owner visual acceptance packet deliverables:
    - `production_renderer_complete: false` until accepted by the correct gate;
    - `owner_visual_acceptance: false` until owner marks acceptance.
 3. `visual_benchmark_report.md` comparing the current packet to the criteria above.
-4. `visual_review_contact_sheet.*` and per-capture image paths.
+4. Native 3D renderer capture manifest and per-capture image paths.
 5. `failed_visual_artifacts.txt` with missing/failing captures; empty only when every packet artifact exists and hashes verify.
 6. `owner_review_checklist.md` with explicit accept/reject rows for visual, input, audio, accessibility, demo scope, and blocker notes.
 7. Owner response artifact recorded separately after human review; automated agents may prepare the packet but cannot sign it.

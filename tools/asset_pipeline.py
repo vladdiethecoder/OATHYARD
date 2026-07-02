@@ -16,13 +16,12 @@ RUNTIME_MANIFEST = ASSETS / "runtime_manifest.json"
 PROVENANCE_REPORT = ASSETS / "asset_provenance_report.md"
 VALIDATION_REPORT = ASSETS / "asset_validation_report.md"
 GLTF_VALIDATION_REPORT = ASSETS / "gltf_validation_report.md"
-PREVIEWS = ASSETS / "previews"
 GLTF_DIR = ASSETS / "gltf"
 TEXTURE_DIR = ASSETS / "textures"
 PBR_MATERIAL_SOURCE = ASSETS_SRC / "materials" / "pbr_materials.oysrc"
 PBR_MATERIAL_DIR = ASSETS / "materials"
 PBR_MATERIAL_MANIFEST = PBR_MATERIAL_DIR / "pbr_surface_manifest.json"
-PBR_MATERIAL_ATLAS = PBR_MATERIAL_DIR / "pbr_surface_atlas.ppm"
+PBR_MATERIAL_ATLAS = PBR_MATERIAL_DIR / "pbr_surface_evidence.json"
 
 PBR_REQUIRED_CHANNELS = [
     "albedo",
@@ -114,7 +113,6 @@ def parse_manifest():
 def build():
     sections = parse_manifest()
     ASSETS.mkdir(exist_ok=True)
-    PREVIEWS.mkdir(parents=True, exist_ok=True)
     GLTF_DIR.mkdir(parents=True, exist_ok=True)
     TEXTURE_DIR.mkdir(parents=True, exist_ok=True)
     PBR_MATERIAL_DIR.mkdir(parents=True, exist_ok=True)
@@ -129,8 +127,6 @@ def build():
             source_path = ROOT / source
             source_text = source_path.read_text(encoding="utf-8")
             digest = sha256_text(source_text + "\n" + row)
-            preview_path = PREVIEWS / f"{asset_id}.svg"
-            preview_path.write_text(render_preview(asset_id, kind, digest), encoding="utf-8")
             material_maps = {}
             if kind == "arenas":
                 material_maps = write_arena_material_maps(
@@ -143,9 +139,9 @@ def build():
                     "id": asset_id,
                     "kind": kind,
                     "source": source.as_posix(),
-                    "preview": preview_path.relative_to(ROOT).as_posix(),
+                    "preview": "",
                     "runtime_mesh": f"assets/runtime/{asset_id}.mesh.json",
-                    "runtime_gltf": f"assets/gltf/{asset_id}.gltf",
+                    "runtime_gltf": f"assets/runtime/candidate/gltf/{asset_id}.gltf",
                     "material_maps": material_maps,
                     "pbr_material_profile": material_profile_for_entry(asset_id, kind, pbr_surfaces),
                     "hash": digest,
@@ -263,11 +259,8 @@ def validate():
                         failures.append(f"{asset_id} arena source must preserve rectangular-drill composition")
                     if "no_ring_backdrop" not in fields.get("silhouette_context", ""):
                         failures.append(f"{asset_id} arena source must quarantine verdict-ring-like backdrop language")
-            preview = PREVIEWS / f"{asset_id}.svg"
             runtime = ASSETS / "runtime" / f"{asset_id}.mesh.json"
             gltf = GLTF_DIR / f"{asset_id}.gltf"
-            if RUNTIME_MANIFEST.exists() and not preview.exists():
-                failures.append(f"{asset_id} missing preview {preview}")
             if RUNTIME_MANIFEST.exists() and not runtime.exists():
                 failures.append(f"{asset_id} missing runtime asset {runtime}")
             if RUNTIME_MANIFEST.exists() and not gltf.exists():
@@ -307,23 +300,6 @@ def validate():
             print(f"asset validation failed: {failure}", file=sys.stderr)
         raise SystemExit(1)
     print("asset validation passed")
-
-
-def render_preview(asset_id: str, kind: str, digest: str) -> str:
-    color = "#" + digest[:6]
-    title = f"{asset_id} {kind}"
-    return "\n".join(
-        [
-            '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220" viewBox="0 0 360 220">',
-            '<rect width="360" height="220" fill="#ece3d2"/>',
-            f'<rect x="24" y="24" width="312" height="172" fill="{color}" opacity="0.82"/>',
-            '<path d="M76 168 L128 68 L180 168 Z M196 168 L248 52 L306 168 Z" fill="#161817" opacity="0.66"/>',
-            f'<text x="28" y="40" font-family="monospace" font-size="16" fill="#161817">{escape(title)}</text>',
-            f'<text x="28" y="190" font-family="monospace" font-size="11" fill="#161817">hash {digest[:16]}</text>',
-            "</svg>",
-            "",
-        ]
-    )
 
 
 def parse_pbr_material_source():
@@ -393,7 +369,7 @@ def normalize_pbr_surface(fields):
 def write_pbr_material_library(surfaces):
     coverage = pbr_material_coverage(surfaces)
     pixels = pbr_material_atlas_pixels(surfaces, 1024, 512)
-    write_ppm_rgb(PBR_MATERIAL_ATLAS, 1024, 512, pixels)
+    write_pbr_material_evidence(PBR_MATERIAL_ATLAS, 1024, 512, pixels)
     manifest = {
         "schema": "oathyard.pbr_surface_manifest.v1",
         "product": "OATHYARD",
@@ -403,8 +379,8 @@ def write_pbr_material_library(surfaces):
         "required_channels": coverage,
         "all_required_channels_covered": all(item["covered"] for item in coverage),
         "asset_classes_covered": sorted({klass for surface in surfaces for klass in surface["applies_to"]}),
-        "surface_atlas": PBR_MATERIAL_ATLAS.relative_to(ROOT).as_posix(),
-        "surface_atlas_hash": sha256_file(PBR_MATERIAL_ATLAS),
+        "nonvisual_material_evidence": PBR_MATERIAL_ATLAS.relative_to(ROOT).as_posix(),
+        "nonvisual_material_evidence_hash": sha256_file(PBR_MATERIAL_ATLAS),
         "truth_authoritative": False,
         "presentation_only": True,
         "material_maps_affect_replay_hash": False,
@@ -533,11 +509,19 @@ def pbr_surface_pixel(surface, x, y):
     )
 
 
-def write_ppm_rgb(path: Path, width: int, height: int, pixels):
-    payload = bytearray(f"P6\n{width} {height}\n255\n", "ascii")
-    for r, g, b in pixels:
-        payload.extend([r, g, b])
-    path.write_bytes(bytes(payload))
+def write_pbr_material_evidence(path: Path, width: int, height: int, pixels):
+    payload = bytes(channel for rgb in pixels for channel in rgb)
+    evidence = {
+        "schema": "oathyard.pbr_surface_evidence.v1",
+        "width": width,
+        "height": height,
+        "pixel_hash": hashlib.sha256(payload).hexdigest(),
+        "distinct_color_count": len(set(pixels)),
+        "visual_evidence": False,
+        "native_3d_render_capture": False,
+        "truth_mutation": False,
+    }
+    path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def render_gltf(entry):

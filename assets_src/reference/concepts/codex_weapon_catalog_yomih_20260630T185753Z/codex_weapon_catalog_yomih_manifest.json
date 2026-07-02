@@ -73,7 +73,7 @@
   "created_utc": "2026-06-30T18:57:53Z",
   "design_instruction": "Weapon and weapon/martial arts variety should be heavily inspired by YOMIH mechanics while avoiding copied YOMI/YOMIH names, characters, sprites, UI, exact weapons, or proprietary identity.",
   "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
-  "overview_contact_sheet": {
+  "overview_contact_index": {
     "file": "assets_src/reference/concepts/codex_weapon_catalog_yomih_20260630T185753Z/codex_weapon_catalog_yomih_overview.png",
     "sha256": "60a0b915293745526d7ba56ccc4ac187177528a5ab488e75cea755a6b73a304b",
     "size": [

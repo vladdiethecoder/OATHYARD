@@ -24,7 +24,7 @@ Hard boundary:
 - OATHYARD is a deterministic native-PC 3D planned-time physical melee duel game.
 - Truth remains fixed 120 Hz, deterministic, integer/fixed-point, replayable, and hash-audited.
 - Renderer, UI, audio, VFX, camera, fight-film, settings, accessibility, materials, post-processing, animation, and facial/cloth/cosmetic bones are presentation only unless a separate truth-promotion ADR passes the canon gates.
-- Raw X11/XWayland, SVG, PPM, software-raster captures, debug overlays, diagnostic contact sheets, low-poly glTF, cubes/capsules/primitives, wireframes, and metadata-only checks are local verification evidence only. They cannot pass this document.
+- Blocked native-renderer status, non-native diagram, non-native frame, non-native local raster captures, debug overlays, diagnostic image rollups, low-poly glTF, cubes/capsules/primitives, wireframes, and metadata-only checks are local verification evidence only. They cannot pass this document.
 - Elden Ring and For Honor are quality/readability references only. OATHYARD must not copy their names, assets, silhouettes, factions, UI, animations, lore, characters, textures, music, sounds, or proprietary mechanics.
 - Automated QA/media review can pass or fail the acceptance packet. Only the owner can set `owner_visual_acceptance:true`; legal/store/public-demo gates remain separate.
 
@@ -146,7 +146,7 @@ owner_visual_acceptance: false until owner explicitly accepts
 
 ### 2.3 Evidence minimums
 
-- Images must be at least 1920x1080 native pixels. 1280x720, 1280x800, 960x540, upscaled captures, and cropped debug contact sheets fail the high-fidelity gate.
+- Images must be at least 1920x1080 native pixels. 1280x720, 1280x800, 960x540, upscaled captures, and cropped debug image rollups fail the high-fidelity gate.
 - 2560x1440 captures are a stretch target where hardware/toolchain supports them; lack of 1440p is non-blocking only if 1080p native passes and public/demo requirements do not demand 1440p.
 - Every capture must be generated after replay verification when it represents combat, fight-film, contact, injury, consequence, or replay UI.
 - Every asset visible in product captures must be loaded from the production asset manifest, not a debug primitive fallback.
@@ -216,7 +216,7 @@ Hard pass requires all of the following:
 ### 4.3 Fail examples
 
 - Flat gray/black background with primitive fighters.
-- Raw PPM/SVG/X11/debug capture presented as mood evidence.
+- Non-native frame/non-native diagram/X11/debug capture presented as mood evidence.
 - One flat floor disk or noisy decals instead of authored arena identity.
 - Dark-fantasy mood achieved by crushing detail into black.
 - Fog/dust hides feet, weapon arcs, or contact.
@@ -434,7 +434,7 @@ Hard pass requires:
 
 - 1280x720 frame resized to 1920x1080.
 - Asset closeup at 1920x1080 but gameplay/contact frame at 1280x720.
-- Debug contact sheet composed at 1920x1080 from lower-resolution tiles and presented as product capture.
+- Debug image rollup composed at 1920x1080 from lower-resolution tiles and presented as product capture.
 - UI readable only because of debug overlay zoom, not in real product frame.
 
 ## 9. Frame-rate and performance targets
@@ -492,7 +492,7 @@ Any item below blocks high-fidelity visual acceptance and native public-demo rea
 1. Evidence/source blockers
    - Required capture missing.
    - Capture below 1920x1080, upscaled from lower resolution, stale, unhashable, or not from current executable/assets.
-   - Capture is raw X11/PPM/SVG/debug/software-raster/low-poly/primitive evidence instead of production renderer output.
+   - Capture is blocked native-renderer status/non-native frame/non-native diagram/debug/non-native local raster/low-poly/primitive evidence instead of production renderer output.
    - Manifest lacks replay hash, content/asset hashes, renderer/backend id, command, resolution, or capture file hash.
    - Media QA did not inspect actual pixels/frames.
 2. Readiness honesty blockers
@@ -642,7 +642,7 @@ visual_acceptance_manifest.json
 visual_reference_manifest.json
 capture_manifest.json
 visual_benchmark_report.md
-visual_review_contact_sheet.png or .jpg
+native_3d_visual_capture_manifest.json
 per_capture_reviews/*.md or .json
 failed_visual_artifacts.txt
 owner_review_checklist.md

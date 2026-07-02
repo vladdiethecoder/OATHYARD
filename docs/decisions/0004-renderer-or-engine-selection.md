@@ -6,7 +6,7 @@ Supersedes/clarifies: `docs/decisions/0009-production-renderer-selection.md` whe
 
 ## Context
 
-The current OATHYARD truth core is Rust and deterministic. Current visual evidence includes software/PPM/SVG/debug-local render paths and production-candidate 1920x1080 image evidence, but not a continuous high-fidelity native-PC 3D renderer or engine path.
+The current OATHYARD truth core is Rust and deterministic. Current accepted visual evidence must come from a native 3D renderer or engine capture path; older fallback/debug image paths are historical scaffolding only and are no longer accepted by audits.
 
 Fresh local inspection on 2026-06-30 recorded:
 
@@ -33,7 +33,7 @@ Use this selection order:
 2. **Godot native 3D bridge** — practical fallback because Godot is installed and MIT-licensed; requires a separate Rust-truth-to-Godot presentation packet bridge and package/capture ADR before runtime adoption.
 3. **Custom Vulkan/wgpu/direct renderer** — fallback if engine dependencies or Bevy/Godot integration fail; highest implementation cost but maximum control.
 4. **Unreal Engine** — not adopted until Unreal is installed and the EULA/royalty/source-build/asset pipeline/legal gates are accepted by owner; strongest rendering features but largest external gate.
-5. **Raw X11/PPM/SVG/software renderers** — local verification backends only; never production high-fidelity presentation.
+5. **Standalone fallback/debug image paths** — historical scaffolding only; no longer accepted by visual verification gates.
 6. **Browser/HTML** — QA harness only; rejected for native product presentation.
 
 No renderer/engine may become authoritative truth. Renderer, animation, camera, UI, VFX, audio, cloth, and post-processing consume truth state only after hash/replay verification.

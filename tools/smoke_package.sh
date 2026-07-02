@@ -28,8 +28,6 @@ test -x "$package_dir/bin/oathyard"
 
 (
   cd "$package_dir"
-  ./bin/oathyard native-roster-showcase \
-    --out "$smoke_root_abs/native_roster" >/dev/null
   ./bin/oathyard native-combat-render \
     --scenario examples/duels/basic_oathyard.duel \
     --out "$smoke_root_abs/native_combat" >/dev/null
@@ -44,13 +42,12 @@ test -s "$smoke_root_abs/run_artifacts/duel_report.md"
 test -s "$smoke_root_abs/run_artifacts/fight_film_manifest.json"
 test -s "$smoke_root_abs/export_bundle/export_bundle_manifest.json"
 test -s "$smoke_root_abs/export_bundle/bundle_hashes.txt"
-test -s "$smoke_root_abs/native_roster/native_roster_showcase_manifest.json"
 test -s "$smoke_root_abs/native_combat/native_combat_render_manifest.json"
 test -s "$smoke_root_abs/no_args_launch/native_combat_render_manifest.json"
 
-grep -q '"renderer": "native-software-3d"' "$smoke_root_abs/native_combat/native_combat_render_manifest.json"
-grep -q '"renderer": "native-software-3d"' "$smoke_root_abs/no_args_launch/native_combat_render_manifest.json"
-grep -q '"native_3d_runtime_geometry": true' "$smoke_root_abs/native_combat/native_combat_render_manifest.json"
-grep -q '"game_is_3d": true' "$smoke_root_abs/native_roster/native_roster_showcase_manifest.json"
+grep -q '"schema": "oathyard.native_3d_visual_blocked.v1"' "$smoke_root_abs/native_combat/native_combat_render_manifest.json"
+grep -q '"schema": "oathyard.native_3d_visual_blocked.v1"' "$smoke_root_abs/no_args_launch/native_combat_render_manifest.json"
+grep -q '"native_3d_visual_evidence_present": false' "$smoke_root_abs/native_combat/native_combat_render_manifest.json"
+
 
 echo "package smoke passed: $package_tar_abs"

@@ -36,7 +36,7 @@ Baseline build could not be verified because `Cargo.lock` and the referenced sou
 
 Rust/Cargo is the smallest available native source stack already selected by the repo metadata. A no-dependency first slice keeps deterministic build and audit scope small and avoids license review for third-party crates.
 
-The first presentation artifact is deterministic SVG/trace/report output from the native executable. The current native presentation path uses dependency-light Linux X11/XWayland artifact captures. Vulkan runtime/tooling command `vulkaninfo` exists locally, but Vulkan pkg-config metadata is unavailable and no Vulkan renderer is implemented or claimed in this decision.
+Historical note: the first slice used lightweight deterministic presentation artifacts beside trace/report output from the native executable. Superseding policy: standalone non-3D visual outputs are no longer accepted by audits or visual verification. Visual readiness now requires native 3D renderer/engine captures with renderer/asset/camera/replay metadata and `truth_mutation=false`; otherwise the visual gate is blocked. Vulkan runtime/tooling command `vulkaninfo` exists locally, but Vulkan pkg-config metadata is unavailable and no Vulkan renderer is implemented or claimed in this decision.
 
 ## Determinism Risks
 

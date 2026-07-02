@@ -243,7 +243,7 @@ Dependency spine:
 | M12 | Accessibility, runtime settings | Presentation-only artifacts exist |
 | M13 | Deterministic AI/scripted seats | AI duel/sweep exists |
 | M14 | Fight-film cameras, presentation states | Shot-manifest JSON exists |
-| M15 | Native presentation renderer | Raw X11/PPM evidence; production renderer false |
+| M15 | Native presentation renderer | Blocked native-renderer status/non-native frame evidence; production renderer false |
 | M16 | Audio/VFX, mixer, device smoke | Trace-derived evidence; shipping backend false |
 | M17 | Performance, package, package smoke | Local package candidate exists |
 | M18 | High-fidelity production renderer | NOT PASSED |

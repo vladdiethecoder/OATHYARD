@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-root="artifacts/match_sweep"
+root="${1:-artifacts/match_sweep}"
 mkdir -p "$root"
 
 scenarios=(
@@ -17,14 +17,15 @@ for scenario in "${scenarios[@]}"; do
   cargo run --locked -- match --scenario "$scenario" --out "$out" --best-of 5
 done
 
-./tools/ai_sweep.sh artifacts/ai_sweep/verify
+./tools/ai_sweep.sh "$root/ai_sweep"
 ./tools/truth_stress.sh "$root/truth_stress"
 
-python3 - <<'PY'
+python3 - "$root" <<'PY'
 import json
+import sys
 from pathlib import Path
 
-root = Path("artifacts/match_sweep")
+root = Path(sys.argv[1])
 scenario_paths = [
     Path("examples/duels/basic_oathyard.duel"),
     Path("examples/duels/axe_vs_spear.duel"),
@@ -63,7 +64,7 @@ for scenario_path in scenario_paths:
         }
     )
 
-ai = json.loads(Path("artifacts/ai_sweep/verify/ai_sweep.json").read_text())
+ai = json.loads((root / "ai_sweep" / "ai_sweep.json").read_text())
 truth = json.loads((root / "truth_stress" / "truth_stress.json").read_text())
 
 ai_capability_stops = sum(

@@ -4,7 +4,7 @@ set -euo pipefail
 out="${1:-artifacts/desktop_metadata/verify}"
 src_dir="packaging/linux"
 desktop="$src_dir/io.oathyard.OATHYARD.desktop"
-icon="$src_dir/io.oathyard.OATHYARD.svg"
+icon="removed_by_3d_only_visual_policy"
 blocker="$src_dir/APPSTREAM_BLOCKED.md"
 
 mkdir -p "$out"
@@ -27,21 +27,9 @@ else
   done
 fi
 
-icon_validator="fallback"
+icon_validator="not_applicable_3d_only_visual_policy"
 icon_valid=true
 icon_error=""
-if command -v xmllint >/dev/null 2>&1; then
-  icon_validator="xmllint"
-  if ! xmllint --noout "$icon" >"$out/icon-xmllint.log" 2>&1; then
-    icon_valid=false
-    icon_error="$(tr '\n' ' ' < "$out/icon-xmllint.log")"
-  fi
-else
-  if ! grep -q '<svg xmlns="http://www.w3.org/2000/svg"' "$icon"; then
-    icon_valid=false
-    icon_error="fallback icon validation missed svg namespace"
-  fi
-fi
 
 exec_value="$(awk -F= '/^Exec=/ {print $2; exit}' "$desktop")"
 icon_value="$(awk -F= '/^Icon=/ {print $2; exit}' "$desktop")"

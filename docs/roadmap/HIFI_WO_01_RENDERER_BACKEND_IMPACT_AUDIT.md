@@ -13,9 +13,9 @@ Measure license, dependency, build, package, capture, input, audio, and truth-bo
 
 | ID | Target | pkg-config | License surface | Status |
 | --- | --- | --- | --- | --- |
-| A | Raw X11 / software PPM (current) | x11=1.8.13 | libX11-devel MIT AND X11 | Active local verification only; not product renderer |
-| B | Raw X11 / GLX / OpenGL | x11=1.8.13, gl=1.2 | libglvnd-devel MIT-feh AND MIT-Modern-Variant AND BSD AND GPL-3.0-or-later WITH Autoconf-exception | Safe for disposable spike; recommended immediate ADR path |
-| C | Raw X11 / EGL / OpenGL | x11=1.8.13, egl=1.5, gl=1.2 | libglvnd-devel (same as B) plus libEGL | Measured fallback spike candidate; not primary ADR target |
+| A | Blocked native-renderer status / non-native status-manifest (current) | x11=1.8.13 | libX11-devel MIT AND X11 | Active local verification only; not product renderer |
+| B | Blocked native-renderer status / GLX / OpenGL | x11=1.8.13, gl=1.2 | libglvnd-devel MIT-feh AND MIT-Modern-Variant AND BSD AND GPL-3.0-or-later WITH Autoconf-exception | Safe for disposable spike; recommended immediate ADR path |
+| C | Blocked native-renderer status / EGL / OpenGL | x11=1.8.13, egl=1.5, gl=1.2 | libglvnd-devel (same as B) plus libEGL | Measured fallback spike candidate; not primary ADR target |
 | D | Raw Wayland / EGL / OpenGL | wayland-client=1.24.0, egl=1.5 | wayland-devel MIT, libglvnd-devel | Deferred: protocol/header/build/capture/package impact unmeasured |
 | E | Vulkan direct-loader | vulkan=missing | Vulkan runtime visible (1.4.341) but no pkg-config | Deferred: header/build/capture impact unmeasured |
 
@@ -102,7 +102,7 @@ vulkaninfo --summary: Vulkan 1.4.341, AMD RADV + NVIDIA RTX 5090 + llvmpipe visi
 
 ## ADR-safe shortlist
 
-Only target B (raw X11/GLX/OpenGL) is safe to recommend now, and only as a disposable spike. Target C (X11/EGL/OpenGL) is a measured fallback. Targets D and E are deferred until their protocol/header/build/capture/package impact is proven.
+Only target B (blocked native-renderer status/GLX/OpenGL) is safe to recommend now, and only as a disposable spike. Target C (X11/EGL/OpenGL) is a measured fallback. Targets D and E are deferred until their protocol/header/build/capture/package impact is proven.
 
 ## Evidence logs
 

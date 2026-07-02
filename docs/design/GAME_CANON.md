@@ -1,6 +1,6 @@
 # OATHYARD Full-Game Canon
 
-This document preserves the deterministic bootstrap canon while adding the full-game high-fidelity native-PC 3D production target. Older first-slice, bootstrap, headless, SVG, or raw-PPM wording is historical baseline only and cannot satisfy the full-game target by itself.
+This document preserves the deterministic bootstrap canon while adding the full-game high-fidelity native-PC 3D production target. Older first-slice, bootstrap, headless, or non-native visual-output wording is historical baseline only and cannot satisfy the full-game target by itself.
 
 ## Identity
 
@@ -10,7 +10,7 @@ OATHYARD is a deterministic native-PC 3D planned-time physical melee duel game.
 
 The product target is a premium current-generation native-PC 3D game with high-fidelity dark-fantasy judicial-duel art direction and melee readability ambition benchmarked against Elden Ring and For Honor. Those games are quality/readability references only; OATHYARD must remain original and must not copy names, assets, silhouettes, factions, UI, animations, lore, characters, textures, music, or proprietary mechanics.
 
-Current raw X11/XWayland, SVG, PPM, low-poly glTF, and software-raster captures are local verification evidence only. They prove deterministic render data flow and nonzero-Z source-backed geometry; they do not prove high-fidelity product presentation, production renderer completion, owner visual acceptance, public-demo readiness, or release-candidate readiness.
+Current nonvisual manifests/reports and low-poly glTF checks are local verification evidence only. They prove deterministic data flow and nonzero-Z source-backed geometry; they do not prove high-fidelity product presentation, production renderer completion, owner visual acceptance, public-demo readiness, or release-candidate readiness.
 
 Production visual completion requires source-backed high-detail fighters, armor, weapons, arenas, material maps, lighting, atmosphere, animation presentation, combat feedback, UI, replay/fight-film cameras, deterministic captures, and owner visual acceptance as defined by `docs/decisions/0007-high-fidelity-production-target.md`.
 

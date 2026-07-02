@@ -18,11 +18,11 @@ Canon precedence reviewed:
 
 1. `docs/design/GAME_CANON.md`
    - OATHYARD identity: deterministic native-PC 3D planned-time physical melee duel game (`GAME_CANON.md:5-15`).
-   - Raw X11/XWayland, SVG, PPM, low-poly glTF, and software-raster captures are local verification evidence only (`GAME_CANON.md:11-15`).
+   - Blocked native-renderer status, non-native diagram, non-native frame, low-poly glTF, and non-native local raster captures are local verification evidence only (`GAME_CANON.md:11-15`).
    - Public-demo and release-candidate readiness stay false without explicit owner/human gates (`GAME_CANON.md:165-170`).
 2. `docs/design/DEMO_SCOPE.md`
    - Full-game target includes native menus, local match flow, fighter/loadout selection, deterministic seats, production asset manifests, packaging smoke, fight-film cameras, previews, audio/VFX, and quality gates (`DEMO_SCOPE.md:15-21`).
-   - Current raw/headless/SVG/PPM evidence is local verification only until a continuous high-fidelity native 3D renderer or accepted backend exists (`DEMO_SCOPE.md:29-35`).
+   - Current raw/headless/non-native diagram/non-native frame evidence is local verification only until a continuous high-fidelity native 3D renderer or accepted backend exists (`DEMO_SCOPE.md:29-35`).
 3. `ACCEPTANCE_MAP.md`
    - High-fidelity production gate is not passed and requires high-fidelity arenas/training arena, lighting/atmosphere, deterministic 1920x1080+ capture coverage, visual benchmark report, and owner visual acceptance recorded separately (`ACCEPTANCE_MAP.md:32-40`).
    - Local package and public/store release gates are separate (`ACCEPTANCE_MAP.md:46-99`).
@@ -45,15 +45,13 @@ Current source/manifest evidence:
   - `oathyard_verdict_ring`: `assets/runtime/oathyard_verdict_ring.mesh.json` SHA-256 `abea152eef54dfb55f142cfbcc98a9ff6df564febbb178f478126f9859c13333`; `assets/gltf/oathyard_verdict_ring.gltf` SHA-256 `53a4c278d3d1ecfb473dfb11ecfa8cc1bef9703f7c964f71bc305f245dc14708`; 309 glTF vertices, 1176 indices, 6 materials, 3 images; scale reference `6200mm_ring_3600mm_clear_combat_core`.
   - `training_yard`: `assets/runtime/training_yard.mesh.json` SHA-256 `aa46f49b7ccda0a52e593e56e81c03e3a150d990b7b339b9e63c3f116008b319`; `assets/gltf/training_yard.gltf` SHA-256 `302a3d9e2a40eabfc969419da3c7abd7b49a3dd8ad8a6b2650d852bfc6736c25`; 253 glTF vertices, 1116 indices, 6 materials, 3 images; scale reference `4800mm_yard_3000mm_practice_core`.
 
-Current image evidence:
+Current historical image evidence (non-acceptance context only):
 
-- Contact sheet: `artifacts/hifi_world_arena_identity/t_185e9c4c/20260630T031117Z_verify/arena_captures/arena_environment_contact_sheet.png`
-  - SHA-256 `bf18d04ff3506401d1b68835b46b9f688b5e0a71709d89dfe0ec16cd9e8c78e6`
-  - Dimensions: 1320x980 contact-sheet composite.
+- Historical rollup image evidence existed for `t_185e9c4c`, but standalone rollups are no longer accepted by the 3D-only visual evidence policy.
 - Individual 1920x1080 captures exist for both arenas in establishing, gameplay, and contact modes (`arena_environment_capture_manifest.json:5-270`).
-- `arena_environment_capture_report.md:1-29` reports 6 captures, `truth_mutation:false`, owner visual acceptance not claimed, public-demo not ready, release-candidate not ready, and current blockers: software raster PNG local verification evidence only, external Khronos/DCC/renderer acceptance not claimed.
+- `arena_environment_capture_report.md:1-29` reports 6 captures, `truth_mutation:false`, owner visual acceptance not claimed, public-demo not ready, release-candidate not ready, and current blockers: non-native local raster PNG local verification evidence only, external Khronos/DCC/renderer acceptance not claimed.
 - Vision inspection in this task:
-  - Contact sheet: verdict ring and training yard are visually distinct in palette and enclosure, but share the same central circular/radial floor silhouette; fighters are tiny colored cubes/markers; context is minimal black void; combat center is readable but not final scale/art proof.
+  - Historical rollup review: verdict ring and training yard were visually distinct in palette and enclosure, but shared the same central circular/radial floor silhouette; fighters were tiny colored cubes/markers; context was minimal black void; combat center was readable but not final scale/art proof.
   - Verdict-ring gameplay capture: judicial-duel identity is suggested by a central disc/ring, opposing markers, symmetry, and flanking architecture, but scale is too zoomed out, fighters are minuscule, backdrop is dark/abstract, and debris/radial pattern can obscure action.
   - Training-yard gameplay capture: practice-yard identity is suggested by warm wooden frame, golden boundary, radial target motif, and opposing markers, but it still reads as low-poly blockout, has a huge circular backdrop, busy beams/verticals, and a third figure/outer scaffold that can distract from combat.
 
@@ -63,7 +61,7 @@ Current image evidence:
 | --- | --- | --- |
 | `t_1585bf34` | Root assets/world/arena dissatisfaction card. Owner-failure comment states the visual failure is broader than assets/world/arenas and includes renderer, integrated assets, camera/readability, UI/HUD, VFX/audio, lighting/post, benchmark/owner handoff. | Confirms this audit must not launder structural work into owner visual acceptance. |
 | `t_7d209020` | Produced broad asset/world/arena canon audit with 17 findings. It found arena/world selection absent, source layout thin, verdict ring tokenized, training yard unvalidated, and current local visuals below standard. | Baseline gap taxonomy. This audit narrows to current verdict-ring/training-yard identity after later repairs. |
-| `t_614cc73b` | Pixel-level visual fidelity audit. It found ultra-low-poly placeholder assets, flat/no material response, primitive arenas/world, text-driven combat feedback, debug HUD density, and missing training-yard scene coverage. | Baseline visual failure. Current captures improve training-yard coverage but still inherit blockout/software-raster and scale/readability limits. |
+| `t_614cc73b` | Pixel-level visual fidelity audit. It found ultra-low-poly placeholder assets, flat/no material response, primitive arenas/world, text-driven combat feedback, debug HUD density, and missing training-yard scene coverage. | Baseline visual failure. Current captures improve training-yard coverage but still inherit blockout/non-native local raster and scale/readability limits. |
 | `t_cb68c544` | Produced `docs/roadmap/HIFI_REMEDIATION_PHASE_PLAN.md`, mapping arena/world remediation to `t_6aea2f80`, renderer/capture work, lighting/post, camera/VFX/UI, benchmark packet, and owner handoff. | Downstream routing source. This audit feeds implementation child `t_48a6a7f8`; broad cards should not duplicate it. |
 | `t_34a5af6b` | Legacy broad implementation catch-all; comments mark it aggregate/supersede-only and not broad implementation. | Do not use for vague implementation. Concrete repairs should be on child cards such as `t_48a6a7f8`. |
 | `t_6aea2f80` | Implemented arena environment production-art metadata, nonzero-Z geometry, 6-zone PBR materials, validators, capture tooling; board-stage accepted structurally. Later owner-failure comment superseded any visual-acceptance interpretation. | Partial work that supplies source-backed arena metadata and captures. Still only structural/local evidence, not owner/high-fidelity acceptance. |
@@ -74,7 +72,7 @@ Current image evidence:
 
 Current world/arena identity is materially better than the earlier 18-vertex/32-triangle atlas-only baseline. The current evidence shows two arena identities rather than a single manifest token: a cold, open, circular verdict ring and a warm, framed training yard. Both now have source-backed metadata, material maps, nonzero-Z geometry, and 1920x1080 establishing/gameplay/contact captures.
 
-The remaining issue is not asset existence. The issue is that the current pixels still read as software-rasterized low-poly environment visualization with shared radial-floor DNA, tiny placeholder fighters, black-void context, debug-like guide lines/borders, and limited environmental storytelling. It is adequate as a structured implementation seed. It is not yet an owner-reviewable high-fidelity arena identity packet.
+The remaining issue is not asset existence. The issue is that the current pixels still read as non-native local rasterized low-poly environment visualization with shared radial-floor DNA, tiny placeholder fighters, black-void context, debug-like guide lines/borders, and limited environmental storytelling. It is adequate as a structured implementation seed. It is not yet an owner-reviewable high-fidelity arena identity packet.
 
 ## 5. Enumerated gaps and remediation directives
 
@@ -85,7 +83,7 @@ Severity: blocker for owner-facing world identity; major for current implementat
 
 Observed gap:
 
-- The contact sheet and individual gameplay captures show both arenas using a dominant circular/radial floor/backdrop as the main visual signature.
+- Historical review artifacts and individual gameplay captures showed both arenas using a dominant circular/radial floor/backdrop as the main visual signature.
 - Verdict ring: the radial disc supports the oath/verdict concept.
 - Training yard: the same large circular/radial motif makes the yard read as a warm reskin of the verdict ring or as a target-wheel stage, not a practical measured practice yard.
 
@@ -98,12 +96,12 @@ Remediation directive:
 
 - Keep the circular/radial oath geometry as a verdict-ring-specific identity element.
 - Remove or subordinate the circular/radial motif from the training yard. Replace the training-yard dominant silhouette with a rectangular drill inset, lanes, footwork grids, start boxes, target marks, rope line, posts, weapon rack, water barrel, and maintenance/tool zone.
-- Target state: in a grayscale silhouette/contact sheet with labels removed, reviewers can identify verdict ring as circular judicial ritual and training yard as rectangular/practical drill yard.
+- Target state: in a native 3D renderer capture with labels removed, reviewers can identify verdict ring as circular judicial ritual and training yard as rectangular/practical drill yard.
 - Implementation touchpoints: `assets_src/arenas/arenas.oysrc`, arena mesh generation in `tools/asset_pipeline.py`, and capture styling in `tools/arena_environment_captures.sh`.
 
 Acceptance evidence:
 
-- Updated `arena_environment_contact_sheet.png` where the training yard no longer depends on a verdict-ring-like radial center.
+- Updated native 3D arena capture manifest where the training yard no longer depends on a verdict-ring-like radial center.
 - `arena_world_identity_manifest.json` preserves distinct `composition_profile`, `silhouette_context`, and `playable_space` for both arenas.
 - Media/vision review explicitly answers “distinct environment, not reskin” without relying on labels.
 
@@ -176,7 +174,7 @@ Severity: major
 
 Observed gap:
 
-- Both arenas center the action and use symmetry. This is stable for a contact sheet, but too generic as product composition.
+- Both arenas center the action and use symmetry. This is stable for a review rollup, but too generic as product composition.
 - The current negative space is mostly a black void or repeated beams/guide lines. It does not yet tell where players may move, where observers stand, where evidence/weapon staging lives, or why the camera is placed there.
 
 Canon/art conflict:
@@ -259,7 +257,7 @@ Severity: major
 Observed gap:
 
 - Source says verdict ring has `6200mm_ring_3600mm_clear_combat_core`; training yard has `4800mm_yard_3000mm_practice_core` (`assets_src/arenas/arenas.oysrc:6-7`).
-- Current pixels rely on visible ovals, golden rectangles, or guide lines/borders that read partly like debug overlays or contact-sheet framing.
+- Current pixels rely on visible ovals, golden rectangles, or guide lines/borders that read partly like debug overlays or image-rollup framing.
 
 Canon/art conflict:
 
@@ -331,7 +329,7 @@ Remediation directive:
 Acceptance evidence:
 
 - Reviewer can identify feet, body orientation, active weapon side, and contact/no-contact in both arenas without reading labels.
-- Contact sheet includes clean product view plus optional overlay/debug view.
+- Image rollup includes clean product view plus optional overlay/debug view.
 
 ### READ-01 — Arena select / scenario use is still a design-risk surface
 
@@ -387,19 +385,19 @@ Acceptance evidence:
 - Visual benchmark row “originality/no-copying” passes by inspection with current capture IDs.
 - Removed labels still leave a recognizable OATHYARD court/practice identity, not generic medieval/fighting arena.
 
-### ORIG-02 — Low-poly software-raster style risks being mistaken for final style unless explicitly quarantined
+### ORIG-02 — Low-poly non-native local raster style risks being mistaken for final style unless explicitly quarantined
 
 Area: originality, readiness boundary
 Severity: blocker for acceptance claims; major for implementation planning
 
 Observed gap:
 
-- Current captures are useful and more detailed than earlier baseline, but still visually read as low-poly/software-raster visualization with flat-shaded shapes and placeholder fighters.
+- Current captures are useful and more detailed than earlier baseline, but still visually read as low-poly/non-native local raster visualization with flat-shaded shapes and placeholder fighters.
 - Without explicit quarantine, downstream work may incorrectly treat the look as a chosen stylized art direction rather than a local verification backend.
 
 Canon/art conflict:
 
-- Current raw X11/XWayland, SVG, PPM, low-poly glTF, and software-raster captures are local verification evidence only (`GAME_CANON.md:11-15`, `DEMO_SCOPE.md:29-35`).
+- Current blocked native-renderer status, non-native diagram, non-native frame, low-poly glTF, and non-native local raster captures are local verification evidence only (`GAME_CANON.md:11-15`, `DEMO_SCOPE.md:29-35`).
 - High-fidelity gate requires production renderer/assets/materials/lighting/captures and owner acceptance separately (`ACCEPTANCE_MAP.md:32-40`).
 
 Remediation directive:
@@ -468,12 +466,12 @@ cargo test --locked
 ./tools/verify.sh
 ```
 
-If `./tools/verify.sh` fails because `./tools/validate_assets.sh` requires `assets/production_visual_manifest.json`, classify it as a missing production visual asset manifest / external production-asset evidence blocker. Do not fake that manifest from local software-raster captures.
+If `./tools/verify.sh` fails because `./tools/validate_assets.sh` requires `assets/production_visual_manifest.json`, classify it as a missing production visual asset manifest / external production-asset evidence blocker. Do not fake that manifest from local non-native local raster captures.
 
 ## 8. Audit conclusion
 
 The current verdict-ring/training-yard lane has crossed from “manifest-only arena tokens” into structured source-backed identity evidence: both arenas have source metadata, runtime glTF/mesh assets, material-map references, and 1920x1080 captures. The verdict ring and training yard now separate by cold/circular/judicial versus warm/framed/practice cues.
 
-The remaining gaps are specific and implementable: split the shared radial floor language, make verdict-ring judicial hierarchy visual, make training-yard practicality visual, prove human scale with actual fighter silhouettes, replace debug-like bounds with diegetic bounds, add backdrop/context depth, keep combat readability clear of posts/radial clutter, and quarantine low-poly/software-raster evidence as local verification only.
+The remaining gaps are specific and implementable: split the shared radial floor language, make verdict-ring judicial hierarchy visual, make training-yard practicality visual, prove human scale with actual fighter silhouettes, replace debug-like bounds with diegetic bounds, add backdrop/context depth, keep combat readability clear of posts/radial clutter, and quarantine low-poly/non-native local raster evidence as local verification only.
 
 This audit should unblock `t_48a6a7f8` as a concrete implementation task. It should not unblock owner visual acceptance or any public/release readiness gate.

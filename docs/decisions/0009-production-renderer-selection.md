@@ -48,7 +48,7 @@ The Blender failure blocks the normal DCC/source-asset path until a self-contain
 | --- | --- | --- | --- |
 | Bevy/wgpu | Official Bevy docs state Bevy is free/open-source under MIT or Apache 2.0; current quick-start lists `bevy = "0.19"` as a Rust crate. | Rust-native, source-buildable with Cargo, wgpu backend can target Vulkan on RTX 5090, supports 3D/PBR/gltf/skinning ecosystem, clean truth isolation by consuming replay-derived presentation data. | Selected for V1 production-renderer spike. |
 | Custom Vulkan/DX12 | Legally usable but would require direct loader/header integration, swapchain, asset, skinning, PBR, shadows, capture, and tooling from scratch. | Maximum control, highest implementation cost. | Fallback only if Bevy/wgpu fails measured spike criteria. |
-| Raw X11/GLX/OpenGL | Existing ADR 0008 authorized a dependency-zero spike, but the referenced spike directory is absent and GLX currently reports the AMD iGPU display path, not the RTX 5090 production path. | Useful technical spike/debug route, not a credible high-fidelity production target by itself. | Superseded for V1 selection by Bevy/wgpu unless the user explicitly wants the raw OpenGL spike first. |
+| Blocked native-renderer status/GLX/OpenGL | Existing ADR 0008 authorized a dependency-zero spike, but the referenced spike directory is absent and GLX currently reports the AMD iGPU display path, not the RTX 5090 production path. | Useful technical spike/debug route, not a credible high-fidelity production target by itself. | Superseded for V1 selection by Bevy/wgpu unless the user explicitly wants the raw OpenGL spike first. |
 | Godot 4 | Official license page says Godot is MIT and game content remains the user's; engine not installed. | Strong editor/runtime option, but adds non-Rust engine pipeline and separate scripting/build/package integration. | Secondary option; reconsider if Bevy/wgpu cannot meet animation/asset pipeline needs. |
 | Unreal Engine 5 | EULA-governed proprietary licensed technology; not installed. | Strongest out-of-box Nanite/Lumen-class rendering, but requires Epic account/download/EULA/royalty/licensing review, large toolchain, and C++/asset pipeline bridge. | Not adopted without explicit owner/legal/toolchain gate. |
 | Fyrox | Rust engine option, less proven/mature for the target than Bevy. | Possible fallback. | Defer. |
@@ -56,7 +56,7 @@ The Blender failure blocks the normal DCC/source-asset path until a self-contain
 
 ## Source-backed rationale
 
-- Bevy official introduction describes Bevy as a Rust game engine with complete 2D/3D feature goals, data-driven ECS, modularity, and MIT/Apache-2.0 licensing.
+- Bevy official introduction describes Bevy as a Rust game engine with broad rendering feature goals, data-driven ECS, modularity, and MIT/Apache-2.0 licensing.
 - Bevy official getting-started docs list crate installation through Cargo and `bevy = "0.19"`.
 - Godot official license page states Godot is MIT, free/open-source, and game content is not covered by the engine license.
 - Unreal official EULA page states Unreal Engine use is governed by Epic's EULA and accepting/downloading creates contractual terms; this is an owner/legal gate before adoption.

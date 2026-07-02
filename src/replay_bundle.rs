@@ -145,7 +145,61 @@ pub fn verify_replay_export_bundle(bundle_dir: impl AsRef<Path>) -> Result<DuelR
         }
     }
 
+    reject_forbidden_visual_bundle_files(bundle_dir)?;
+
     Ok(result)
+}
+
+fn reject_forbidden_visual_bundle_files(bundle_dir: &Path) -> Result<(), OathError> {
+    let forbidden_ext = [
+        "s".to_string() + "vg",
+        "p".to_string() + "pm",
+        "p".to_string() + "bm",
+        "p".to_string() + "gm",
+        "x".to_string() + "pm",
+    ];
+    let forbidden_terms = [
+        "time".to_string() + "line." + "s" + "vg",
+        "<".to_string() + "s" + "vg",
+        "fight_film_contact_".to_string() + "sheet",
+        "native-software-".to_string() + "p" + "pm",
+        "p".to_string() + "pm_capture",
+        "time".to_string() + "line_capture",
+    ];
+    let mut stack = vec![bundle_dir.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for entry in fs::read_dir(&dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            let rel = path
+                .strip_prefix(bundle_dir)
+                .unwrap_or(&path)
+                .display()
+                .to_string();
+            if let Some(ext) = path.extension().and_then(|value| value.to_str()) {
+                if forbidden_ext.iter().any(|candidate| candidate == ext) {
+                    return Err(OathError::Verify(format!(
+                        "export bundle contains forbidden visual artifact {rel}"
+                    )));
+                }
+            }
+            if let Ok(text) = fs::read_to_string(&path) {
+                let lower = text.to_lowercase();
+                for term in &forbidden_terms {
+                    if lower.contains(term) {
+                        return Err(OathError::Verify(format!(
+                            "export bundle contains forbidden visual reference {rel}"
+                        )));
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn replay_export_bundle_source_files(out_dir: &Path) -> Result<Vec<ExportBundleFile>, OathError> {

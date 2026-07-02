@@ -64,7 +64,6 @@ post_sha = sha(post_replay)
 manifest = evidence / "animation_state_machine_manifest.json"
 sequence = evidence / "animation_state_sequence.json"
 retargeting = evidence / "animation_retargeting_bridge.json"
-contact_sheet = evidence / "animation_contact_sheet.ppm"
 report = evidence / "animation_state_machine_report.md"
 
 if pre_hash != post_hash:
@@ -97,7 +96,7 @@ if state_labels != expected_states:
 if reaction_labels != expected_reactions:
     raise SystemExit(f"reaction_labels mismatch: {reaction_labels}")
 
-for artifact in [manifest, sequence, retargeting, contact_sheet, report]:
+for artifact in [manifest, sequence, retargeting, report]:
     if not artifact.is_file() or artifact.stat().st_size == 0:
         raise SystemExit(f"missing or empty artifact: {artifact}")
 
@@ -143,7 +142,6 @@ wrapper_report = [
     f"- Manifest: `{manifest.as_posix()}`",
     f"- Sequence: `{sequence.as_posix()}`",
     f"- Retargeting: `{retargeting.as_posix()}`",
-    f"- Contact sheet: `{contact_sheet.as_posix()}`",
     f"- Report: `{report.as_posix()}`",
 ]
 (root / "animation_state_machine_wrapper_report.md").write_text(

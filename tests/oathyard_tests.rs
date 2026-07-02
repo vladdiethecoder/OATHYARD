@@ -162,6 +162,9 @@ fn replay_export_bundle_contains_verified_artifacts_and_hash_manifest() {
     fs::create_dir_all(root).expect("export bundle temp dir");
     let replay_path = root.join("source_replay.json");
     let out_dir = root.join("bundle");
+    if out_dir.exists() {
+        fs::remove_dir_all(&out_dir).expect("clean export bundle temp dir");
+    }
     let source = run_scenario_text(BASIC).expect("run");
     fs::write(&replay_path, &source.replay_json).expect("write replay");
 
@@ -185,6 +188,11 @@ fn replay_export_bundle_contains_verified_artifacts_and_hash_manifest() {
     assert!(report.contains("Truth mutation: `none`"));
     assert!(hashes.contains("trace.json"));
     assert!(hashes.contains("export_bundle_manifest.json"));
+    let forbidden = out_dir.join(format!("visual_proof.{}", "s".to_string() + "vg"));
+    fs::write(&forbidden, "not allowed\n").expect("inject forbidden visual artifact");
+    let error = verify_replay_export_bundle(&out_dir).expect_err("forbidden visual should fail");
+    assert!(error.to_string().contains("forbidden visual artifact"));
+    fs::remove_file(&forbidden).expect("remove injected forbidden visual artifact");
     fs::write(out_dir.join("trace.json"), "{}\n").expect("tamper trace");
     let error = verify_replay_export_bundle(&out_dir).expect_err("tamper should fail");
     assert!(error.to_string().contains("export bundle hash mismatch"));
@@ -406,14 +414,12 @@ fn audio_vfx_artifacts_are_trace_derived() {
     let captions = fs::read_to_string(root.join("captions.srt")).expect("captions");
     let timing =
         fs::read_to_string(root.join("audio_vfx_timing_loudness.json")).expect("timing loudness");
-    let contact_sheet = fs::read(root.join("impact_vfx_contact_sheet.ppm")).expect("contact sheet");
 
     assert_eq!(baseline.trace_json, generated.trace_json);
     assert_eq!(baseline.replay_json, generated.replay_json);
     assert_eq!(baseline.final_state_hash, generated.final_state_hash);
 
     assert!(wav.starts_with(b"RIFF"));
-    assert!(contact_sheet.starts_with(b"P6"));
     assert!(events.contains("\"schema\": \"oathyard.audio_events.v1\""));
     assert!(events.contains("trace-derived-only"));
     assert!(events.contains("\"truth_mutation\": false"));
@@ -432,6 +438,7 @@ fn audio_vfx_artifacts_are_trace_derived() {
     assert!(vfx.contains("\"schema\": \"oathyard.vfx_manifest.v1\""));
     assert!(vfx.contains("\"presentation_only\": true"));
     assert!(vfx.contains("\"reduced_flash_compliant\": true"));
+    assert!(vfx.contains("\"nonvisual_vfx_evidence\""));
     assert!(vfx.contains("\"owner_visual_acceptance\": false"));
     assert!(vfx.contains("\"source_event_id\":"));
     assert!(vfx.contains("\"material_ids\":"));
@@ -639,16 +646,19 @@ fn runtime_asset_manifest_references_valid_local_gltf_outputs() {
     );
 
     let manifest = fs::read_to_string("assets/runtime_manifest.json").expect("runtime manifest");
-    let fighter_gltf =
-        fs::read_to_string("assets/gltf/saltreach_duelist.gltf").expect("fighter gltf");
-    let weapon_gltf = fs::read_to_string("assets/gltf/longsword.gltf").expect("weapon gltf");
+    let fighter_gltf = fs::read_to_string("assets/runtime/candidate/gltf/saltreach_duelist.gltf")
+        .expect("fighter gltf");
+    let weapon_gltf =
+        fs::read_to_string("assets/runtime/candidate/gltf/longsword.gltf").expect("weapon gltf");
     let material_manifest = fs::read_to_string("assets/materials/pbr_surface_manifest.json")
         .expect("pbr material manifest");
     let gltf_report =
         fs::read_to_string("assets/gltf_validation_report.md").expect("gltf validation report");
 
-    assert!(manifest.contains("\"runtime_gltf\": \"assets/gltf/longsword.gltf\""));
-    assert!(manifest.contains("\"runtime_gltf\": \"assets/gltf/oathyard_verdict_ring.gltf\""));
+    assert!(manifest.contains("\"runtime_gltf\": \"assets/runtime/candidate/gltf/longsword.gltf\""));
+    assert!(manifest.contains(
+        "\"runtime_gltf\": \"assets/runtime/candidate/gltf/oathyard_verdict_ring.gltf\""
+    ));
     assert!(fighter_gltf.contains("\"version\": \"2.0\""));
     assert!(fighter_gltf.contains("\"truth_authoritative\": false"));
     assert!(fighter_gltf.contains("\"canonical_truth_joints\""));
@@ -698,12 +708,13 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
         String::from_utf8_lossy(&production_visual.stderr)
     );
 
-    let manifest_path = Path::new("assets/presentation_manifest.json");
+    let manifest_path = Path::new("assets/manifests/presentation_manifest.json");
     let manifest = fs::read_to_string(manifest_path).expect("presentation manifest");
-    let production_manifest = fs::read_to_string("assets/production_visual_manifest.json")
-        .expect("production visual manifest");
+    let production_manifest =
+        fs::read_to_string("assets/manifests/production_visual_manifest.json")
+            .expect("production visual manifest");
     let production_candidate_manifest =
-        fs::read_to_string("assets/production_candidate_visual_manifest.json")
+        fs::read_to_string("assets/manifests/production_candidate_visual_manifest.json")
             .expect("production candidate visual manifest");
 
     assert!(manifest.contains("\"schema\": \"oathyard.presentation_assets.v1\""));
@@ -740,10 +751,13 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
     assert!(production_manifest.contains("\"production_renderer_complete\": false"));
     assert!(production_manifest.contains("\"owner_visual_acceptance\": false"));
     assert!(production_manifest.contains(
-        "\"production_candidate_manifest\": \"assets/production_candidate_visual_manifest.json\""
+        "\"production_candidate_manifest\": \"assets/manifests/production_candidate_visual_manifest.json\""
     ));
-    assert!(production_manifest.contains("\"entry_count\": 0"));
-    assert!(production_manifest.contains("\"entries\": []"));
+    // Unit-047: production lane now contains source-approved production seed entries
+    assert!(production_manifest.contains("\"entry_count\": 26"));
+    assert!(production_manifest.contains("\"source_approved\""));
+    assert!(production_manifest.contains("\"production_ready\": false"));
+    assert!(production_manifest.contains("\"candidate_only\": false"));
     assert!(production_candidate_manifest
         .contains("\"schema\": \"oathyard.production_candidate_visual_assets.v1\""));
     assert!(
@@ -825,7 +839,7 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
         preview_manifest.contains("t_73291be5 previews/captures are production-candidate evidence")
     );
 
-    let runtime_mesh = fs::read_to_string("assets/presentation_runtime/longsword.mesh.json")
+    let runtime_mesh = fs::read_to_string("assets/runtime/candidate/longsword.mesh.json")
         .expect("presentation runtime mesh");
     assert!(runtime_mesh.contains("\"schema\": \"oathyard.presentation_runtime_asset.v1\""));
     assert!(runtime_mesh.contains("\"schema\": \"oathyard.production_contact_profile.v1\""));
@@ -838,6 +852,305 @@ fn high_detail_presentation_manifest_is_validated_and_loud_fail() {
     assert!(report.contains("Status: PASSED"));
     assert!(report.contains("Production validation: `true`"));
     assert!(report.contains("Source/provenance/license/toolchain/runtime-hash/preview/in-engine/contact/material/rig validation is fail-closed"));
+}
+
+#[test]
+fn asset_provenance_audit_accepts_candidate_preview_metadata_without_standalone_runtime_previews() {
+    let _asset_lock = acquire_asset_generation_test_lock();
+    let production_visual = Command::new("python3")
+        .args(["tools/production_visual_manifest.py"])
+        .output()
+        .expect("write production visual manifest before provenance audit");
+    assert!(
+        production_visual.status.success(),
+        "production visual manifest failed before provenance audit\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&production_visual.stdout),
+        String::from_utf8_lossy(&production_visual.stderr)
+    );
+
+    let out = Path::new("target/tmp/oathyard_asset_provenance_3d_only_preview_semantics_test");
+    if out.exists() {
+        fs::remove_dir_all(out).expect("clear old asset provenance audit output");
+    }
+    let audit = Command::new("./tools/asset_provenance_audit.sh")
+        .arg(out)
+        .output()
+        .expect("run asset provenance audit");
+    assert!(
+        audit.status.success(),
+        "asset provenance audit should accept candidate preview/capture metadata while standalone runtime previews stay empty under the 3D-only policy\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&audit.stdout),
+        String::from_utf8_lossy(&audit.stderr)
+    );
+
+    let manifest = fs::read_to_string(out.join("asset_provenance_audit_manifest.json"))
+        .expect("asset provenance audit manifest");
+    let failed = fs::read_to_string(out.join("failed_asset_provenance_checks.txt"))
+        .expect("asset provenance failed checks");
+    let report = fs::read_to_string(out.join("asset_provenance_audit_report.md"))
+        .expect("asset provenance report");
+
+    assert!(manifest.contains("\"passed\": true"));
+    assert!(manifest.contains("\"runtime_preview_optional_under_3d_only_policy\": true"));
+    assert_eq!(failed, "none\n");
+    assert!(!manifest.contains("_has_preview"));
+    assert!(!manifest.contains("_preview_exists"));
+    assert!(report
+        .contains("Runtime preview files are optional under the 3D-only visual evidence policy"));
+}
+
+#[test]
+fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
+    let _asset_lock = acquire_asset_generation_test_lock();
+    let out = Path::new("target/tmp/oathyard_generated_asset_quarantine_test");
+    if out.exists() {
+        fs::remove_dir_all(out).expect("clear old generated asset quarantine output");
+    }
+    let audit = Command::new("./tools/audit_generated_assets.sh")
+        .arg(out)
+        .output()
+        .expect("run generated asset audit");
+    assert!(
+        !audit.status.success(),
+        "generated asset audit must stay fail-closed while assets are candidate/license-pending\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&audit.stdout),
+        String::from_utf8_lossy(&audit.stderr)
+    );
+    assert_eq!(audit.status.code(), Some(1));
+
+    let quarantine_manifest =
+        fs::read_to_string(out.join("generated_asset_quarantine_manifest.json"))
+            .expect("generated asset quarantine manifest");
+    let quarantine_report = fs::read_to_string(out.join("generated_asset_quarantine_report.md"))
+        .expect("generated asset quarantine report");
+    let unblock_matrix =
+        fs::read_to_string(out.join("generated_asset_production_unblock_matrix.json"))
+            .expect("generated asset production unblock matrix");
+    let unblock_report =
+        fs::read_to_string(out.join("generated_asset_production_unblock_matrix.md"))
+            .expect("generated asset production unblock matrix report");
+    let generated_audit = fs::read_to_string(out.join("generated_asset_audit.json"))
+        .expect("generated asset audit json");
+    let generated_audit_csv = fs::read_to_string(out.join("generated_asset_audit.csv"))
+        .expect("generated asset audit csv");
+    let blocked_asset_evidence = fs::read_to_string(out.join("blocked_asset_evidence.md"))
+        .expect("blocked asset evidence report");
+    let asset_state_summary =
+        fs::read_to_string(out.join("asset_state_summary.md")).expect("asset state summary report");
+
+    assert!(quarantine_manifest.contains("\"schema\": \"oathyard.generated_asset_quarantine.v1\""));
+    assert!(quarantine_manifest.contains("\"candidate_asset_quarantine_active\": true"));
+    assert!(quarantine_manifest.contains("\"production_asset_ready\": false"));
+    assert!(quarantine_manifest.contains("\"owner_visual_accepted\": false"));
+    assert!(quarantine_manifest.contains("\"public_demo_visual_ready\": false"));
+    assert!(quarantine_manifest.contains("\"release_candidate_ready\": false"));
+    assert!(quarantine_manifest.contains("\"generated_asset_audit_rc\": 1"));
+    assert!(quarantine_manifest.contains("\"quarantined_asset_count\": 22"));
+    assert!(quarantine_manifest.contains("\"blocked_by_license_or_commercial_use\": 22"));
+    assert!(quarantine_manifest.contains("\"acceptance_status_counts\""));
+    assert!(quarantine_manifest.contains("\"candidate\": 22"));
+    assert!(quarantine_manifest.contains("\"quarantined_assets\""));
+    assert!(quarantine_manifest.contains("license_or_project_license_pending"));
+    assert!(!quarantine_manifest.contains("external_dcc_validation_missing"));
+    assert!(!quarantine_manifest.contains("topology_manifold_boundary_edges_present"));
+    assert!(!quarantine_manifest.contains("external_khronos_gltf_validation_missing"));
+    assert!(!quarantine_manifest.contains("procedural_model_candidate_not_dcc_source"));
+    assert!(!quarantine_manifest.contains("tangents_missing_or_unverified"));
+    assert!(quarantine_report.contains("Status: FAIL-CLOSED"));
+    assert!(
+        quarantine_report.contains("No generated/model-candidate asset is promoted to production.")
+    );
+    assert!(unblock_matrix
+        .contains("\"schema\": \"oathyard.generated_asset_production_unblock_matrix.v1\""));
+    assert!(unblock_matrix.contains("\"production_asset_ready\": false"));
+    assert!(unblock_matrix.contains("\"quarantined_asset_count\": 22"));
+    assert!(unblock_matrix.contains("\"blocked_asset_count\": 22"));
+    assert!(unblock_matrix.contains("\"required_unblock_stage_count\": 7"));
+    assert!(unblock_matrix.contains("\"license_and_commercial_clearance\": 22"));
+    assert!(unblock_matrix.contains("\"dcc_or_openusd_source_authoring\": 0"));
+    assert!(unblock_matrix.contains("\"external_geometry_validation\": 0"));
+    assert!(unblock_matrix.contains("\"material_texture_uv_completion\": 0"));
+    assert!(unblock_matrix.contains("\"rig_truth_contact_profile_validation\": 0"));
+    assert!(unblock_matrix.contains("\"native_renderer_capture_matrix\": 22"));
+    assert!(unblock_matrix.contains("\"owner_visual_acceptance\": 22"));
+    assert!(unblock_matrix.contains("\"license_and_commercial_clearance\""));
+    assert!(unblock_matrix.contains("\"dcc_or_openusd_source_authoring\""));
+    assert!(unblock_matrix.contains("\"native_renderer_capture_matrix\""));
+    assert!(unblock_matrix.contains("\"owner_visual_acceptance\""));
+    assert!(unblock_matrix.contains("\"per_asset_unblock_plan\""));
+    assert!(unblock_matrix.contains("\"oathyard_verdict_ring\""));
+    assert!(unblock_matrix.contains("\"training_yard\""));
+    assert!(unblock_matrix.contains("\"longsword\""));
+    assert!(unblock_matrix.contains("\"arming_sword\""));
+    assert!(unblock_matrix.contains("\"ash_spear\""));
+    assert!(unblock_matrix.contains("\"bearded_axe\""));
+    assert!(unblock_matrix.contains("\"billhook\""));
+    assert!(unblock_matrix.contains("\"curved_sword\""));
+    assert!(unblock_matrix.contains("\"iron_maul\""));
+    assert!(unblock_matrix.contains("\"round_shield\""));
+    assert!(unblock_matrix.contains("\"saltreach_duelist\""));
+    assert!(unblock_matrix.contains("\"oathyard_writ\""));
+    assert!(unblock_matrix.contains("\"chainbreaker\""));
+    assert!(unblock_matrix.contains("\"reed_sentinel\""));
+    assert!(unblock_matrix.contains("\"gate_shield\""));
+    assert!(unblock_matrix.contains("\"bruiser_oath\""));
+    assert!(unblock_matrix.contains("\"gambeson\""));
+    assert!(unblock_matrix.contains("\"mail_hauberk\""));
+    assert!(unblock_matrix.contains("\"heavy_plate\""));
+    assert!(unblock_matrix.contains("\"lamellar\""));
+    assert!(unblock_matrix.contains("\"fencer_light\""));
+    assert!(unblock_matrix.contains("\"bruiser_padded_plate\""));
+    assert!(unblock_matrix.contains("\"source_authoring_evidence\""));
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/arenas/oathyard_verdict_ring.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/arenas/training_yard.source.usda"
+    )
+    .is_file());
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/weapons/longsword.source.usda")
+            .is_file()
+    );
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/weapons/arming_sword.source.usda"
+    )
+    .is_file());
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/weapons/ash_spear.source.usda")
+            .is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/weapons/bearded_axe.source.usda")
+            .is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/weapons/billhook.source.usda")
+            .is_file()
+    );
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/weapons/curved_sword.source.usda"
+    )
+    .is_file());
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/weapons/iron_maul.source.usda")
+            .is_file()
+    );
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/weapons/round_shield.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/saltreach_duelist.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/oathyard_writ.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/chainbreaker.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/reed_sentinel.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/gate_shield.source.usda"
+    )
+    .is_file());
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/fighters/bruiser_oath.source.usda"
+    )
+    .is_file());
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/armor/gambeson.source.usda").is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/armor/mail_hauberk.source.usda")
+            .is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/armor/heavy_plate.source.usda")
+            .is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/armor/lamellar.source.usda").is_file()
+    );
+    assert!(
+        Path::new("assets/source/model_candidates/t_73291be5/armor/fencer_light.source.usda")
+            .is_file()
+    );
+    assert!(Path::new(
+        "assets/source/model_candidates/t_73291be5/armor/bruiser_padded_plate.source.usda"
+    )
+    .is_file());
+    assert!(unblock_matrix.contains("license_or_project_license_pending"));
+    assert!(unblock_report.contains("Status: FAIL-CLOSED"));
+    assert!(unblock_report.contains("Required production unblock stages: `7`"));
+    for required_field in [
+        "\"asset_id\"",
+        "\"asset_class\"",
+        "\"source_path\"",
+        "\"runtime_path\"",
+        "\"generation_import_tool\"",
+        "\"tool_version\"",
+        "\"generation_date\"",
+        "\"source_prompt_path_or_hash\"",
+        "\"source_image_path_or_hash\"",
+        "\"rodin_task_download_export_ids\"",
+        "\"source_file_hash\"",
+        "\"runtime_file_hash\"",
+        "\"texture_file_hashes\"",
+        "\"commercial_use_status\"",
+        "\"ip_protected_style_risk_status\"",
+        "\"index_count\"",
+        "\"bounds\"",
+        "\"normal_status\"",
+        "\"tangent_status\"",
+        "\"material_status\"",
+        "\"texture_status\"",
+        "\"physics_contact_profile_status\"",
+        "\"mass_inertia_status\"",
+        "\"collision_contact_region_status\"",
+        "\"in_engine_capture_status\"",
+        "\"package_inclusion_status\"",
+        "\"presentation_truth_isolation_status\"",
+        "\"acceptance_state\"",
+        "\"blockers\"",
+        "\"next_action\"",
+    ] {
+        assert!(
+            generated_audit.contains(required_field),
+            "generated asset audit missing required field {required_field}"
+        );
+    }
+    assert!(generated_audit.contains("\"production_ready\": false"));
+    assert!(!generated_audit.contains("\"production_ready\": true"));
+    assert!(generated_audit.contains("\"candidate_only\": true"));
+    assert!(generated_audit_csv.starts_with("asset_id,asset_class,"));
+    assert!(generated_audit_csv.contains("license_terms_status"));
+    assert!(blocked_asset_evidence.contains("# OATHYARD Blocked Generated Asset Evidence"));
+    assert!(blocked_asset_evidence.contains("license_or_project_license_pending"));
+    assert!(blocked_asset_evidence.contains("native production renderer capture evidence missing"));
+    assert!(asset_state_summary.contains("# OATHYARD Generated Asset State Summary"));
+    assert!(asset_state_summary.contains("candidate_only: `22`"));
+    assert!(asset_state_summary.contains("license_pending: `22`"));
+    assert!(asset_state_summary.contains("production_ready: `0`"));
+    for latest_path in [
+        "artifacts/asset_audit/latest/generated_asset_audit.json",
+        "artifacts/asset_audit/latest/generated_asset_audit.md",
+        "artifacts/asset_audit/latest/generated_asset_audit.csv",
+        "artifacts/asset_audit/latest/blocked_asset_evidence.md",
+        "artifacts/asset_audit/latest/asset_state_summary.md",
+    ] {
+        assert!(
+            Path::new(latest_path).is_file(),
+            "missing latest audit mirror {latest_path}"
+        );
+    }
 }
 
 #[test]
@@ -904,8 +1217,7 @@ fn pbr_material_artifacts_cover_surfaces_events_and_keep_truth_hashes_stable() {
         "\"enabled_final_state_hash\": \"{}\"",
         result.final_state_hash
     )));
-    assert!(root.join("pbr_material_surface_atlas.ppm").is_file());
-    assert!(root.join("pbr_material_response_sheet.ppm").is_file());
+    assert!(manifest.contains("\"nonvisual_material_evidence\""));
     assert!(report.contains("Status: PASSED"));
     assert!(report.contains("Truth mutation: `none`"));
     assert!(report.contains("Flat recolor rejected: `true`"));
@@ -1101,6 +1413,44 @@ fn truth_stress_runs_long_replay_traces_stably() {
 }
 
 #[test]
+fn final_acceptance_runs_match_sweep_inside_evidence_package() {
+    let final_acceptance =
+        fs::read_to_string("tools/final_acceptance.sh").expect("missing final acceptance tool");
+    let match_sweep =
+        fs::read_to_string("tools/run_match_sweep.sh").expect("missing match sweep tool");
+
+    assert!(final_acceptance.contains("run_step match_sweep ./tools/run_match_sweep.sh"));
+    assert!(final_acceptance.contains("\"$out/match_sweep\""));
+    assert!(match_sweep.contains("root=\"${1:-artifacts/match_sweep}\""));
+    assert!(match_sweep.contains("python3 - \"$root\" <<'PY'"));
+    assert!(match_sweep.contains("root = Path(sys.argv[1])"));
+    assert!(match_sweep.contains("match_sweep_summary.json"));
+    assert!(match_sweep.contains("public_demo_ready"));
+    assert!(match_sweep.contains("release_candidate_ready"));
+}
+
+#[test]
+fn final_acceptance_manifest_indexes_required_evidence_artifacts() {
+    let final_acceptance =
+        fs::read_to_string("tools/final_acceptance.sh").expect("missing final acceptance tool");
+
+    assert!(final_acceptance.contains("'artifact_index'"));
+    assert!(final_acceptance.contains("'artifact_index_missing_count'"));
+    assert!(final_acceptance.contains("final_acceptance_steps.tsv"));
+    assert!(final_acceptance.contains("verify_a/replay.json"));
+    assert!(final_acceptance.contains("match_sweep_summary.json"));
+    assert!(final_acceptance.contains("generated_asset_quarantine_manifest.json"));
+    assert!(final_acceptance.contains("generated_asset_production_unblock_matrix.json"));
+    assert!(final_acceptance.contains("generated_asset_production_unblock_matrix.md"));
+    assert!(final_acceptance.contains("high_fidelity_capture_matrix.json"));
+    assert!(final_acceptance.contains("visual_benchmark_report.md"));
+    assert!(final_acceptance.contains("visual_gap_list.md"));
+    assert!(final_acceptance.contains("oathyard-linux-x86_64.tar"));
+    assert!(final_acceptance.contains("public_demo_ready':False"));
+    assert!(final_acceptance.contains("release_candidate_ready':False"));
+}
+
+#[test]
 fn truth_edge_audit_covers_overflow_clamps_and_replay_compatibility() {
     let root = std::path::Path::new("target/tmp/oathyard_truth_edge_audit_test");
     write_truth_edge_audit_artifacts(root).expect("truth edge audit artifacts");
@@ -1281,7 +1631,6 @@ fn animation_state_machine_is_presentation_only_and_truth_stable() {
     assert!(retargeting.contains("\"grip_r\""));
     assert!(retargeting.contains("\"grip_l\""));
 
-    assert!(root.join("animation_contact_sheet.ppm").is_file());
     assert!(report.contains("Status: PASSED"));
     assert!(report.contains("Truth mutation: `none`"));
     assert!(report.contains("Layer: `runtime_presentation`"));
@@ -1355,7 +1704,6 @@ fn presentation_bricks_layer_is_motionbricks_inspired_and_truth_stable() {
     assert!(retargeting.contains("\"schema\": \"oathyard.presentation_bricks_retargeting.v1\""));
     assert!(retargeting.contains("\"canonical_truth_joint_mapping\": true"));
     assert!(retargeting.contains("\"cosmetic_only_bones_separated_from_truth\": true"));
-    assert!(root.join("presentation_bricks_contact_sheet.ppm").is_file());
     assert!(report.contains("Status: PASSED"));
     assert!(report.contains("Motion system: `MotionBricks-inspired PresentationBricks`"));
     assert!(report.contains("Named vendor integration claimed: `false`"));
@@ -1363,107 +1711,467 @@ fn presentation_bricks_layer_is_motionbricks_inspired_and_truth_stable() {
 }
 
 #[test]
-fn native_render_product_capture_lane_is_clean_and_manifested() {
+fn native_render_path_is_blocked_without_3d_renderer_capture() {
     let source = fs::read_to_string("src/lib.rs").expect("source");
     let native_tool = fs::read_to_string("tools/native_combat_render.sh").expect("native tool");
     let hifi_tool =
         fs::read_to_string("tools/capture_high_fidelity_screens.sh").expect("hifi tool");
 
-    assert!(
-        source.contains("fn draw_native_software_camera_readability_overlay("),
-        "missing helper must not leave native software renderer uncompilable"
-    );
-    assert!(
-        source.contains("fn render_native_product_resolution_capture("),
-        "native high-resolution captures must use a clean product-mode software framebuffer"
-    );
-    assert!(source.contains("product_mode_clean_captures"));
-    assert!(source.contains("debug_overlay"));
-    assert!(source.contains("software-product-renderer-clean-frame-after-truth-hash"));
-    assert!(source.contains("verdict_ring_establishing"));
-    assert!(source.contains("combat_contact_readability"));
-    assert!(source.contains("material_impact_closeup"));
-    for camera in [
-        "first_person_guard_line",
-        "third_person_verdict_ring",
-        "planning_tactical_reach",
-        "consequence_aftermath_dwell",
-        "fight_film_orbit",
-        "asset_closeup_weapon_armor",
-    ] {
-        assert!(
-            source.contains(camera),
-            "native renderer source must explicitly define six-camera readability mode {camera}"
-        );
-        assert!(
-            native_tool.contains(camera)
-                || native_tool.contains(&camera.replace("_tactical_reach", "")),
-            "native render tool must assert six-camera readability evidence for {camera}"
-        );
-    }
-    for file in [
-        "native_combat_3d_first_person.ppm",
-        "native_combat_3d_third_person.ppm",
-        "native_combat_3d_planning.ppm",
-        "native_combat_3d_consequence.ppm",
-        "native_combat_3d_fight_film.ppm",
-        "native_combat_3d_asset_closeup.ppm",
-        "native_product_fight_film_1920x1080.ppm",
-    ] {
-        assert!(
-            native_tool.contains(file),
-            "native render tool must assert six-camera capture artifact {file} exists"
-        );
-    }
-    assert!(source.contains("product_mode_clean_capture_count"));
-    assert!(source.contains("native_renderer_assert_truth_unchanged"));
-    assert!(source.contains("native_renderer_truth_writeback_audit.md"));
-    assert!(source.contains("render_native_renderer_truth_writeback_audit_report"));
-    assert!(source.contains("capture_after_truth_hash"));
-    assert!(source.contains("verified_replay_trace_input"));
-    assert!(source.contains("replay_verified"));
-    assert!(source.contains("native_capture_timestamp_ms"));
-    assert!(source.contains("write_native_capture_camera_metadata_json"));
-    assert!(source.contains("replay_source_hash"));
-    assert!(source.contains("timestamp_ms"));
-    assert!(source.contains("position_milli"));
-    assert!(source.contains("Pre/post truth hashes equal"));
-    assert!(source.contains("PRODUCTION_RENDERER_MANIFEST_SCHEMA"));
-    assert!(source.contains("fn write_native_production_renderer_bundle("));
-    assert!(source.contains("fn render_native_production_renderer_capture("));
-    assert!(source.contains("production-renderer-state-frame-from-replay-trace-after-truth-hash"));
+    assert!(source.contains("render_native_3d_blocked_manifest_json"));
+    assert!(source.contains("oathyard.native_3d_visual_blocked.v1"));
+    assert!(source.contains("truth-after-hash-duel-result"));
+    assert!(source.contains("forbidden_visual_fallbacks_emitted"));
+    assert!(source.contains("native_3d_visual_evidence_present"));
+    assert!(native_tool.contains("BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE"));
+    assert!(native_tool.contains("\"source\": \"truth-after-hash-duel-result\""));
+    assert!(native_tool.contains("forbidden_visual_fallbacks_emitted"));
+    assert!(native_tool.contains("native_3d_visual_evidence_present"));
+    assert!(hifi_tool.contains("native_3d_visual_evidence_required"));
+    assert!(hifi_tool.contains("BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE"));
+}
 
-    for file in [
-        "native_product_verdict_ring_1920x1080.ppm",
-        "native_product_contact_1920x1080.ppm",
-        "native_product_material_closeup_1920x1080.ppm",
-    ] {
+#[test]
+fn high_fidelity_capture_gate_emits_fail_closed_required_capture_matrix() {
+    let out = Path::new("target/tmp/oathyard_high_fidelity_capture_matrix_test");
+    if out.exists() {
+        fs::remove_dir_all(out).expect("clear old high-fidelity capture matrix output");
+    }
+    let capture = Command::new("./tools/capture_high_fidelity_screens.sh")
+        .arg(out)
+        .output()
+        .expect("run high-fidelity capture gate");
+    assert!(
+        !capture.status.success(),
+        "capture gate must fail closed while native production 3D renderer evidence is missing\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&capture.stdout),
+        String::from_utf8_lossy(&capture.stderr)
+    );
+    assert_eq!(capture.status.code(), Some(1));
+
+    let matrix = fs::read_to_string(out.join("high_fidelity_capture_matrix.json"))
+        .expect("high-fidelity capture matrix json");
+    let matrix_report = fs::read_to_string(out.join("high_fidelity_capture_matrix.md"))
+        .expect("high-fidelity capture matrix report");
+
+    assert!(matrix.contains("\"schema\": \"oathyard.high_fidelity_capture_matrix.v1\""));
+    assert!(matrix.contains("\"required_capture_group_count\": 27"));
+    assert!(matrix.contains("\"required_capture_slot_count\": 56"));
+    assert!(matrix.contains("\"minimum_resolution_width\": 1920"));
+    assert!(matrix.contains("\"minimum_resolution_height\": 1080"));
+    assert!(matrix.contains("\"current_native_capture_count\": 0"));
+    assert!(matrix.contains("\"fallback_visual_substitutes_allowed\": false"));
+    assert!(matrix.contains("\"production_renderer_complete\": false"));
+    assert!(matrix.contains("\"truth_mutation\": false"));
+    assert!(matrix.contains("boot_main_menu"));
+    assert!(matrix.contains("fighter_closeup_06"));
+    assert!(matrix.contains("weapon_family_closeup_08"));
+    assert!(matrix.contains("gameplay_distance_weapon_family_08"));
+    assert!(matrix.contains("performance_debug_overlay"));
+    assert!(matrix.contains("missing_native_3d_capture"));
+    assert!(matrix_report.contains("Status: BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE"));
+    assert!(matrix_report.contains("Required capture slots: `56`"));
+    assert!(matrix_report.contains("Fallback visual substitutes: `forbidden`"));
+}
+
+#[test]
+fn high_fidelity_capture_gate_ingests_valid_production_renderer_capture_manifest_fail_closed() {
+    let root = Path::new("target/tmp/oathyard_high_fidelity_capture_manifest_ingest_test");
+    if root.exists() {
+        fs::remove_dir_all(root).expect("clear old production renderer fixture output");
+    }
+    let renderer_root = root.join("production_renderer_fixture");
+    let out = root.join("high_fidelity_screens");
+    fs::create_dir_all(&renderer_root).expect("create production renderer fixture root");
+
+    let png_path = renderer_root.join("production_renderer_boot_main_menu.png");
+    let mut png = Vec::new();
+    png.extend_from_slice(b"\x89PNG\r\n\x1a\n");
+    png.extend_from_slice(&13u32.to_be_bytes());
+    png.extend_from_slice(b"IHDR");
+    png.extend_from_slice(&1920u32.to_be_bytes());
+    png.extend_from_slice(&1080u32.to_be_bytes());
+    png.extend_from_slice(&[8, 6, 0, 0, 0]);
+    fs::write(&png_path, png).expect("write production renderer png fixture");
+
+    let manifest_path = renderer_root.join("production_renderer_manifest.json");
+    fs::write(
+        &manifest_path,
+        r#"{
+  "schema": "oathyard.production_renderer_manifest.v1",
+  "production_renderer_complete": true,
+  "native_3d_render_capture": true,
+  "truth_mutation": false,
+  "fallback_visual_substitutes_allowed": false,
+  "owner_visual_acceptance": false,
+  "public_demo_ready": false,
+  "release_candidate_ready": false,
+  "captures": [
+    {
+      "capture_id": "boot_main_menu",
+      "capture_file": "production_renderer_boot_main_menu.png",
+      "native_3d_capture": true,
+      "truth_mutation": false,
+      "renderer_backend_id": "fixture-native-renderer",
+      "renderer_build_hash_or_binary_hash": "fixture-build-hash",
+      "quality_preset": "fixture-production-candidate",
+      "replay_path": "artifacts/fixture/replay.json",
+      "replay_final_hash": "f17c8f76b9dfae86",
+      "content_manifest_hash": "fixture-content-hash",
+      "asset_manifest_hash": "fixture-asset-hash",
+      "camera_mode": "fixture-boot-main-menu",
+      "frame_or_tick": "0"
+    }
+  ]
+}
+"#,
+    )
+    .expect("write production renderer fixture manifest");
+
+    let capture = Command::new("./tools/capture_high_fidelity_screens.sh")
+        .arg(&out)
+        .env("OATHYARD_PRODUCTION_RENDERER_MANIFEST", &manifest_path)
+        .env("OATHYARD_PRODUCTION_RENDERER_ROOT", &renderer_root)
+        .output()
+        .expect("run high-fidelity capture gate with production renderer fixture");
+    assert!(
+        !capture.status.success(),
+        "capture gate must remain fail-closed until all required native capture slots exist\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&capture.stdout),
+        String::from_utf8_lossy(&capture.stderr)
+    );
+    assert_eq!(capture.status.code(), Some(1));
+
+    let matrix = fs::read_to_string(out.join("high_fidelity_capture_matrix.json"))
+        .expect("high-fidelity capture matrix json");
+    let report = fs::read_to_string(out.join("high_fidelity_capture_matrix.md"))
+        .expect("high-fidelity capture matrix report");
+    let manifest = fs::read_to_string(out.join("high_fidelity_screen_manifest.json"))
+        .expect("high-fidelity capture manifest");
+
+    assert!(matrix.contains("\"current_native_capture_count\": 1"));
+    assert!(matrix.contains("\"missing_native_capture_count\": 55"));
+    assert!(matrix.contains("\"capture_id\": \"boot_main_menu\""));
+    assert!(matrix.contains("\"status\": \"native_3d_capture_present\""));
+    assert!(matrix.contains("\"renderer_backend_id\": \"fixture-native-renderer\""));
+    assert!(matrix.contains("\"truth_mutation\": false"));
+    assert!(matrix.contains("\"fallback_visual_substitutes_allowed\": false"));
+    assert!(manifest.contains("\"capture_count\": 1"));
+    assert!(manifest.contains("\"passed\": false"));
+    assert!(manifest.contains("\"public_demo_ready\": false"));
+    assert!(manifest.contains("\"release_candidate_ready\": false"));
+    assert!(report.contains("Current native capture count: `1`"));
+    assert!(report.contains("Missing native capture count: `55`"));
+}
+
+#[test]
+fn high_fidelity_capture_gate_records_renderer_spike_candidate_without_production_credit() {
+    let root = Path::new("target/tmp/oathyard_high_fidelity_capture_candidate_ingest_test");
+    if root.exists() {
+        fs::remove_dir_all(root).expect("clear old candidate renderer fixture output");
+    }
+    let renderer_root = root.join("wgpu_renderer_spike_fixture");
+    let out = root.join("high_fidelity_screens");
+    fs::create_dir_all(&renderer_root).expect("create candidate renderer fixture root");
+
+    let png_path = renderer_root.join("production_renderer_wgpu_spike_1920x1080.png");
+    let mut png = Vec::new();
+    png.extend_from_slice(b"\x89PNG\r\n\x1a\n");
+    png.extend_from_slice(&13u32.to_be_bytes());
+    png.extend_from_slice(b"IHDR");
+    png.extend_from_slice(&1920u32.to_be_bytes());
+    png.extend_from_slice(&1080u32.to_be_bytes());
+    png.extend_from_slice(&[8, 6, 0, 0, 0]);
+    fs::write(&png_path, png).expect("write candidate renderer png fixture");
+
+    let manifest_path = renderer_root.join("production_renderer_manifest.json");
+    fs::write(
+        &manifest_path,
+        r#"{
+  "schema": "oathyard.production_renderer_manifest.v1",
+  "production_renderer_complete": false,
+  "native_3d_render_capture": true,
+  "truth_mutation": false,
+  "fallback_visual_substitutes_allowed": false,
+  "owner_visual_acceptance": false,
+  "public_demo_ready": false,
+  "release_candidate_ready": false,
+  "captures": [
+    {
+      "capture_id": "oathyard_verdict_ring_establishing",
+      "capture_file": "production_renderer_wgpu_spike_1920x1080.png",
+      "native_3d_capture": true,
+      "truth_mutation": false,
+      "renderer_backend_id": "wgpu-vulkan-offscreen-production-renderer-spike-v1",
+      "renderer_build_hash_or_binary_hash": "fixture-wgpu-build-hash",
+      "quality_preset": "wgpu_offscreen_spike_candidate_blockout_not_production",
+      "replay_path": "artifacts/fixture/replay.json",
+      "replay_final_hash": "f17c8f76b9dfae86",
+      "content_manifest_hash": "fixture-content-hash",
+      "asset_manifest_hash": "candidate-spike-no-production-assets",
+      "camera_mode": "offscreen_verdict_ring_establishing_spike",
+      "frame_or_tick": "post_hash_static_frame"
+    }
+  ]
+}
+"#,
+    )
+    .expect("write candidate renderer fixture manifest");
+
+    let capture = Command::new("./tools/capture_high_fidelity_screens.sh")
+        .arg(&out)
+        .env("OATHYARD_PRODUCTION_RENDERER_MANIFEST", &manifest_path)
+        .env("OATHYARD_PRODUCTION_RENDERER_ROOT", &renderer_root)
+        .output()
+        .expect("run high-fidelity capture gate with candidate renderer fixture");
+    assert!(
+        !capture.status.success(),
+        "candidate renderer capture must not pass the high-fidelity production gate\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&capture.stdout),
+        String::from_utf8_lossy(&capture.stderr)
+    );
+    assert_eq!(capture.status.code(), Some(1));
+
+    let matrix = fs::read_to_string(out.join("high_fidelity_capture_matrix.json"))
+        .expect("high-fidelity candidate capture matrix json");
+    let manifest = fs::read_to_string(out.join("high_fidelity_screen_manifest.json"))
+        .expect("high-fidelity candidate capture manifest");
+    let report = fs::read_to_string(out.join("high_fidelity_capture_matrix.md"))
+        .expect("high-fidelity candidate capture matrix report");
+
+    assert!(matrix.contains("\"current_native_capture_count\": 0"));
+    assert!(matrix.contains("\"missing_native_capture_count\": 56"));
+    assert!(matrix.contains("\"candidate_native_capture_count\": 1"));
+    assert!(matrix.contains("\"status\": \"candidate_native_3d_capture_not_production_complete\""));
+    assert!(matrix.contains("\"capture_id\": \"oathyard_verdict_ring_establishing\""));
+    assert!(matrix.contains("\"production_renderer_complete\": false"));
+    assert!(matrix.contains("\"owner_visual_acceptance\": false"));
+    assert!(manifest.contains("\"candidate_native_capture_count\": 1"));
+    assert!(manifest.contains("\"capture_count\": 0"));
+    assert!(manifest.contains("\"passed\": false"));
+    assert!(manifest.contains("\"public_demo_ready\": false"));
+    assert!(manifest.contains("\"release_candidate_ready\": false"));
+    assert!(report.contains("Candidate native capture count: `1`"));
+    assert!(report.contains("Current native capture count: `0`"));
+}
+
+#[test]
+fn wgpu_renderer_spike_declares_rodin_candidate_asset_capture_rows() {
+    let source = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing wgpu renderer spike source");
+    let tool = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike tool");
+
+    assert!(source.contains("--capture-id"));
+    assert!(source.contains("--candidate-assets"));
+    assert!(source.contains("candidate_asset_ids"));
+    assert!(source.contains("asset_manifest_sha256"));
+    assert!(tool.contains("assets/manifests/production_candidate_visual_manifest.json"));
+    assert!(tool.contains("production_renderer_manifest_default.json"));
+    assert!(tool.contains("fighter_closeup_01"));
+    assert!(tool.contains("weapon_family_closeup_01"));
+    assert!(tool.contains("armor_loadout_family_closeup_01"));
+    assert!(tool.contains("gameplay_distance_fighter_loadout_family_01"));
+    assert!(tool.contains("gameplay_distance_weapon_family_01"));
+    assert!(tool.contains("pre_contact_frame"));
+    assert!(tool.contains("contact_frame"));
+    assert!(tool.contains("candidate_asset_ids"));
+    assert!(tool.contains("wgpu_offscreen_spike_candidate_rodin_asset_metadata_not_mesh_render"));
+    assert!(tool.contains("'saltreach_duelist'"));
+    assert!(tool.contains("'longsword'"));
+    assert!(tool.contains("production_renderer_wgpu_spike_fighter_closeup_01_1920x1080.png"));
+}
+
+#[test]
+fn wgpu_renderer_spike_consumes_candidate_runtime_mesh_geometry() {
+    let source = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing wgpu renderer spike source");
+    let shader = std::fs::read_to_string("spikes/wgpu_renderer/src/verdict_ring.wgsl")
+        .expect("missing wgpu verdict-ring shader");
+    let tool = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike tool");
+
+    assert!(source.contains("--mesh-json"));
+    assert!(source.contains("load_runtime_mesh"));
+    assert!(source.contains("MeshVertex"));
+    assert!(source.contains("create_buffer_init"));
+    assert!(source.contains("draw_indexed"));
+    assert!(source.contains("mesh_geometry_consumed"));
+    assert!(shader.contains("mesh_vs_main"));
+    assert!(shader.contains("mesh_fs_main"));
+    assert!(tool.contains("--mesh-json"));
+    assert!(tool.contains("assets/runtime/candidate/longsword.mesh.json"));
+}
+
+#[test]
+fn wgpu_renderer_spike_consumes_multiclass_runtime_mesh_assets() {
+    let source = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing wgpu renderer spike source");
+    let shader = std::fs::read_to_string("spikes/wgpu_renderer/src/verdict_ring.wgsl")
+        .expect("missing wgpu verdict-ring shader");
+    let tool = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike tool");
+
+    assert!(source.contains("--mesh-manifest-json"));
+    assert!(source.contains("load_runtime_mesh_manifest"));
+    assert!(source.contains("mesh_asset_id"));
+    assert!(source.contains("mesh_asset_class"));
+    assert!(source.contains("mesh_assets"));
+    assert!(source.contains("candidate_status"));
+    assert!(source.contains("production_ready"));
+    assert!(source.contains("transform_baked_or_runtime"));
+    assert!(source.contains("draw_indexed"));
+    assert!(shader.contains("mesh_vs_main"));
+    assert!(shader.contains("mesh_fs_main"));
+
+    for class_name in ["fighter", "weapon", "armor", "arena"] {
         assert!(
-            native_tool.contains(file),
-            "native render tool must assert product capture {file} exists"
-        );
-        assert!(
-            hifi_tool.contains(file) || hifi_tool.contains("native_product_"),
-            "high-fidelity screen reducer must classify product capture {file}"
+            tool.contains(class_name),
+            "wgpu renderer spike must declare mesh-backed class {class_name}"
         );
     }
-    assert!(native_tool.contains("native_production_renderer_manifest.json"));
-    assert!(native_tool.contains("native_renderer_truth_writeback_audit.md"));
-    assert!(native_tool.contains("OATHYARD_NATIVE_COMBAT_OUT"));
-    assert!(native_tool.contains("out = Path(os.environ[\"OATHYARD_NATIVE_COMBAT_OUT\"])"));
-    assert!(!native_tool.contains("Path(\"$out\""));
-    assert!(native_tool.contains("product_mode_clean_captures"));
-    assert!(native_tool.contains("required_modes.issubset"));
-    assert!(native_tool.contains("cap[\"capture_after_truth_hash\"] is True"));
-    assert!(native_tool.contains("cap[\"truth_mutation\"] is False"));
-    assert!(native_tool.contains("capture[\"capture_after_truth_hash\"] is True"));
-    assert!(native_tool.contains("mutation_proof[\"changed_fields\"] == []"));
-    assert!(native_tool.contains("production_renderer_state_capture"));
-    assert!(hifi_tool.contains("artifacts/production_renderer/latest"));
-    assert!(hifi_tool.contains("production_renderer_manifest_backed"));
-    assert!(hifi_tool.contains("production_renderer_"));
-    assert!(hifi_tool.contains("debug_local_evidence = False"));
-    assert!(hifi_tool.contains("production_asset_evidence = True"));
+    for required_mesh in [
+        "assets/runtime/candidate/saltreach_duelist.mesh.json",
+        "assets/runtime/candidate/longsword.mesh.json",
+        "assets/runtime/candidate/gambeson.mesh.json",
+        "assets/runtime/candidate/oathyard_verdict_ring.mesh.json",
+    ] {
+        assert!(
+            tool.contains(required_mesh),
+            "wgpu renderer spike must consume {required_mesh}"
+        );
+    }
+    for required_capture in [
+        "fighter_closeup_01",
+        "armor_family_closeup_01",
+        "weapon_family_closeup_01",
+        "oathyard_arena_candidate_01",
+        "gameplay_distance_fighter_weapon_01",
+        "pre_contact_frame",
+        "contact_frame",
+        "fight_film_candidate_shot_01",
+    ] {
+        assert!(
+            tool.contains(required_capture),
+            "wgpu renderer spike must emit mesh-backed capture row {required_capture}"
+        );
+    }
+    assert!(tool.contains("mesh_geometry_capture_count"));
+    assert!(tool.contains("mesh_class_coverage"));
+    assert!(tool.contains("distinct_mesh_sha256_count"));
+    assert!(tool.contains("presentation_truth_isolation_passed"));
+    assert!(tool.contains("production_renderer_complete") && tool.contains("False"));
+    assert!(!tool.contains(".ppm"));
+    assert!(!tool.contains(".svg"));
+}
+
+#[test]
+fn wgpu_renderer_spike_binds_candidate_material_textures_fail_closed() {
+    let source = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing wgpu renderer spike source");
+    let shader = std::fs::read_to_string("spikes/wgpu_renderer/src/verdict_ring.wgsl")
+        .expect("missing wgpu verdict-ring shader");
+    let tool = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike tool");
+
+    assert!(source.contains("RuntimeMaterial"));
+    assert!(source.contains("load_runtime_material"));
+    assert!(source.contains("material_texture_binding"));
+    assert!(source.contains("material_texture_summary"));
+    assert!(source.contains("create_texture_with_data"));
+    assert!(source.contains("TextureUsages::TEXTURE_BINDING"));
+    assert!(source.contains("TextureSampleType::Float"));
+    assert!(source.contains("base_color_texture_path"));
+    assert!(source.contains("normal_texture_path"));
+    assert!(source.contains("orm_texture_path"));
+    assert!(source.contains("texture_hashes"));
+    assert!(shader.contains("@group(1) @binding(0)"));
+    assert!(shader.contains("texture_2d<f32>"));
+    assert!(shader.contains("textureSample"));
+    assert!(shader.contains("material_uv"));
+    assert!(tool.contains("material_texture_binding_count"));
+    assert!(tool.contains("bound_texture_channels"));
+    assert!(tool.contains("distinct_texture_sha256_count"));
+    assert!(tool.contains("base_color_texture_path"));
+    assert!(tool.contains("normal_texture_path"));
+    assert!(tool.contains("orm_texture_path"));
+    assert!(tool.contains("production_renderer_complete") && tool.contains("False"));
+    assert!(!tool.contains("owner_visual_acceptance = True"));
+}
+
+#[test]
+fn wgpu_renderer_spike_multiclass_manifest_assertion_is_fail_closed() {
+    let tool = std::fs::read_to_string("tools/wgpu_renderer_spike.sh")
+        .expect("missing wgpu renderer spike tool");
+
+    assert!(tool.contains("required_mesh_classes"));
+    assert!(tool.contains("mesh_backed_captures"));
+    assert!(tool.contains("distinct_mesh_sha256_count"));
+    assert!(tool.contains("mesh_asset_class"));
+    assert!(tool.contains("mesh_sha256"));
+    assert!(tool.contains("vertex_count"));
+    assert!(tool.contains("index_count"));
+    assert!(tool.contains("triangle_count"));
+    assert!(tool.contains("bounds_min"));
+    assert!(tool.contains("bounds_max"));
+    assert!(tool.contains("candidate_status"));
+    assert!(tool.contains("production_ready"));
+    assert!(tool.contains("truth_mutation"));
+    assert!(tool.contains("raise SystemExit(1)"));
+}
+
+#[test]
+fn visual_benchmark_integrates_high_fidelity_capture_matrix_into_gap_list() {
+    let root = Path::new("target/tmp/oathyard_visual_benchmark_capture_matrix_test");
+    if root.exists() {
+        fs::remove_dir_all(root).expect("clear old visual benchmark capture matrix output");
+    }
+    fs::create_dir_all(root).expect("create visual benchmark capture matrix output");
+
+    let capture = Command::new("./tools/capture_high_fidelity_screens.sh")
+        .arg(root.join("high_fidelity_screens"))
+        .output()
+        .expect("run high-fidelity capture gate");
+    assert_eq!(capture.status.code(), Some(1));
+
+    let benchmark = Command::new("./tools/visual_benchmark.sh")
+        .arg(root.join("visual_review"))
+        .output()
+        .expect("run visual benchmark gate");
+    assert!(
+        !benchmark.status.success(),
+        "visual benchmark must fail closed without production visual evidence"
+    );
+    assert_eq!(benchmark.status.code(), Some(1));
+
+    let manifest = fs::read_to_string(root.join("visual_review/visual_benchmark_manifest.json"))
+        .expect("visual benchmark manifest");
+    let report = fs::read_to_string(root.join("visual_review/visual_benchmark_report.md"))
+        .expect("visual benchmark report");
+    let gap_list =
+        fs::read_to_string(root.join("visual_review/visual_gap_list.md")).expect("visual gap list");
+
+    assert!(manifest.contains("\"source_capture_matrix\":"));
+    assert!(manifest.contains("\"required_capture_slot_count\": 56"));
+    assert!(manifest.contains("\"missing_native_capture_count\": 56"));
+    assert!(manifest.contains("\"current_native_capture_count\": 0"));
+    assert!(manifest.contains("\"fallback_visual_substitutes_allowed\": false"));
+    assert!(manifest.contains("\"production_renderer_complete\": false"));
+    assert!(manifest.contains("\"owner_visual_acceptance\": false"));
+    assert!(report.contains("Required high-fidelity capture slots: `56`"));
+    assert!(report.contains("Missing native capture slots: `56`"));
+    assert!(gap_list.contains("Required high-fidelity capture slots: `56`"));
+    assert!(gap_list.contains("Missing native capture slots: `56`"));
+    assert!(gap_list.contains("Fallback visual substitutes: `forbidden`"));
+}
+
+#[test]
+fn performance_benchmark_handles_blocked_native_3d_manifest_without_traceback() {
+    let perf_tool =
+        fs::read_to_string("tools/performance_benchmark.py").expect("performance benchmark tool");
+
+    assert!(perf_tool.contains("blocked_pending_native_3d_renderer_capture"));
+    assert!(perf_tool.contains("native_render_status"));
+    assert!(perf_tool.contains("render_manifest.get(\"playback_loop\", {})"));
 }
 
 #[test]
@@ -1507,10 +2215,13 @@ fn wgpu_renderer_spike_lane_is_source_buildable_and_truth_isolated() {
     assert!(tool.contains("cargo run --locked --manifest-path spikes/wgpu_renderer/Cargo.toml"));
     assert!(tool.contains("post_hash_presentation_packet.json"));
     assert!(tool.contains("production_renderer_manifest.json"));
+    assert!(tool.contains("native_3d_render_capture"));
+    assert!(tool.contains("oathyard_verdict_ring_establishing"));
     assert!(tool.contains("presentation_truth_isolation_passed"));
     assert!(tool.contains("\"truth_mutation\": false"));
     assert!(truth_tool.contains("tools/wgpu_renderer_spike.sh"));
-    assert!(hifi_tool.contains("path.suffix.lower() == '.png'"));
-    assert!(hifi_tool
-        .contains("native_3d_production_renderer_evidence = is_non_debug_production_renderer_png"));
+    assert!(hifi_tool.contains("capture_path.suffix.lower() != '.png'"));
+    assert!(
+        hifi_tool.contains("capture file is not a production_renderer_*.png native evidence file")
+    );
 }

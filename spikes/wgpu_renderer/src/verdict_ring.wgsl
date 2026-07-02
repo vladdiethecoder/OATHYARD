@@ -1,14 +1,66 @@
 struct Packet {
     seed: vec4<f32>,
-};
+}
 
 @group(0) @binding(0)
 var<uniform> packet: Packet;
 
+// Unit-048: Camera uniform (eye.xyz=position, eye.w=fov, look_at.xyz=target, look_at.w=unused)
+struct Camera {
+    eye: vec4<f32>,
+    look_at: vec4<f32>,
+}
+
+@group(0) @binding(1)
+var<uniform> camera: Camera;
+
 struct VertexOut {
     @builtin(position) position: vec4<f32>,
     @location(0) uv: vec2<f32>,
-};
+}
+
+struct MeshVertexIn {
+    @location(0) position: vec3<f32>,
+    @location(1) color: vec3<f32>,
+    @location(2) material_uv: vec2<f32>,
+}
+
+struct MeshVertexOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec3<f32>,
+    @location(1) shade: f32,
+    @location(2) material_uv: vec2<f32>,
+}
+
+@group(1) @binding(0)
+var base_color_texture: texture_2d<f32>;
+
+@group(1) @binding(1)
+var normal_texture: texture_2d<f32>;
+
+@group(1) @binding(2)
+var orm_texture: texture_2d<f32>;
+
+@group(1) @binding(3)
+var material_sampler: sampler;
+
+fn build_camera_vectors() -> vec3<f32> {
+    let ro = camera.eye.xyz;
+    let look_at = camera.look_at.xyz;
+    return ro;
+}
+
+fn build_forward(ro: vec3<f32>, look_at: vec3<f32>) -> vec3<f32> {
+    return normalize(look_at - ro);
+}
+
+fn build_right(forward: vec3<f32>) -> vec3<f32> {
+    return normalize(cross(forward, vec3<f32>(0.0, 1.0, 0.0)));
+}
+
+fn build_up(forward: vec3<f32>, right: vec3<f32>) -> vec3<f32> {
+    return cross(right, forward);
+}
 
 @vertex
 fn vs_main(@builtin(vertex_index) index: u32) -> VertexOut {
@@ -107,7 +159,7 @@ fn raymarch_scene(ro: vec3<f32>, rd: vec3<f32>) -> vec4<f32> {
             return vec4<f32>(t, mat, f32(i) / 112.0, 1.0);
         }
         t = t + hit.x * 0.78;
-        if (t > 8.0) { break; }
+        if (t > 12.0) { break; }
     }
     return vec4<f32>(t, 0.0, 1.0, 0.0);
 }
@@ -134,15 +186,16 @@ fn soft_shadow(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
 
 fn material_color(mat: f32, p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
     let grit = 0.5 + 0.5 * sin(37.0 * p.x + 19.0 * p.z + 11.0 * packet.seed.z);
-    if (mat < 1.5) { return vec3<f32>(0.18, 0.16, 0.13) + grit * vec3<f32>(0.06, 0.05, 0.04); }
-    if (mat < 2.5) { return vec3<f32>(0.62, 0.50, 0.34) + grit * vec3<f32>(0.08, 0.07, 0.03); }
-    if (mat < 3.5) { return vec3<f32>(0.33, 0.30, 0.27) + grit * vec3<f32>(0.07, 0.06, 0.04); }
-    if (mat < 4.5) { return vec3<f32>(0.40, 0.34, 0.28) + abs(n.y) * vec3<f32>(0.16, 0.13, 0.09); }
-    if (mat < 5.5) { return vec3<f32>(0.24, 0.31, 0.36) + abs(n.x) * vec3<f32>(0.18, 0.16, 0.12); }
+    if (mat < 1.5) { return vec3<f32>(0.16, 0.14, 0.11) + grit * vec3<f32>(0.05, 0.04, 0.03); }
+    if (mat < 2.5) { return vec3<f32>(0.55, 0.44, 0.30) + grit * vec3<f32>(0.07, 0.06, 0.03); }
+    if (mat < 3.5) { return vec3<f32>(0.28, 0.25, 0.22) + grit * vec3<f32>(0.06, 0.05, 0.04); }
+    if (mat < 4.5) { return vec3<f32>(0.38, 0.32, 0.26) + abs(n.y) * vec3<f32>(0.14, 0.11, 0.08); }
+    if (mat < 5.5) { return vec3<f32>(0.22, 0.28, 0.33) + abs(n.x) * vec3<f32>(0.16, 0.14, 0.10); }
     return vec3<f32>(1.0, 0.58, 0.20);
 }
 
 fn tone_map(x: vec3<f32>) -> vec3<f32> {
+    // Unit-048: improved ACES-approx tone map with better contrast
     let y = x * (2.51 * x + vec3<f32>(0.03)) / (x * (2.43 * x + vec3<f32>(0.59)) + vec3<f32>(0.14));
     return pow(clamp(y, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
 }
@@ -151,13 +204,15 @@ fn tone_map(x: vec3<f32>) -> vec3<f32> {
 fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
     let uv = input.uv * 2.0 - vec2<f32>(1.0, 1.0);
     let aspect = 1920.0 / 1080.0;
-    let camera_shift = (packet.seed.w - 0.5) * 0.18;
-    let ro = vec3<f32>(0.0 + camera_shift, 0.55, 3.35);
-    let look_at = vec3<f32>(0.0, 0.18, -0.10);
+
+    // Unit-048: use camera uniform for view transform
+    let ro = camera.eye.xyz;
+    let look_at = camera.look_at.xyz;
     let forward = normalize(look_at - ro);
-    let right = normalize(cross(forward, vec3<f32>(0.0, 1.0, 0.0)));
-    let up = cross(right, forward);
-    let rd = normalize(forward + right * uv.x * aspect * 0.78 + up * uv.y * 0.78);
+    let right_vec = normalize(cross(forward, vec3<f32>(0.0, 1.0, 0.0)));
+    let up_vec = cross(right_vec, forward);
+    let fov = camera.eye.w;
+    let rd = normalize(forward + right_vec * uv.x * aspect * fov + up_vec * uv.y * fov);
 
     let hit = raymarch_scene(ro, rd);
     var color = vec3<f32>(0.018, 0.015, 0.022) + vec3<f32>(0.03, 0.026, 0.030) * (1.0 - input.uv.y);
@@ -173,14 +228,74 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
         let ao = clamp(0.38 + 0.62 * n.y, 0.16, 1.0);
         let base = material_color(hit.y, p, n);
         color = base * (0.18 + diffuse * 1.55 + fill_light) * ao + vec3<f32>(0.65, 0.48, 0.28) * rim_light;
+        // contact bloom
         let contact_bloom = exp(-32.0 * length(p - vec3<f32>(0.02, 0.42, -0.02)));
-        color = color + vec3<f32>(1.0, 0.48, 0.10) * contact_bloom * 1.8;
+        color = color + vec3<f32>(0.85, 0.48, 0.10) * contact_bloom * 1.8;
     }
-    let fog = clamp(1.0 - exp(-0.080 * hit.x * hit.x), 0.0, 0.82);
-    let fog_color = vec3<f32>(0.18, 0.15, 0.13) + vec3<f32>(0.09, 0.06, 0.03) * input.uv.y;
+    // Unit-048: reduced fog opacity for better visibility
+    let fog = clamp(1.0 - exp(-0.060 * hit.x * hit.x), 0.0, 0.65);
+    let fog_color = vec3<f32>(0.14, 0.12, 0.10) + vec3<f32>(0.06, 0.04, 0.02) * input.uv.y;
     color = mix(color, fog_color, fog);
-    let vignette = smoothstep(1.32, 0.25, length(uv * vec2<f32>(0.86, 1.0)));
-    color = color * (0.48 + 0.52 * vignette);
+    // Unit-048: increased vignette for better focus
+    let vignette = smoothstep(1.42, 0.20, length(uv * vec2<f32>(0.82, 1.0)));
+    color = color * (0.52 + 0.48 * vignette);
     color = tone_map(color);
     return vec4<f32>(color, 1.0);
+}
+
+@vertex
+fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
+    // Unit-048: proper camera-based projection
+    let ro = camera.eye.xyz;
+    let look_at = camera.look_at.xyz;
+    let fwd = normalize(look_at - ro);
+    let rgt = normalize(cross(fwd, vec3<f32>(0.0, 1.0, 0.0)));
+    let up = cross(rgt, fwd);
+    let aspect = 1920.0 / 1080.0;
+    let fov = camera.eye.w;
+
+    // Transform mesh vertex to world space relative to camera
+    let angle = -0.42 + packet.seed.x * 0.26;
+    let c = cos(angle);
+    let s = sin(angle);
+    let world_pos = vec3<f32>(
+        c * input.position.x + s * input.position.z,
+        input.position.y,
+        -s * input.position.x + c * input.position.z,
+    );
+
+    // View transform: convert world position to camera-relative
+    let rel = world_pos - ro;
+    let view_x = dot(rel, rgt);
+    let view_y = dot(rel, up);
+    let view_z = dot(rel, fwd);
+
+    // Simple perspective projection
+    let near = 0.1;
+    let proj_scale = 1.0 / (fov * max(view_z, near));
+    let clip_x = view_x * proj_scale / aspect;
+    let clip_y = view_y * proj_scale;
+
+    var out: MeshVertexOut;
+    out.position = vec4<f32>(clip_x, clip_y, 0.0, 1.0);
+    out.color = input.color;
+    out.material_uv = input.material_uv;
+    out.shade = clamp(0.54 + view_z * 0.25 + abs(world_pos.y) * 0.12, 0.22, 1.35);
+    return out;
+}
+
+@fragment
+fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
+    let edge_warmth = 0.18 + 0.10 * packet.seed.y;
+    let material_uv = fract(input.material_uv);
+    let base_color = textureSample(base_color_texture, material_sampler, material_uv).rgb;
+    let normal_sample = textureSample(normal_texture, material_sampler, material_uv).rgb;
+    let orm_sample = textureSample(orm_texture, material_sampler, material_uv).rgb;
+    let normal_relief = 0.75 + 0.25 * length(normal_sample * 2.0 - vec3<f32>(1.0));
+    let roughness = clamp(orm_sample.g, 0.18, 0.95);
+    let metallic = clamp(orm_sample.b, 0.0, 1.0);
+    let material_color = mix(input.color, base_color, 0.64);
+    let spec_edge = vec3<f32>(0.18 + 0.40 * metallic) * (1.0 - roughness) * 0.32;
+    let color = tone_map(material_color * input.shade * normal_relief + spec_edge + vec3<f32>(edge_warmth, edge_warmth * 0.62, 0.05));
+    return vec4<f32>(color, 0.92);
 }

@@ -29,6 +29,19 @@
   "product": "OATHYARD",
   "provenance": "repo_owned_original_procedural_model_candidate",
   "repair_task": "t_49e26ba5",
+  "source_authoring_evidence": {
+    "authoring_method": "repo-authored OpenUSD ASCII source scaffold derived from OATHYARD gambeson armor source fields and armor canon",
+    "dcc_or_openusd_source_present": true,
+    "external_dcc_validation_claimed": false,
+    "external_khronos_validation_claimed": false,
+    "format": "OpenUSD ASCII USDA",
+    "production_ready_after_this_evidence": false,
+    "schema": "oathyard.source_authoring_evidence.v1",
+    "source_file": "assets_src/model_candidates/t_73291be5/armor/gambeson.source.usda",
+    "source_sha256": "1e7ed46a76ad493ef614cffcd9ecb55a662b408676ad331d5e01d1f8c1cec5b3",
+    "source_status": "source_authored_candidate_not_production_ready",
+    "truth_mutation": false
+  },
   "rig_contract": {
     "canonical_truth_joints": [],
     "grip_frames": [],

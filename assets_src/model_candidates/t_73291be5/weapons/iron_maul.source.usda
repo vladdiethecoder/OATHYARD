@@ -1,0 +1,88 @@
+#usda 1.0
+(
+    defaultPrim = "IRON_MAUL"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "iron_maul"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "IRON_MAUL"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "940mm two-handed dark-iron maul with heavy rectangular crush head, reinforced cheeks, langets, ash haft, counterweight, and blunt-crush contact semantics"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "blunt_crush"
+        int oathyard:length_mm = 940
+    }
+
+    def Mesh "heavy_rectangular_crush_head"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.145, 0.000, 0.355), (0.145, 0.000, 0.355), (0.145, 0.000, 0.510), (-0.145, 0.000, 0.510),
+            (-0.145, 0.160, 0.355), (0.145, 0.160, 0.355), (0.145, 0.160, 0.510), (-0.145, 0.160, 0.510),
+            (-0.175, 0.026, 0.392), (0.175, 0.026, 0.392), (0.175, 0.134, 0.478), (-0.175, 0.134, 0.478)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0, 8, 9, 10, 11, 8, 11, 7, 4]
+        uniform token[] primvars:oathyard_material = ["dark_forged_iron_flat_crush_faces"]
+        uniform token[] primvars:oathyard_contact = ["broad_crush_face_left", "broad_crush_face_right", "corner_stagger_edge", "mass_center_visual"]
+    }
+
+    def Mesh "raised_cheek_bands_and_edges"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.160, 0.010, 0.340), (0.160, 0.010, 0.340), (0.160, 0.010, 0.370), (-0.160, 0.010, 0.370),
+            (-0.160, 0.150, 0.340), (0.160, 0.150, 0.340), (0.160, 0.150, 0.370), (-0.160, 0.150, 0.370),
+            (-0.160, 0.010, 0.495), (0.160, 0.010, 0.495), (0.160, 0.010, 0.530), (-0.160, 0.010, 0.530),
+            (-0.160, 0.150, 0.495), (0.160, 0.150, 0.495), (0.160, 0.150, 0.530), (-0.160, 0.150, 0.530)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 3, 2, 6, 7, 11, 10, 14, 15]
+        uniform token[] primvars:oathyard_material = ["bright_worn_edge_bands"]
+        uniform token[] primvars:oathyard_contact = ["reinforced_cheek", "edge_burr_stagger", "armor_denting_shoulder"]
+    }
+
+    def Mesh "socket_langets_and_rivets"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.040, 0.000, 0.235), (0.040, 0.000, 0.235), (0.040, 0.000, 0.390), (-0.040, 0.000, 0.390),
+            (-0.034, 0.160, 0.235), (0.034, 0.160, 0.235), (0.034, 0.160, 0.390), (-0.034, 0.160, 0.390),
+            (-0.018, -0.010, -0.270), (0.018, -0.010, -0.270), (0.018, -0.010, 0.330), (-0.018, -0.010, 0.330),
+            (-0.015, 0.170, -0.270), (0.015, 0.170, -0.270), (0.015, 0.170, 0.330), (-0.015, 0.170, 0.330)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["blackened_socket_and_langets"]
+        uniform token[] primvars:oathyard_contact = ["socket_shoulder", "langet_guard", "haft_reinforcement"]
+    }
+
+    def Mesh "ash_two_hand_haft_and_counterweight"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.030, 0.020, -0.455), (0.030, 0.020, -0.455), (0.026, 0.020, 0.275), (-0.026, 0.020, 0.275),
+            (-0.024, 0.135, -0.450), (0.024, 0.135, -0.450), (0.022, 0.135, 0.270), (-0.022, 0.135, 0.270),
+            (-0.048, 0.000, -0.540), (0.048, 0.000, -0.540), (0.040, 0.000, -0.455), (-0.040, 0.000, -0.455),
+            (-0.036, 0.155, -0.530), (0.036, 0.155, -0.530), (0.032, 0.155, -0.462), (-0.032, 0.155, -0.462)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["dark_ash_wood_grip", "iron_counterweight_cap"]
+        uniform token[] primvars:oathyard_contact = ["two_hand_grip_frame", "butt_blunt_surface", "counterweighted_follow_through"]
+    }
+}

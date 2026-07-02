@@ -68,7 +68,7 @@ The current ordering is:
 4. only then Bevy/Unreal renderer/import/capture work;
 5. only after that visual benchmark / owner acceptance / readiness gates.
 
-Renderer-only, import-only, capture-only, PPM/SVG/raw-X11/software/debug, or scalar-table evidence must not close high-fidelity cards.
+Renderer-only, import-only, capture-only, non-native frame/non-native diagram/native-status/software/debug, or scalar-table evidence must not close high-fidelity cards.
 
 ## Continuous local automation
 

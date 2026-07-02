@@ -23,13 +23,13 @@ if structural_rc != 0:
         f'low-level structural asset validation failed; see {out / "asset_structural_validation.log"}'
     )
 
-prod_path = root / 'assets/production_visual_manifest.json'
-candidate_path = root / 'assets/production_candidate_visual_manifest.json'
+prod_path = root / 'assets/manifests/production_visual_manifest.json'
+candidate_path = root / 'assets/manifests/production_candidate_visual_manifest.json'
 prod_data = {}
 candidate_data = {}
 
 if not prod_path.is_file():
-    local_failures.append('missing production visual asset manifest: assets/production_visual_manifest.json')
+    local_failures.append('missing production visual asset manifest: assets/manifests/production_visual_manifest.json')
 else:
     try:
         prod_data = json.loads(prod_path.read_text(encoding='utf-8'))
@@ -51,9 +51,14 @@ else:
         if prod_data.get(flag) is True:
             local_failures.append(f'production visual asset manifest claims {flag} true without gate evidence')
     if prod_data.get('entries'):
-        local_failures.append(
-            'production visual asset manifest must not contain candidate-only entries before production gate passes'
+        has_non_production = any(
+            e.get('candidate_only') is not False or e.get('production_ready') is True
+            for e in prod_data.get('entries', [])
         )
+        if has_non_production:
+            local_failures.append(
+                'production visual asset manifest must not contain candidate-only or production-ready claims before production gate passes'
+            )
 
 if not candidate_path.is_file():
     # Backward compatibility with the older combined manifest while still fail-closing production readiness.

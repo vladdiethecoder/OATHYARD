@@ -11,7 +11,7 @@ Key controlling constraints:
 
 - OATHYARD is a deterministic native-PC 3D planned-time physical melee duel game.
 - The target is premium current-generation high-fidelity native 3D with dark-fantasy judicial-duel art direction and melee readability benchmarked against Elden Ring and For Honor for quality/readability only. Do not copy their names, assets, silhouettes, factions, UI, animation, lore, characters, textures, music, or proprietary mechanics.
-- Current raw X11/XWayland, SVG, PPM, low-poly glTF, software-raster captures, diagnostic contact sheets, and sandbox-regenerated model candidates are local verification or QA evidence only. They prove pipeline/data-flow boundaries or expose blockers; they are not visual target evidence and are not the production model style.
+- Current local nonvisual manifests/reports, low-poly glTF, and sandbox-regenerated model candidates are local verification or QA evidence only. They prove pipeline/data-flow boundaries or expose blockers; they are not visual target evidence and are not the production model style.
 - Production assets must be repo-owned, source-backed, provenance-tagged, regenerable from `assets_src/`, non-flat 3D geometry, and suitable for rigging/skinning without mutating deterministic gameplay truth.
 - Current QA blocker source for the next model pass: `/home/vdubrov/.hermes/kanban/boards/oathyard-full-game/workspaces/t_3388ac99/qa_results/OATHYARD_MODEL_VISUAL_ANIMATION_QA_REPORT.md`.
 
@@ -68,7 +68,7 @@ These targets revise the art/model direction for the next source-backed generati
 
 ### Cross-asset silhouette and material rules
 
-- Primary identity must survive a gameplay-distance contact sheet: each fighter, weapon, armor family, and arena must be identifiable by outline before reading labels or metadata.
+- Primary identity must survive a gameplay-distance native 3D capture: each fighter, weapon, armor family, and arena must be identifiable by outline before reading labels or metadata.
 - Preserve functional negative space: arms must separate from shoulders/straps, weapon heads must separate from shafts, armor pieces must separate from cloth layers, and arena landmarks must not merge into floor noise.
 - Do not differentiate families by flat recolor alone. Use geometry, edge highlights, normals, straps, rows, lacing, rivets, bosses, fullers, hooks, bevels, dents, stitched channels, and material masks.
 - Random red/dark scatter is not material identity. Blood, grit, soot, chalk, and wear must be localized to contact/wear zones and must not obscure the silhouette or make artifacts look like generator noise.
@@ -92,7 +92,7 @@ These targets revise the art/model direction for the next source-backed generati
 | Asset | Required silhouette/material target for next pass |
 | --- | --- |
 | `curved_sword` | Make the curved single-edge identity unmistakable: a continuous crescent-like cutting line, separated spine/edge highlights, readable guard/pommel, and enough blade length/thickness that it cannot read as a stubby dagger or wedge. |
-| `longsword` | Distinguish from `arming_sword` by two-handed scale: longer straight double-edge blade, fuller or center ridge, longer grip, larger cruciform guard, and slimmer reach-forward profile. It must read as 1220 mm reach at contact-sheet scale. |
+| `longsword` | Distinguish from `arming_sword` by two-handed scale: longer straight double-edge blade, fuller or center ridge, longer grip, larger cruciform guard, and slimmer reach-forward profile. It must read as 1220 mm reach at image-rollup scale. |
 | `bearded_axe` | Keep the strong bearded hook silhouette, but replace flat-black head/outlier triangle artifacts with unified worn steel/blackened-iron material: bevel highlight on cutting edge, darker poll/socket, clear beard edge, and no stray gray geometry that reads as shadow trash. |
 | `ash_spear` | Strengthen the long-thin read without losing elegance: thicker/value-separated ash shaft, leaf head wide enough to see, metal socket/collar, two grip wraps, and reduced scatter near the point so the pierce/bracing line remains clean. |
 | `round_shield` | Preserve round readability but clarify construction: raised boss, rim thickness, wood plank or hide face, rear strap/grip cues, chalk/red legal marking, and edge wear localized to the rim. |
@@ -123,7 +123,7 @@ These targets revise the art/model direction for the next source-backed generati
 A revised model source package should not be accepted until it provides:
 
 - updated source metadata carrying these per-asset silhouette/material notes or equivalent fields;
-- regenerated previews/contact sheets plus close-up crops for fighters, weapons, armor, and arenas;
+- regenerated source metadata plus manifest-backed native 3D close-up/gameplay captures for fighters, weapons, armor, and arenas;
 - visual inspection confirming the listed identity blockers are gone;
 - fighter motion/deformation evidence for idle, walk, and attack or mapped OATHYARD action poses;
 - armor skin/socket no-clipping proof if armor is wearable;

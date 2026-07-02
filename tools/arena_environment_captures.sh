@@ -23,7 +23,7 @@ MODES = ["establishing", "gameplay", "contact"]
 WIDTH = 1920
 HEIGHT = 1080
 SOURCE_BACKED_PATHS = [
-    "assets_src/arenas/arenas.oysrc",
+    "assets/source/oysrc/arenas.oysrc",
     "content/oathyard_content.manifest",
     "assets/runtime_manifest.json",
     "tools/asset_pipeline.py",
@@ -553,7 +553,7 @@ payload = {
     "release_candidate_ready": False,
     "truth_mutation": False,
     "current_blockers": [
-        "software raster PNG captures are local verification evidence, not owner visual acceptance",
+        "non-native local raster PNG captures are local verification evidence, not owner visual acceptance",
         "external Khronos/DCC/renderer acceptance is not claimed",
     ],
     "failed_check_count": len(failures),
@@ -623,27 +623,6 @@ if failures:
 report.extend(["", "## Explicit blockers", *[f"- {blocker}" for blocker in payload["current_blockers"]]])
 (out / "arena_environment_capture_report.md").write_text("\n".join(report) + "\n", encoding="utf-8")
 
-sheet = [
-    '<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="980" viewBox="0 0 1320 980">',
-    '<rect width="100%" height="100%" fill="#111414"/>',
-    '<text x="24" y="36" fill="#f1eadb" font-family="monospace" font-size="22">OATHYARD arena environment capture sheet</text>',
-    '<text x="24" y="62" fill="#b8c5c4" font-family="monospace" font-size="13">establishing/gameplay/contact captures; source-backed runtime glTF + material-map evidence; owner visual acceptance not claimed</text>',
-]
-thumb_w = 400
-thumb_h = 225
-for idx, capture in enumerate(captures):
-    col = idx % 3
-    row = idx // 3
-    x = 24 + col * 430
-    y = 92 + row * 420
-    sheet.append(f'<rect x="{x}" y="{y}" width="410" height="350" fill="#1d2525" stroke="#607170"/>')
-    embedded_png = base64.b64encode((out / capture["file"]).read_bytes()).decode("ascii")
-    sheet.append(f'<image href="data:image/png;base64,{embedded_png}" x="{x+5}" y="{y+8}" width="{thumb_w}" height="{thumb_h}" preserveAspectRatio="xMidYMid slice"/>')
-    sheet.append(f'<text x="{x+14}" y="{y+260}" fill="#f2ead8" font-family="monospace" font-size="14">{capture["arena_id"]}</text>')
-    sheet.append(f'<text x="{x+14}" y="{y+284}" fill="#b8c5c4" font-family="monospace" font-size="12">mode {capture["mode"]} | sha {capture["sha256"][:16]}</text>')
-    sheet.append(f'<text x="{x+14}" y="{y+308}" fill="#b8c5c4" font-family="monospace" font-size="12">gltf {Path(capture["runtime_gltf"]).name} | z {capture["bounds"]["min_z"]}..{capture["bounds"]["max_z"]}</text>')
-sheet.append('</svg>')
-(out / "arena_environment_contact_sheet.svg").write_text("\n".join(sheet) + "\n", encoding="utf-8")
 if not passed:
     sys.stderr.write("arena environment captures failed\n")
     sys.exit(1)

@@ -1,0 +1,82 @@
+#usda 1.0
+(
+    defaultPrim = "LONGSWORD"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "longsword"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "LONGSWORD"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "straight double-edged oathyard longsword with crossguard, two-hand grip, scent-stopper pommel, edge/pierce contact semantics, and physical length/mass provenance"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "edge_pierce_cross"
+        int oathyard:length_mm = 1220
+    }
+
+    def Mesh "straight_double_edge_blade"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.045, 0.000, -0.060), (0.045, 0.000, -0.060), (0.038, 0.000, 0.840), (-0.038, 0.000, 0.840),
+            (-0.025, 0.018, -0.050), (0.025, 0.018, -0.050), (0.020, 0.018, 0.835), (-0.020, 0.018, 0.835),
+            (0.000, 0.009, 0.930)
+        ]
+        int[] faceVertexCounts = [4, 4, 3, 3, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 3, 2, 8, 7, 2, 6, 8, 0, 4, 5, 1, 1, 5, 6, 2]
+        uniform token[] primvars:oathyard_material = ["tempered_steel_edge_worn"]
+        uniform token[] primvars:oathyard_contact = ["cutting_edge", "piercing_tip", "central_ridge"]
+    }
+
+    def Mesh "crossguard_quillons"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.285, 0.000, -0.090), (0.285, 0.000, -0.090), (0.265, 0.000, -0.030), (-0.265, 0.000, -0.030),
+            (-0.260, 0.040, -0.085), (0.260, 0.040, -0.085), (0.240, 0.040, -0.035), (-0.240, 0.040, -0.035)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        uniform token[] primvars:oathyard_material = ["darkened_steel_guard"]
+        uniform token[] primvars:oathyard_contact = ["crossguard_bind_surface"]
+    }
+
+    def Mesh "two_hand_grip"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.035, 0.000, -0.365), (0.035, 0.000, -0.365), (0.035, 0.000, -0.095), (-0.035, 0.000, -0.095),
+            (-0.030, 0.055, -0.355), (0.030, 0.055, -0.355), (0.030, 0.055, -0.105), (-0.030, 0.055, -0.105)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        uniform token[] primvars:oathyard_material = ["wrapped_leather_grip"]
+        uniform token[] primvars:oathyard_contact = ["grip_r_l_reference"]
+    }
+
+    def Mesh "weighted_pommel"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.060, 0.000, -0.455), (0.060, 0.000, -0.455), (0.070, 0.000, -0.380), (-0.070, 0.000, -0.380),
+            (-0.048, 0.060, -0.445), (0.048, 0.060, -0.445), (0.058, 0.060, -0.390), (-0.058, 0.060, -0.390)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        uniform token[] primvars:oathyard_material = ["weighted_steel_pommel"]
+        uniform token[] primvars:oathyard_contact = ["counterweight_blunt_surface"]
+    }
+}

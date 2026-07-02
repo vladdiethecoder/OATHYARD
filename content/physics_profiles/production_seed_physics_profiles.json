@@ -1,0 +1,43 @@
+{
+  "schema": "oathyard.production_seed_physics_profiles.v1",
+  "profile_count": 4,
+  "profiles": [
+    {
+      "asset_id": "longsword",
+      "asset_class": "weapon",
+      "mass_kg": 1.8,
+      "mass_distribution": "blade_heavy",
+      "moment_of_inertia_status": "placeholder",
+      "collision_regions": ["blade_edge", "cross_guard", "pommel"],
+      "contact_profile_status": "pending_deterministic_truth_binding",
+      "truth_boundary": "presentation_only"
+    },
+    {
+      "asset_id": "witness_stone",
+      "asset_class": "arena",
+      "mass_kg": null,
+      "moment_of_inertia_status": "static_prop",
+      "collision_regions": ["base", "shaft", "inscription_band"],
+      "contact_profile_status": "pending_deterministic_truth_binding",
+      "truth_boundary": "presentation_only"
+    },
+    {
+      "asset_id": "gambeson",
+      "asset_class": "armor",
+      "mass_kg": 4.5,
+      "coverage_regions": ["torso", "shoulders", "arms"],
+      "material_layers": ["outer_linen", "padding", "inner_lining"],
+      "contact_profile_status": "pending_deterministic_truth_binding",
+      "truth_boundary": "presentation_only"
+    },
+    {
+      "asset_id": "fighter_mannequin",
+      "asset_class": "fighter",
+      "mass_kg": 75.0,
+      "rig_status": "unrigged",
+      "contact_regions": ["head", "torso", "arms", "legs"],
+      "contact_profile_status": "pending_rig_and_truth_joint_mapping",
+      "truth_boundary": "presentation_only"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 """Headless Blender production-candidate asset generator for OATHYARD.
 
 Run inside Blender:
-  blender --background --python tools/blender_autonomous_pipeline.py -- --asset longsword --source assets_src/model_candidates/t_73291be5/weapons/longsword.model_source.json --run-id <id>
+  blender --background --python tools/blender_autonomous_pipeline.py -- --asset longsword --source assets/source/model_candidates/t_73291be5/weapons/longsword.model_source.json --run-id <id>
 
 This creates candidate evidence only. It never writes canonical assets/gltf and never
 claims owner/public/release readiness.

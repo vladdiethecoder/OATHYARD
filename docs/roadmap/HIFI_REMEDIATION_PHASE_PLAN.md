@@ -21,7 +21,7 @@ Hard facts from the audits:
 
 - Current visuals fail the full-game visual bar: ultra-low-poly assets, flat materials, sparse/flat arenas, text-driven combat feedback, and debug/HUD overlays dominate the evidence (`t_614cc73b` report lines 7-12, 62-271).
 - Current runtime asset breadth exists but is placeholder-scale: 22 assets, 292 vertices, 492 triangles total; fighters are 14 vertices / 28 triangles and arenas are 18 vertices / 32 triangles (`t_7d209020` report lines 40-49, 54-75).
-- Existing local gates prove deterministic source-backed 3D evidence only; raw X11/XWayland, SVG, PPM, low-poly glTF, and software-raster captures do not prove high-fidelity product presentation, owner acceptance, public-demo readiness, or release-candidate readiness (`GAME_CANON.md:9-15`, `DEMO_SCOPE.md:15-21`, `ACCEPTANCE_MAP.md:32-42`).
+- Existing local gates prove deterministic source-backed 3D evidence only; blocked native-renderer status, non-native diagram, non-native frame, low-poly glTF, and non-native local raster captures do not prove high-fidelity product presentation, owner acceptance, public-demo readiness, or release-candidate readiness (`GAME_CANON.md:9-15`, `DEMO_SCOPE.md:15-21`, `ACCEPTANCE_MAP.md:32-42`).
 - Current scenario/match evidence does not expose arena/world selection in the duel grammar and current native render evidence hard-codes `oathyard_verdict_ring`, leaving `training_yard` unexercised as a scene (`t_7d209020` report lines 275-294, 351-369; `t_614cc73b` report lines 181-197).
 - The candidate lane `t_73291be5` materially improves structural package quality but is not native product visual acceptance or owner acceptance; it currently also has a path/name mismatch follow-up (`t_f72f4c22`) that must close before asset-source acceptance can be clean.
 
@@ -32,7 +32,7 @@ Hard facts from the audits:
 - No HP, hit points, arbitrary damage numbers, armor points, DPS, crit chance, super meter, perks, unlock stats, or speed/damage bonuses as truth.
 - No Unity, Unreal, Godot, browser-first product renderer, copied/unlicensed assets, telemetry, network services, installers, or vendored graphics blobs in this remediation slice unless a later owner-approved ADR explicitly supersedes the current canon.
 - Public-demo, release-candidate, owner-final, owner-visual, legal, trademark, and store readiness remain false until the corresponding external gates are actually evidenced.
-- Raw X11/PPM/SVG/debug/contact-sheet evidence may support local verification but cannot be reported as high-fidelity product presentation.
+- Blocked native-renderer status/non-native frame/non-native diagram/debug/image-rollup evidence may support local verification but cannot be reported as high-fidelity product presentation.
 
 ## Effort scale
 
@@ -184,7 +184,7 @@ Acceptance criteria:
 
 - `t_f72f4c22` either creates deterministic repo-owned alias/symlink/copy paths matching the expected path contract or updates the incorrect board/docs/spec reference without weakening media QA.
 - `t_a95fe445` confirms the source-backed package covers six fighters, eight weapons, six armor/loadout families, and two arenas with provenance/source hashes/runtime hashes.
-- Media QA inspects actual current images/contact sheets, not only manifests, and records named blockers for any asset below target.
+- Media QA inspects actual current native 3D captures when available, not only manifests, and records named blockers for any asset below target; if native 3D captures are absent, visual status remains blocked.
 - Any accepted package still keeps owner/public/release/native-DCC/external-validation readiness false unless separately evidenced.
 
 Exact verification commands:

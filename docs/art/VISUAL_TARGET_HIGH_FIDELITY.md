@@ -24,7 +24,7 @@ OATHYARD must read as an original dark-fantasy judicial duel:
 ## Current gate state
 
 ```text
-candidate_asset_preview: true for existing candidate contact sheets
+candidate_asset_preview: true for existing candidate native 3D capture metadata only
 production_asset_ready: false
 in_engine_visual_ready: false
 high_fidelity_ready: false
@@ -50,4 +50,4 @@ A production visual gate passes only when all are true:
 
 ## Explicit non-evidence
 
-Rodin turntables, contact sheets, isolated asset previews, PPM/SVG/debug captures, low-poly glTF, untextured meshes, primitive silhouettes, and metadata-only reports cannot satisfy high-fidelity visual completion.
+Rodin turntables, isolated asset previews, legacy local debug captures, low-poly glTF, untextured meshes, primitive silhouettes, and metadata-only reports cannot satisfy high-fidelity visual completion.

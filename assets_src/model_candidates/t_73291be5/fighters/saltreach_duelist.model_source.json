@@ -29,6 +29,19 @@
   "product": "OATHYARD",
   "provenance": "repo_owned_original_procedural_model_candidate",
   "repair_task": "t_49e26ba5",
+  "source_authoring_evidence": {
+    "authoring_method": "repo-authored OpenUSD ASCII source scaffold derived from OATHYARD saltreach-duelist source fields, canonical truth-joint contract, and fighter canon",
+    "dcc_or_openusd_source_present": true,
+    "external_dcc_validation_claimed": false,
+    "external_khronos_validation_claimed": false,
+    "format": "OpenUSD ASCII USDA",
+    "production_ready_after_this_evidence": false,
+    "schema": "oathyard.source_authoring_evidence.v1",
+    "source_file": "assets_src/model_candidates/t_73291be5/fighters/saltreach_duelist.source.usda",
+    "source_sha256": "ccf83b7bd3667e3b694bdbef0da184305330506c7e09e9d6821089aed5ae4147",
+    "source_status": "source_authored_candidate_not_production_ready",
+    "truth_mutation": false
+  },
   "rig_contract": {
     "canonical_truth_joints": [
       "root",

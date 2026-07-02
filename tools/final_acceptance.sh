@@ -25,7 +25,8 @@ run_step truth_audit ./tools/audit_truth.sh
 run_step deterministic_duel_a ./tools/run_duel.sh examples/duels/basic_oathyard.duel --out "$out/verify_a"
 run_step deterministic_duel_b ./tools/run_duel.sh examples/duels/basic_oathyard.duel --out "$out/verify_b"
 run_step replay_verify ./tools/replay_verify.sh "$out/verify_a/replay.json"
-run_step audit_rodin_assets ./tools/audit_rodin_assets.sh "$out/rodin_asset_audit"
+run_step match_sweep ./tools/run_match_sweep.sh "$out/match_sweep"
+run_step audit_generated_assets ./tools/audit_generated_assets.sh "$out/asset_audit"
 run_step build_assets ./tools/build_assets.sh
 run_step validate_assets ./tools/validate_assets.sh "$out/assets"
 run_step render_asset_previews ./tools/render_asset_previews.sh "$out/asset_previews"
@@ -51,12 +52,42 @@ for line in summary_tsv.read_text(encoding='utf-8').splitlines()[1:]:
         name, rc, log = line.split('\t', 2); rows.append({'step': name, 'rc': int(rc), 'log': log})
 failed=[r for r in rows if r['rc'] != 0]
 passed=not failed
-manifest={'schema':'oathyard.final_acceptance.v2','tool':'tools/final_acceptance.sh','passed':passed,'production_renderer_complete':False,'owner_visual_acceptance':False,'public_demo_ready':False,'release_candidate_ready':False,'step_count':len(rows),'failed_step_count':len(failed),'steps':rows}
-(out/'final_acceptance_manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True)+'\n', encoding='utf-8')
 report=['# OATHYARD Final Acceptance Gate','',f"Status: {'PASSED' if passed else 'FAILED'}",'', 'Readiness boundary:', '', '- Production renderer complete: `false` unless current production renderer evidence proves it.', '- Owner visual acceptance: `false` until owner explicitly accepts.', '- Public demo ready: `false` until owner/legal/store/demo-scope gates pass.', '- Release candidate ready: `false` until local, clean-release, owner, legal/trademark/license, and store gates pass.', '', '## Step results','', '| Step | RC | Log |','| --- | ---: | --- |']
 for row in rows: report.append(f"| `{row['step']}` | `{row['rc']}` | `{row['log']}` |")
 if failed:
     report.extend(['','## Failed steps','']+[f"- `{r['step']}` rc `{r['rc']}` log `{r['log']}`" for r in failed])
+(out/'final_acceptance_report.md').write_text('\n'.join(report)+'\n', encoding='utf-8')
+artifact_specs = [
+    ('final_acceptance_steps', summary_tsv),
+    ('final_acceptance_report', out / 'final_acceptance_report.md'),
+    ('deterministic_duel_a_replay', out / 'verify_a/replay.json'),
+    ('deterministic_duel_a_final_hash', out / 'verify_a/final_state_hash.txt'),
+    ('deterministic_duel_b_replay', out / 'verify_b/replay.json'),
+    ('replay_verify_log', out / 'logs/replay_verify.log'),
+    ('match_sweep_summary_json', out / 'match_sweep/match_sweep_summary.json'),
+    ('match_sweep_summary_md', out / 'match_sweep/match_sweep_summary.md'),
+    ('generated_asset_audit_json', out / 'asset_audit/generated_asset_audit.json'),
+    ('generated_asset_audit_md', out / 'asset_audit/generated_asset_audit.md'),
+    ('generated_asset_quarantine_manifest_json', out / 'asset_audit/generated_asset_quarantine_manifest.json'),
+    ('generated_asset_quarantine_report_md', out / 'asset_audit/generated_asset_quarantine_report.md'),
+    ('generated_asset_production_unblock_matrix_json', out / 'asset_audit/generated_asset_production_unblock_matrix.json'),
+    ('generated_asset_production_unblock_matrix_md', out / 'asset_audit/generated_asset_production_unblock_matrix.md'),
+    ('high_fidelity_capture_matrix_json', out / 'high_fidelity_screens/high_fidelity_capture_matrix.json'),
+    ('high_fidelity_capture_matrix_md', out / 'high_fidelity_screens/high_fidelity_capture_matrix.md'),
+    ('visual_benchmark_report', out / 'visual_review/visual_benchmark_report.md'),
+    ('visual_gap_list', out / 'visual_review/visual_gap_list.md'),
+    ('package_tar', Path('artifacts/package/oathyard-linux-x86_64.tar')),
+]
+artifact_index = [
+    {'id': artifact_id, 'path': path.as_posix(), 'exists': path.is_file()}
+    for artifact_id, path in artifact_specs
+]
+artifact_index_missing_count = sum(1 for artifact in artifact_index if not artifact['exists'])
+manifest={'schema':'oathyard.final_acceptance.v2','tool':'tools/final_acceptance.sh','passed':passed,'production_renderer_complete':False,'owner_visual_acceptance':False,'public_demo_ready':False,'release_candidate_ready':False,'step_count':len(rows),'failed_step_count':len(failed),'steps':rows,'artifact_index':artifact_index,'artifact_index_missing_count':artifact_index_missing_count}
+(out/'final_acceptance_manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True)+'\n', encoding='utf-8')
+report.extend(['','## Evidence artifact index','', '| Artifact | Exists | Path |','| --- | ---: | --- |'])
+for artifact in artifact_index:
+    report.append(f"| `{artifact['id']}` | `{str(artifact['exists']).lower()}` | `{artifact['path']}` |")
 (out/'final_acceptance_report.md').write_text('\n'.join(report)+'\n', encoding='utf-8')
 if failed: raise SystemExit(1)
 PY

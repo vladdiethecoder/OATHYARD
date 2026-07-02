@@ -1,0 +1,113 @@
+#usda 1.0
+(
+    defaultPrim = "GATE_SHIELD"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "gate_shield"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "GATE_SHIELD"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "shielded-low Gate Shield fighter, 90.4kg truth mass basis, heavy-plate armor, chalked round-shield loadout, canonical 16 truth joints plus grip frames"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:loadout_weapon = "round_shield"
+        string oathyard:loadout_armor = "heavy_plate"
+        int oathyard:body_mass_g = 90400
+        int oathyard:reach_bias_mm = -80
+        int oathyard:stance_bias_permille = 1080
+    }
+
+    def Scope "truth_joint_markers"
+    {
+        def Xform "root" { double3 xformOp:translate = (0.000, 0.910, 0.000) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "spine_lower" { double3 xformOp:translate = (0.000, 1.030, 0.010) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "spine_upper" { double3 xformOp:translate = (0.000, 1.300, -0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "neck_head" { double3 xformOp:translate = (0.000, 1.585, -0.015) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "shoulder_r" { double3 xformOp:translate = (0.230, 1.375, -0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "elbow_r" { double3 xformOp:translate = (0.430, 1.145, -0.052) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "wrist_r" { double3 xformOp:translate = (0.480, 0.900, -0.078) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "shoulder_l" { double3 xformOp:translate = (-0.230, 1.375, -0.010) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "elbow_l" { double3 xformOp:translate = (-0.455, 1.140, -0.035) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "wrist_l" { double3 xformOp:translate = (-0.520, 0.900, -0.055) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "hip_r" { double3 xformOp:translate = (0.145, 0.880, 0.012) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "knee_r" { double3 xformOp:translate = (0.180, 0.470, -0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "ankle_r" { double3 xformOp:translate = (0.205, 0.080, -0.045) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "hip_l" { double3 xformOp:translate = (-0.145, 0.880, 0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "knee_l" { double3 xformOp:translate = (-0.180, 0.470, 0.040) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "ankle_l" { double3 xformOp:translate = (-0.205, 0.080, 0.065) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "grip_r" { double3 xformOp:translate = (0.505, 0.875, -0.098) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "grip_l" { double3 xformOp:translate = (-0.545, 0.880, -0.075) uniform token[] xformOpOrder = ["xformOp:translate"] }
+    }
+
+    def Mesh "shielded_low_body_blockout"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.175, 0.865, -0.090), (0.175, 0.865, -0.105), (0.205, 1.345, -0.140), (-0.205, 1.345, -0.105),
+            (-0.165, 0.870, 0.100), (0.165, 0.870, 0.080), (0.195, 1.330, 0.055), (-0.195, 1.335, 0.090),
+            (-0.110, 1.355, -0.082), (0.110, 1.360, -0.092), (0.120, 1.610, -0.082), (-0.115, 1.610, -0.072),
+            (-0.105, 1.355, 0.070), (0.105, 1.360, 0.055), (0.115, 1.600, 0.045), (-0.110, 1.600, 0.065)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["dark_heavy_plate_over_low_guard_mass"]
+        uniform token[] primvars:oathyard_contact = ["torso_mass_visual", "shielded_low_silhouette", "non_authoritative_render_body"]
+    }
+
+    def Mesh "low_guard_limb_pose_blocks"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.200, 1.335, -0.105), (0.270, 1.325, -0.112), (0.510, 0.875, -0.112), (0.440, 0.875, -0.102),
+            (-0.270, 1.325, -0.065), (-0.200, 1.335, -0.055), (-0.515, 0.865, -0.088), (-0.585, 0.860, -0.075),
+            (0.120, 0.865, -0.005), (0.205, 0.860, -0.018), (0.215, 0.080, -0.050), (0.145, 0.080, -0.040),
+            (-0.205, 0.865, 0.025), (-0.120, 0.868, 0.035), (-0.205, 0.080, 0.070), (-0.275, 0.080, 0.065)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["heavy_plate_sleeves_and_gate_greaves"]
+        uniform token[] primvars:oathyard_contact = ["canonical_limb_pose_visual", "future_skinning_reference", "not_truth_collision"]
+    }
+
+    def Mesh "heavy_plate_and_chalked_gate_shield"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.205, 1.300, -0.160), (0.205, 1.300, -0.175), (0.185, 0.790, -0.170), (-0.185, 0.790, -0.150),
+            (-0.180, 1.285, 0.100), (0.180, 1.285, 0.082), (0.160, 0.805, 0.078), (-0.160, 0.805, 0.098),
+            (-0.620, 1.145, -0.165), (-0.355, 1.190, -0.175), (-0.350, 0.820, -0.160), (-0.615, 0.775, -0.145),
+            (-0.585, 1.090, -0.190), (-0.390, 1.125, -0.198), (-0.390, 1.035, -0.198), (-0.585, 1.000, -0.188),
+            (-0.560, 0.950, -0.185), (-0.420, 0.975, -0.192), (-0.420, 0.925, -0.192), (-0.560, 0.900, -0.182)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        uniform token[] primvars:oathyard_material = ["blackened_heavy_plate", "chalked_round_shield_face", "gate_oath_marks"]
+        uniform token[] primvars:oathyard_contact = ["armor_visual_coverage_hint", "round_shield_visual_coverage", "shielded_low_identity_marks"]
+    }
+
+    def Mesh "hand_grip_frames"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.465, 0.835, -0.122), (0.535, 0.835, -0.122), (0.535, 0.915, -0.074), (0.465, 0.915, -0.074),
+            (-0.585, 0.830, -0.100), (-0.515, 0.830, -0.100), (-0.515, 0.910, -0.052), (-0.585, 0.910, -0.052)
+        ]
+        int[] faceVertexCounts = [4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7]
+        uniform token[] primvars:oathyard_material = ["gate_shield_hand_wraps"]
+        uniform token[] primvars:oathyard_contact = ["grip_r_visual_frame", "grip_l_visual_frame", "round_shield_loadout_socket"]
+    }
+}

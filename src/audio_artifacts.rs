@@ -20,14 +20,14 @@ pub fn write_audio_vfx_artifacts(
     let events = presentation_events_from_duel(&result);
     let (wav, wav_stats) = render_audio_mix_wav_with_stats(&events);
     fs::write(out_dir.join("audio_mix.wav"), wav)?;
-    let contact_sheet = write_impact_vfx_contact_sheet(out_dir, &events)?;
+    let vfx_evidence = build_impact_vfx_evidence(&events);
     fs::write(
         out_dir.join("audio_events.json"),
         render_audio_events_json(&result, &events),
     )?;
     fs::write(
         out_dir.join("vfx_manifest.json"),
-        render_vfx_manifest_json(&result, &events, &contact_sheet),
+        render_vfx_manifest_json(&result, &events, &vfx_evidence),
     )?;
     fs::write(
         out_dir.join("audio_vfx_timing_loudness.json"),
@@ -36,7 +36,7 @@ pub fn write_audio_vfx_artifacts(
     fs::write(out_dir.join("captions.srt"), render_captions_srt(&events))?;
     fs::write(
         out_dir.join("audio_vfx_report.md"),
-        render_audio_vfx_report(&result, &events, &wav_stats, &contact_sheet),
+        render_audio_vfx_report(&result, &events, &wav_stats, &vfx_evidence),
     )?;
     Ok(result)
 }
@@ -99,7 +99,7 @@ struct AudioMixerStats {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct VfxSheetArtifact {
+struct VfxEvidenceArtifact {
     file: &'static str,
     width: usize,
     height: usize,
@@ -1340,11 +1340,8 @@ fn write_vfx_material_ids_json(
     writeln!(out, "{pad}]{}", if trailing_comma { "," } else { "" }).unwrap();
 }
 
-fn write_impact_vfx_contact_sheet(
-    out_dir: &Path,
-    events: &[PresentationEvent],
-) -> Result<VfxSheetArtifact, OathError> {
-    const FILE: &str = "impact_vfx_contact_sheet.ppm";
+fn build_impact_vfx_evidence(events: &[PresentationEvent]) -> VfxEvidenceArtifact {
+    const FILE: &str = "impact_vfx_event_palette.json";
     let width = 640usize;
     let height = 240usize;
     let mut pixels = vec![0u8; width * height * 3];
@@ -1370,19 +1367,16 @@ fn write_impact_vfx_contact_sheet(
             }
         }
     }
-    let mut ppm = format!("P6\n{} {}\n255\n", width, height).into_bytes();
-    ppm.extend_from_slice(&pixels);
-    let sha256 = hash_hex(&ppm);
+    let sha256 = hash_hex(&pixels);
     let distinct_color_count = distinct_rgb_count(&pixels);
-    fs::write(out_dir.join(FILE), ppm)?;
-    Ok(VfxSheetArtifact {
+    VfxEvidenceArtifact {
         file: FILE,
         width,
         height,
         sha256,
         distinct_color_count,
         event_count: events.len(),
-    })
+    }
 }
 
 fn distinct_rgb_count(pixels: &[u8]) -> usize {
@@ -1462,7 +1456,7 @@ fn render_audio_vfx_timing_loudness_json(
 fn render_vfx_manifest_json(
     result: &DuelResult,
     events: &[PresentationEvent],
-    contact_sheet: &VfxSheetArtifact,
+    vfx_evidence: &VfxEvidenceArtifact,
 ) -> String {
     let mut out = String::new();
     writeln!(&mut out, "{{").unwrap();
@@ -1487,21 +1481,21 @@ fn render_vfx_manifest_json(
         "  \"release_candidate_ready\": {RELEASE_CANDIDATE_READY},"
     )
     .unwrap();
-    writeln!(&mut out, "  \"contact_sheet\": {{").unwrap();
-    write_json_field(&mut out, 2, "file", contact_sheet.file, true);
-    writeln!(&mut out, "    \"width\": {},", contact_sheet.width).unwrap();
-    writeln!(&mut out, "    \"height\": {},", contact_sheet.height).unwrap();
-    write_json_field(&mut out, 2, "sha256", &contact_sheet.sha256, true);
+    writeln!(&mut out, "  \"nonvisual_vfx_evidence\": {{").unwrap();
+    write_json_field(&mut out, 2, "file", vfx_evidence.file, true);
+    writeln!(&mut out, "    \"width\": {},", vfx_evidence.width).unwrap();
+    writeln!(&mut out, "    \"height\": {},", vfx_evidence.height).unwrap();
+    write_json_field(&mut out, 2, "sha256", &vfx_evidence.sha256, true);
     writeln!(
         &mut out,
         "    \"distinct_color_count\": {},",
-        contact_sheet.distinct_color_count
+        vfx_evidence.distinct_color_count
     )
     .unwrap();
     writeln!(
         &mut out,
         "    \"event_count\": {}",
-        contact_sheet.event_count
+        vfx_evidence.event_count
     )
     .unwrap();
     writeln!(&mut out, "  }},").unwrap();
@@ -1553,7 +1547,7 @@ fn render_audio_vfx_report(
     result: &DuelResult,
     events: &[PresentationEvent],
     stats: &AudioMixerStats,
-    contact_sheet: &VfxSheetArtifact,
+    vfx_evidence: &VfxEvidenceArtifact,
 ) -> String {
     let mut out = String::new();
     writeln!(&mut out, "# OATHYARD Audio/VFX Report").unwrap();
@@ -1596,12 +1590,12 @@ fn render_audio_vfx_report(
     .unwrap();
     writeln!(
         &mut out,
-        "- Impact VFX contact sheet: `{}` `{}`x`{}` sha256 `{}` colors `{}`",
-        contact_sheet.file,
-        contact_sheet.width,
-        contact_sheet.height,
-        contact_sheet.sha256,
-        contact_sheet.distinct_color_count
+        "- Impact VFX nonvisual evidence: `{}` `{}`x`{}` sha256 `{}` colors `{}`",
+        vfx_evidence.file,
+        vfx_evidence.width,
+        vfx_evidence.height,
+        vfx_evidence.sha256,
+        vfx_evidence.distinct_color_count
     )
     .unwrap();
     writeln!(&mut out, "- Critical audio captions: `captions.srt`").unwrap();

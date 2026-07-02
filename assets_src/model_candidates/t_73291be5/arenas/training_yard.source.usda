@@ -1,0 +1,77 @@
+#usda 1.0
+(
+    defaultPrim = "TRAINING_YARD"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "training_yard"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "TRAINING_YARD"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "measured practice yard with packed clay, rope line, work lamps, weapon measurement marks, and training-safe footing metadata"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+    }
+
+    def Mesh "packed_clay_yard"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [(-4.8, 0, -4.8), (4.8, 0, -4.8), (4.8, 0, 4.8), (-4.8, 0, 4.8)]
+        int[] faceVertexCounts = [4]
+        int[] faceVertexIndices = [0, 1, 2, 3]
+        normal3f[] normals = [(0, 1, 0)]
+        uniform token[] primvars:oathyard_material = ["packed_clay_worn_practice_floor"]
+    }
+
+    def Mesh "measured_practice_lines"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-4.40, 0.018, -0.055), (4.40, 0.018, -0.055), (4.40, 0.018, 0.055), (-4.40, 0.018, 0.055),
+            (-0.055, 0.019, -4.40), (0.055, 0.019, -4.40), (0.055, 0.019, 4.40), (-0.055, 0.019, 4.40),
+            (-2.20, 0.020, -4.20), (-2.08, 0.020, -4.20), (-2.08, 0.020, 4.20), (-2.20, 0.020, 4.20),
+            (2.08, 0.020, -4.20), (2.20, 0.020, -4.20), (2.20, 0.020, 4.20), (2.08, 0.020, 4.20)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        normal3f[] normals = [(0, 1, 0), (0, 1, 0), (0, 1, 0), (0, 1, 0)]
+        uniform token[] primvars:oathyard_material = ["chalk_measuring_lines"]
+    }
+
+    def Mesh "west_rope_line"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-4.75, 0.00, -4.35), (-4.55, 0.00, -4.35), (-4.55, 0.72, -4.35), (-4.75, 0.72, -4.35),
+            (-4.75, 0.00, 4.35), (-4.55, 0.00, 4.35), (-4.55, 0.72, 4.35), (-4.75, 0.72, 4.35),
+            (-4.66, 0.62, -4.35), (-4.66, 0.62, 4.35), (-4.66, 0.70, 4.35), (-4.66, 0.70, -4.35)
+        ]
+        int[] faceVertexCounts = [4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11]
+        uniform token[] primvars:oathyard_material = ["ash_wood_posts_and_rope"]
+    }
+
+    def Mesh "soft_work_lamp_anchor"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (3.95, 0.0, -3.95), (4.25, 0.0, -3.95), (4.25, 0.0, -3.65), (3.95, 0.0, -3.65),
+            (4.03, 1.10, -3.87), (4.17, 1.10, -3.87), (4.17, 1.10, -3.73), (4.03, 1.10, -3.73)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3]
+        uniform token[] primvars:oathyard_material = ["oil_lamp_warm_practice_light"]
+    }
+}

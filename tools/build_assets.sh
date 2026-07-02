@@ -3,7 +3,7 @@ set -euo pipefail
 
 python3 tools/asset_pipeline.py build
 
-if [[ -f assets/presentation_manifest.json ]]; then
+if [[ -f assets/manifests/presentation_manifest.json ]]; then
   python3 tools/production_visual_manifest.py
 fi
 
@@ -15,7 +15,7 @@ manifest = {
     'tool': 'tools/build_assets.sh',
     'generated_runtime_assets': True,
     'production_visual_assets_complete': False,
-    'production_candidate_visual_assets_complete': Path('assets/production_candidate_visual_manifest.json').is_file(),
+    'production_candidate_visual_assets_complete': Path('assets/manifests/production_candidate_visual_manifest.json').is_file(),
     'production_renderer_complete': False,
     'owner_visual_acceptance': False,
     'public_demo_ready': False,

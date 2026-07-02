@@ -96,6 +96,7 @@ def gltf_metrics(path: Path):
         return {"format": path.suffix.lower().lstrip("."), "parse_error": "not JSON glTF or unreadable"}
     vertices = 0
     triangles = 0
+    index_count = 0
     attrs = set()
     pos_bounds_min = []
     pos_bounds_max = []
@@ -111,6 +112,7 @@ def gltf_metrics(path: Path):
                 pos_bounds_max.append(mx[:3])
             mode = int(prim.get("mode", 4))
             idx_count = accessor_count(data, prim.get("indices"))
+            index_count += idx_count if idx_count else accessor_count(data, pos_i)
             if mode == 4:
                 triangles += idx_count // 3 if idx_count else accessor_count(data, pos_i) // 3
             elif mode == 5:
@@ -144,6 +146,7 @@ def gltf_metrics(path: Path):
         "format": "gltf",
         "asset_version": (data.get("asset") or {}).get("version", ""),
         "vertices": vertices,
+        "index_count": index_count,
         "triangles": triangles,
         "primitive_count": sum(len((m.get("primitives") or [])) for m in (data.get("meshes", []) or [])),
         "material_count": len(materials),
@@ -177,6 +180,61 @@ def texture_resolutions(root: Path, image_uris):
             item["sha256"] = sha256(p)
         result.append(item)
     return result
+
+
+def normalize_kind(kind: str) -> str:
+    k = str(kind or "").lower()
+    return {
+        "fighters": "fighter",
+        "fighter": "fighter",
+        "weapons": "weapon",
+        "weapon": "weapon",
+        "armors": "armor",
+        "armor": "armor",
+        "arenas": "arena",
+        "arena": "arena",
+    }.get(k, k or "unknown")
+
+
+def file_hash(path: Path) -> str:
+    return sha256(path) if path and path.is_file() else ""
+
+
+def texture_hashes(texture_records):
+    result = {}
+    for item in texture_records or []:
+        path = str(item.get("path", ""))
+        digest = str(item.get("sha256", ""))
+        if path:
+            result[path] = digest
+    return result
+
+
+def has_low_resolution_textures(texture_records, threshold=1024):
+    for item in texture_records or []:
+        res = str(item.get("resolution", ""))
+        if "x" not in res:
+            continue
+        try:
+            w, h = [int(part) for part in res.lower().split("x", 1)]
+        except ValueError:
+            continue
+        if w < threshold or h < threshold:
+            return True
+    return False
+
+
+def next_action_for_blockers(blockers):
+    ordered = [str(b) for b in blockers or []]
+    if "license_or_project_license_pending" in ordered:
+        return "record owner/legal project license and commercial-use clearance for source and runtime assets"
+    if "capture_backend_is_software_candidate_not_production_engine" in ordered or "in_engine_screenshot_missing" in ordered:
+        return "capture the asset through the native production renderer matrix with truth_mutation=false"
+    if any("material" in b or "texture" in b or "uv" in b for b in ordered):
+        return "complete production material, texture, UV, normal, and tangent evidence"
+    if any("rig" in b or "truth_joint" in b or "contact" in b for b in ordered):
+        return "complete rig, truth-joint, and contact-profile validation"
+    return "review blockers and provide the missing evidence before promotion"
 
 
 def collect_candidate_entries():
@@ -233,6 +291,37 @@ def collect_candidate_entries():
     return list(entries_by_id.values()), sorted(set(sources))
 
 
+def source_authoring_evidence_summary(evidence):
+    if not isinstance(evidence, dict):
+        return {}
+    source_file = str(evidence.get("source_file") or evidence.get("path") or evidence.get("file") or "")
+    source_path = ROOT / source_file if source_file else Path("")
+    suffix = source_path.suffix.lower() if source_file else ""
+    exists = source_path.is_file() if source_file else False
+    actual_hash = sha256(source_path) if exists else ""
+    expected_hash = str(evidence.get("source_sha256") or "")
+    hash_matches = bool(actual_hash and expected_hash and actual_hash == expected_hash)
+    source_present = bool(
+        exists
+        and suffix in {".blend", ".usd", ".usda", ".usdc", ".fbx"}
+        and (not expected_hash or hash_matches)
+    )
+    return {
+        "schema": evidence.get("schema", "oathyard.source_authoring_evidence.v1"),
+        "source_file": source_file,
+        "format": evidence.get("format", suffix.lstrip(".")),
+        "source_sha256": actual_hash,
+        "expected_source_sha256": expected_hash,
+        "source_sha256_matches": hash_matches if expected_hash else "not_recorded",
+        "source_file_exists": exists,
+        "dcc_or_openusd_source_present": source_present,
+        "external_dcc_validation_claimed": evidence.get("external_dcc_validation_claimed") is True,
+        "external_khronos_validation_claimed": evidence.get("external_khronos_validation_claimed") is True,
+        "production_ready_after_this_evidence": False,
+        "truth_mutation": evidence.get("truth_mutation") is True,
+    }
+
+
 def source_summary(source_path: Path):
     data = read_json(source_path) if source_path.is_file() else None
     if not isinstance(data, dict):
@@ -243,6 +332,7 @@ def source_summary(source_path: Path):
             "license_status": "missing",
             "not_claimed": [],
             "truth_boundary": {},
+            "source_authoring_evidence": {},
         }
     basis = data.get("source_basis", {}) or {}
     cat = basis.get("category_source_fields", {}) or {}
@@ -260,6 +350,7 @@ def source_summary(source_path: Path):
         "license_status": data.get("license_status", ""),
         "not_claimed": data.get("not_claimed", []),
         "truth_boundary": data.get("truth_boundary", {}),
+        "source_authoring_evidence": source_authoring_evidence_summary(data.get("source_authoring_evidence", {})),
     }
 
 
@@ -268,18 +359,23 @@ def classify_acceptance(entry: dict, source: dict, metrics: dict, production_man
     license_status = str(entry.get("license_status") or (entry.get("provenance_license") or {}).get("license_status") or source.get("license_status") or "unknown")
     provenance = str(entry.get("provenance") or (entry.get("provenance_license") or {}).get("provenance") or source.get("provenance") or "unknown")
     authoring = entry.get("authoring_process", {}) or {}
+    dcc_evidence = authoring.get("external_dcc_validation_evidence", {}) or {}
+    source_authoring = source.get("source_authoring_evidence", {}) or {}
+    has_dcc_or_openusd_source = source_authoring.get("dcc_or_openusd_source_present") is True
     if "pending" in license_status.lower() or license_status in {"", "unknown"}:
         blockers.append("license_or_project_license_pending")
     if "rodin" in provenance.lower() and not entry.get("rodin_task_uuid"):
         blockers.append("rodin_task_download_terms_receipt_missing")
-    if "procedural" in provenance.lower() or "procedural" in str(authoring.get("method", "")).lower():
+    if ("procedural" in provenance.lower() or "procedural" in str(authoring.get("method", "")).lower()) and not has_dcc_or_openusd_source:
         blockers.append("procedural_model_candidate_not_dcc_source")
     if authoring and authoring.get("external_dcc_validation_claimed") is not True:
         blockers.append("external_dcc_validation_missing")
+    elif dcc_evidence and dcc_evidence.get("topology_manifold_validation_passed") is not True:
+        blockers.append("topology_manifold_boundary_edges_present")
     if authoring and authoring.get("external_khronos_validation_claimed") is not True:
         blockers.append("external_khronos_gltf_validation_missing")
     source_file = str(entry.get("source_file") or entry.get("source") or "")
-    if Path(source_file).suffix.lower() not in {".blend", ".usd", ".usda", ".usdc", ".fbx"}:
+    if not has_dcc_or_openusd_source and Path(source_file).suffix.lower() not in {".blend", ".usd", ".usda", ".usdc", ".fbx"}:
         blockers.append("source_not_dcc_or_interchange_file")
     if not metrics.get("vertices") or not metrics.get("triangles"):
         blockers.append("mesh_metric_missing")
@@ -287,7 +383,7 @@ def classify_acceptance(entry: dict, source: dict, metrics: dict, production_man
         blockers.append("uv_missing")
     if metrics.get("normals_status") != "present":
         blockers.append("normals_missing")
-    if "tangent" not in str(metrics.get("tangents_status", "")) or metrics.get("tangents_status") == "missing":
+    if metrics.get("tangents_status") != "present":
         blockers.append("tangents_missing_or_unverified")
     if not metrics.get("material_channels"):
         blockers.append("material_channels_missing")
@@ -360,6 +456,7 @@ for entry in entries:
     runtime = (entry.get("runtime_export") or {}).get("source_candidate_gltf") or (entry.get("runtime_export") or {}).get("runtime_gltf") or entry.get("runtime_gltf") or ""
     runtime_path = ROOT / runtime if runtime else Path("")
     metrics = gltf_metrics(runtime_path) if runtime_path.is_file() and runtime_path.suffix.lower() == ".gltf" else {}
+    dcc_evidence = (entry.get("authoring_process", {}) or {}).get("external_dcc_validation_evidence", {}) or {}
     # Prefer manifest metrics when present because candidate manifests were
     # already audited by the model-candidate lane. Raw glTF accessors can be
     # shared across primitives; summing primitive POSITION accessors can
@@ -374,36 +471,120 @@ for entry in entries:
         commercial = "unverified_from_local_artifact"
     protected_ip_risk = "low_known_source_risk_but_owner_legal_review_pending" if "repo_owned" in provenance else "unverified"
     export_date = mtime_iso(runtime_path) if runtime_path.is_file() else ""
+    source_authoring = source.get("source_authoring_evidence", {}) or {}
+    source_authoring_path = source_authoring.get("source_file", "") if isinstance(source_authoring, dict) else ""
+    source_authoring_file_hash = source_authoring.get("source_sha256", "") if isinstance(source_authoring, dict) else ""
+    source_file_digest = file_hash(source_path)
+    runtime_file_digest = file_hash(runtime_path)
+    texture_file_hashes = texture_hashes(tex_res)
+    kind_normalized = normalize_kind(kind)
+    toolchain = entry.get("toolchain") or (entry.get("authoring_process", {}) or {}).get("toolchain") or {}
+    tool_version = ""
+    if isinstance(toolchain, dict):
+        tool_version = str(toolchain.get("python_version", "") or toolchain.get("schema", ""))
+    low_res_textures = has_low_resolution_textures(tex_res)
+    material_channel_complete = bool(metrics.get("material_channels"))
+    material_status = {
+        "channel_status": "present" if material_channel_complete else "missing",
+        "production_quality_status": "candidate_low_resolution_textures_not_production_material_quality" if low_res_textures else "unverified_production_material_quality",
+        "production_ready_after_this_evidence": False,
+    }
+    texture_status = {
+        "texture_count": len(tex_res) or metrics.get("texture_count", 0),
+        "resolutions": tex_res,
+        "low_resolution_texture_present": low_res_textures,
+        "production_ready_after_this_evidence": False,
+    }
+    contact_profile = entry.get("contact_profile") or (entry.get("validation_result", {}) or {}).get("contact_profile") or {}
+    screenshot = entry.get("in_engine_screenshot") or entry.get("in_engine_evidence") or {}
+    capture_backend = str(screenshot.get("backend", "")) if isinstance(screenshot, dict) else ""
+    production_capture = bool(screenshot) and "software" not in capture_backend and "deterministic_software" not in capture_backend
+    license_pending = "pending" in license_status.lower() or commercial.startswith("unverified")
+    candidate_only = status != "production-ready" or license_pending or not production_capture
+    state_facets = {
+        "has_source_authoring_evidence": bool(source_authoring.get("dcc_or_openusd_source_present") is True) if isinstance(source_authoring, dict) else False,
+        "has_license_commercial_clearance": not license_pending,
+        "technical_art_machine_clean": not any(blocker in blockers for blocker in ["mesh_metric_missing", "uv_missing", "normals_missing", "tangents_missing_or_unverified", "material_channels_missing"]),
+        "has_gameplay_contact_profile": isinstance(contact_profile, dict) and contact_profile.get("passed") is True,
+        "has_native_candidate_capture": bool(screenshot),
+        "has_native_production_capture": production_capture,
+        "package_allowed": False,
+        "owner_visual_accepted": False,
+    }
     record = {
+        "asset_id": asset_id,
         "asset_name": asset_id,
+        "asset_class": kind_normalized,
         "kind": kind,
+        "source_path": source_file,
+        "source_authoring_path": source_authoring_path,
+        "runtime_path": runtime,
+        "generation_import_tool": entry.get("toolchain") or (entry.get("authoring_process", {}) or {}).get("method") or "repo procedural/model-candidate tools; Rodin receipt not found",
+        "tool_version": tool_version,
+        "generation_date": export_date,
+        "source_prompt_path_or_hash": source["source_prompt_or_image"] if source["source_prompt_or_image"] != "not recorded as Rodin prompt/image; repo source fields only" else f"repo_source_json_sha256:{source_file_digest}" if source_file_digest else "missing_source_prompt_or_hash",
+        "source_image_path_or_hash": "missing_not_recorded_for_repo_candidate",
+        "rodin_task_download_export_ids": {"status": "missing_not_in_local_artifacts", "task_id": "", "download_receipt_id": "", "export_id": ""},
         "source_prompt_or_image_reference": source["source_prompt_or_image"],
         "generation_tool_and_version": entry.get("toolchain") or (entry.get("authoring_process", {}) or {}).get("toolchain") or "repo procedural/model-candidate tools; Rodin receipt not found",
         "export_format": metrics.get("format") or (runtime_path.suffix.lower().lstrip(".") if runtime else "missing"),
         "export_date": export_date,
+        "source_file_hash": source_file_digest,
+        "source_authoring_file_hash": source_authoring_file_hash,
+        "runtime_file_hash": runtime_file_digest,
+        "texture_file_hashes": texture_file_hashes,
         "license_terms_status": license_status,
         "commercial_use_allowed": commercial,
+        "commercial_use_status": commercial,
         "third_party_protected_ip_risk": protected_ip_risk,
+        "ip_protected_style_risk_status": protected_ip_risk,
         "polygon_count_triangles": metrics.get("triangles", 0),
         "vertex_count": metrics.get("vertices", 0),
+        "index_count": metrics.get("index_count", 0),
+        "triangle_count": metrics.get("triangles", 0),
         "texture_count": len(tex_res) or metrics.get("texture_count", 0),
         "texture_resolutions": tex_res,
         "material_channels_present": metrics.get("material_channels", []),
         "uv_status": metrics.get("uv_status", "unknown"),
+        "normal_status": metrics.get("normals_status", "unknown"),
+        "tangent_status": metrics.get("tangents_status", "unknown"),
+        "material_status": material_status,
+        "texture_status": texture_status,
         "rig_status": metrics.get("rig_status", "unknown"),
         "skin_weight_status": metrics.get("skin_weight_status", "unknown"),
-        "topology_issues": "external topology/manifold validation not performed" if metrics else "missing runtime mesh parse",
-        "manifold_watertight_status": "unverified",
+        "topology_issues": (
+            "closed manifold in Blender DCC import" if dcc_evidence.get("topology_manifold_validation_passed") is True
+            else f"Blender DCC import found {dcc_evidence.get('boundary_edges', 'unknown')} boundary/non-manifold edges"
+            if dcc_evidence
+            else "external topology/manifold validation not performed" if metrics else "missing runtime mesh parse"
+        ),
+        "manifold_watertight_status": dcc_evidence.get("topology_manifold_status", "unverified") if dcc_evidence else "unverified",
         "normals_status": metrics.get("normals_status", "unknown"),
         "tangents_status": metrics.get("tangents_status", "unknown"),
+        "bounds": {"min": metrics.get("bounds_min"), "max": metrics.get("bounds_max"), "z_depth": metrics.get("z_depth"), "nonzero_z_depth": bool(metrics.get("z_depth"))},
         "scale_orientation": {"bounds_min": metrics.get("bounds_min"), "bounds_max": metrics.get("bounds_max"), "z_depth": metrics.get("z_depth")},
         "canonical_truth_joint_mapping_status": entry.get("truth_joint_mapping") or source.get("truth_boundary") or "unverified",
         "contact_physics_profile_status": entry.get("contact_profile") or (entry.get("validation_result", {}) or {}).get("contact_profile") or "missing",
+        "physics_contact_profile_status": contact_profile or "missing",
+        "mass_inertia_status": "candidate_profile_present_mass_inertia_not_authoritative" if contact_profile else "missing",
+        "collision_contact_region_status": "candidate_contact_region_profile_present" if contact_profile else "missing",
+        "in_engine_capture_status": {"backend": capture_backend or "missing", "production_capture": production_capture, "truth_mutation": False},
+        "package_inclusion_status": "candidate_runtime_present_not_production_package_allowed" if runtime_path.is_file() else "missing_runtime_export",
+        "presentation_truth_isolation_status": {"presentation_only": True, "truth_authoritative": False, "truth_mutation": False},
         "runtime_suitability": "candidate_runtime_presentation_only" if status != "production-ready" else "production_runtime_candidate",
         "required_art_pass": "DCC/source approval, sculpt/retopo/UV/material polish, native renderer visual review",
         "required_technical_pass": "license/terms proof, glTF validator, topology/manifold check, rig/skin/contact profile validation, production renderer load, truth isolation",
         "acceptance_status": status,
+        "acceptance_state": status,
+        "asset_state": "license-pending" if license_pending else status,
+        "state_facets": state_facets,
+        "production_ready": False,
+        "candidate_only": candidate_only,
         "acceptance_blockers": blockers,
+        "blockers": blockers,
+        "next_action": next_action_for_blockers(blockers),
+        "external_dcc_validation_evidence": dcc_evidence,
+        "source_authoring_evidence": source.get("source_authoring_evidence", {}),
         "source_file": source_file,
         "runtime_export": runtime,
         "manifest_source": entry.get("_manifest", ""),
@@ -419,7 +600,7 @@ rodin_export_files = [f for f in rodin_files if f["suffix"] in MODEL_EXTS]
 if not rodin_export_files:
     failures.append("no completed local Rodin model export files with Rodin path/name were found")
 if production_manifest_contains_candidate:
-    failures.append("candidate-only entries are present in assets/production_visual_manifest.json; move them to a candidate manifest")
+    failures.append("candidate-only entries are present in assets/manifests/production_visual_manifest.json; move them to a candidate manifest")
 not_prod = [r for r in records if r["acceptance_status"] != "production-ready"]
 if not_prod:
     failures.append(f"{len(not_prod)} audited assets are not production-ready")
@@ -433,6 +614,15 @@ for r in records:
 status_counts = {}
 for r in records:
     status_counts[r["acceptance_status"]] = status_counts.get(r["acceptance_status"], 0) + 1
+state_counts = {}
+for r in records:
+    state_counts[r["asset_state"]] = state_counts.get(r["asset_state"], 0) + 1
+facet_counts = {
+    "candidate_only": sum(1 for r in records if r.get("candidate_only") is True),
+    "license_pending": sum(1 for r in records if r.get("asset_state") == "license-pending"),
+    "production_ready": sum(1 for r in records if r.get("production_ready") is True),
+    "native_production_capture": sum(1 for r in records if (r.get("state_facets") or {}).get("has_native_production_capture") is True),
+}
 
 manifest = {
     "schema": "oathyard.rodin_asset_audit.v1",
@@ -451,6 +641,8 @@ manifest = {
     "asset_count": len(records),
     "kind_counts": counts,
     "acceptance_status_counts": status_counts,
+    "asset_state_counts": state_counts,
+    "state_facet_counts": facet_counts,
     "failed_check_count": len(failures),
     "failures": failures,
     "rodin_related_files_sample": rodin_files[:80],
@@ -459,11 +651,14 @@ manifest = {
 (OUT / "rodin_asset_audit.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 csv_fields = [
-    "asset_name", "kind", "source_prompt_or_image_reference", "export_format", "export_date",
-    "license_terms_status", "commercial_use_allowed", "third_party_protected_ip_risk",
-    "polygon_count_triangles", "vertex_count", "texture_count", "uv_status", "rig_status",
-    "skin_weight_status", "normals_status", "tangents_status", "manifold_watertight_status",
-    "runtime_suitability", "acceptance_status", "source_file", "runtime_export", "manifest_source",
+    "asset_id", "asset_class", "asset_name", "kind", "source_path", "runtime_path",
+    "source_prompt_path_or_hash", "source_image_path_or_hash", "generation_date",
+    "export_format", "license_terms_status", "commercial_use_status", "commercial_use_allowed",
+    "third_party_protected_ip_risk", "ip_protected_style_risk_status",
+    "polygon_count_triangles", "triangle_count", "vertex_count", "index_count", "texture_count",
+    "uv_status", "normal_status", "tangent_status", "rig_status", "skin_weight_status",
+    "manifold_watertight_status", "runtime_suitability", "acceptance_state", "acceptance_status",
+    "asset_state", "candidate_only", "production_ready", "next_action", "source_file", "runtime_export", "manifest_source",
 ]
 with (OUT / "rodin_asset_audit.csv").open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=csv_fields)
@@ -521,7 +716,7 @@ lines.extend([
     "",
     "## Rodin/license conclusion",
     "",
-    "No asset is accepted for shipping solely because it appears in a Rodin/model-candidate/contact-sheet preview. Current local evidence lacks a complete Rodin terms/account/task/download receipt packet. Commercial-use status remains unverified unless a generation-time plan/terms snapshot and owner/legal review are recorded.",
+    "No asset is accepted for shipping solely because it appears in a Rodin/model-candidate/image-rollup preview. Current local evidence lacks a complete Rodin terms/account/task/download receipt packet. Commercial-use status remains unverified unless a generation-time plan/terms snapshot and owner/legal review are recorded.",
 ])
 (OUT / "rodin_asset_audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -31,7 +31,6 @@ text_suffixes = {
     ".py",
     ".json",
     ".desktop",
-    ".svg",
     ".manifest",
     ".oysrc",
 }

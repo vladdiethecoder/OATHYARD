@@ -1,0 +1,90 @@
+#usda 1.0
+(
+    defaultPrim = "CURVED_SWORD"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "curved_sword"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "CURVED_SWORD"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "880mm one-handed curved single-edge sword with forward-weighted sweeping blade, false-edge tip, guard quillons, ochre leather grip, and edge-sweep contact semantics"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "edge_sweep"
+        int oathyard:length_mm = 880
+    }
+
+    def Mesh "curved_single_edge_blade"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.030, 0.000, -0.085), (0.030, 0.000, -0.080), (0.090, 0.000, 0.160), (0.118, 0.000, 0.380),
+            (0.095, 0.000, 0.610), (0.020, 0.000, 0.735), (-0.050, 0.000, 0.640), (-0.065, 0.000, 0.410),
+            (-0.055, 0.000, 0.160),
+            (-0.024, 0.020, -0.080), (0.025, 0.020, -0.076), (0.078, 0.020, 0.164), (0.100, 0.020, 0.376),
+            (0.080, 0.020, 0.596), (0.018, 0.020, 0.700), (-0.040, 0.020, 0.625), (-0.052, 0.020, 0.408),
+            (-0.045, 0.020, 0.162)
+        ]
+        int[] faceVertexCounts = [9, 9, 4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 16, 15, 14, 13, 12, 11, 10, 0, 9, 10, 1, 1, 10, 11, 2, 2, 11, 12, 3, 3, 12, 13, 4, 4, 13, 14, 5, 5, 14, 15, 6, 6, 15, 16, 7, 7, 16, 17, 8]
+        uniform token[] primvars:oathyard_material = ["dark_steel_single_edge_polished_spine"]
+        uniform token[] primvars:oathyard_contact = ["convex_sweeping_edge", "false_edge_tip", "back_spine_deflect", "single_edge_alignment"]
+    }
+
+    def Mesh "thickened_spine_and_tip"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.050, 0.002, 0.020), (-0.024, 0.002, 0.020), (-0.038, 0.002, 0.610), (-0.008, 0.002, 0.695),
+            (-0.044, 0.024, 0.020), (-0.022, 0.024, 0.020), (-0.034, 0.024, 0.596), (-0.010, 0.024, 0.674),
+            (0.008, 0.002, 0.708), (0.040, 0.002, 0.672), (0.004, 0.024, 0.684), (0.032, 0.024, 0.652)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 11, 10, 3, 7, 10, 8]
+        uniform token[] primvars:oathyard_material = ["bright_edge_wear_and_thick_spine"]
+        uniform token[] primvars:oathyard_contact = ["reinforced_spine", "tip_draw_cut", "tip_puncture_secondary"]
+    }
+
+    def Mesh "cross_guard_and_langets"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.145, 0.000, -0.105), (0.145, 0.000, -0.105), (0.120, 0.000, -0.045), (-0.120, 0.000, -0.045),
+            (-0.130, 0.040, -0.100), (0.130, 0.040, -0.100), (0.108, 0.040, -0.050), (-0.108, 0.040, -0.050),
+            (-0.020, 0.004, -0.135), (0.020, 0.004, -0.135), (0.018, 0.004, 0.045), (-0.018, 0.004, 0.045),
+            (-0.015, 0.035, -0.128), (0.015, 0.035, -0.128), (0.014, 0.035, 0.035), (-0.014, 0.035, 0.035)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["blackened_guard_and_langets"]
+        uniform token[] primvars:oathyard_contact = ["guard_bind_stop", "quillon_catch", "langet_blade_support"]
+    }
+
+    def Mesh "ochre_leather_grip_and_pommel"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.026, 0.000, -0.360), (0.026, 0.000, -0.360), (0.024, 0.000, -0.130), (-0.024, 0.000, -0.130),
+            (-0.022, 0.046, -0.352), (0.022, 0.046, -0.352), (0.020, 0.046, -0.136), (-0.020, 0.046, -0.136),
+            (-0.046, 0.000, -0.430), (0.046, 0.000, -0.430), (0.038, 0.000, -0.360), (-0.038, 0.000, -0.360),
+            (-0.034, 0.046, -0.420), (0.034, 0.046, -0.420), (0.030, 0.046, -0.365), (-0.030, 0.046, -0.365)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["ochre_leather_wrap", "iron_wheel_pommel"]
+        uniform token[] primvars:oathyard_contact = ["one_hand_grip_frame", "pommel_blunt_check", "balance_counterweight"]
+    }
+}

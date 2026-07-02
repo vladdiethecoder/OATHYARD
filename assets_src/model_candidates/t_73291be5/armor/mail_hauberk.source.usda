@@ -1,0 +1,88 @@
+#usda 1.0
+(
+    defaultPrim = "MAIL_HAUBERK"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "mail_hauberk"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "MAIL_HAUBERK"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "riveted mail hauberk armor source, torso hauberk and coif scarf with belt, coverage/gap/deformation metadata only, no truth authority"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:armor_material = "riveted_mail"
+        string oathyard:armor_pieces = "torso_hauberk,coif_scarf"
+        string oathyard:armor_straps = "belt"
+        bool oathyard:truth_mutation = 0
+    }
+
+    def Scope "armor_contract"
+    {
+        customData = {
+            string oathyard:armor_physics_contract = "pieces,mass,inertia,coverage,gaps,deformation,deflection,blunt_transfer,binding,damage,detachment"
+            string oathyard:mail_response_hint = "flexible ring mesh, cut-resistant, blunt-transfer-prone, gap-sensitive at armpit/neck/hem"
+            string oathyard:truth_collision_status = "not_authoritative_candidate_visual_source"
+            string oathyard:runtime_validation_needed = "external_geometry_validation,material_texture_uv_completion,rig_truth_contact_profile_validation,native_renderer_capture_matrix,owner_visual_acceptance"
+        }
+    }
+
+    def Mesh "hauberk_torso_drape_blockout"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.245, 0.705, -0.115), (0.245, 0.705, -0.130), (0.220, 1.350, -0.150), (-0.220, 1.350, -0.120),
+            (-0.240, 0.705, 0.115), (0.240, 0.705, 0.100), (0.210, 1.340, 0.085), (-0.210, 1.345, 0.110),
+            (-0.300, 0.560, -0.100), (0.300, 0.560, -0.115), (0.245, 0.705, -0.130), (-0.245, 0.705, -0.115),
+            (-0.290, 0.560, 0.105), (0.290, 0.560, 0.092), (0.240, 0.705, 0.100), (-0.240, 0.705, 0.115)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["dark_riveted_mail_torso", "weighted_mail_hem_candidate"]
+        uniform token[] primvars:oathyard_contact = ["torso_coverage_visual", "mail_drape_visual", "non_authoritative_armor_source"]
+    }
+
+    def Mesh "coif_scarf_and_belt"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.155, 1.330, -0.135), (0.155, 1.330, -0.150), (0.140, 1.575, -0.135), (-0.140, 1.575, -0.120),
+            (-0.150, 1.330, 0.092), (0.150, 1.330, 0.080), (0.132, 1.560, 0.066), (-0.132, 1.560, 0.082),
+            (-0.255, 0.980, -0.155), (0.255, 0.980, -0.170), (0.255, 1.030, -0.172), (-0.255, 1.030, -0.158),
+            (-0.255, 0.980, 0.105), (0.255, 0.980, 0.088), (0.255, 1.030, 0.088), (-0.255, 1.030, 0.108)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["mail_coif_scarf", "dark_leather_belt"]
+        uniform token[] primvars:oathyard_contact = ["neck_coverage_visual", "belt_binding_visual", "gap_marker_candidate"]
+    }
+
+    def Mesh "riveted_ring_pattern_rows"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.210, 1.250, -0.162), (0.210, 1.250, -0.176), (0.210, 1.280, -0.177), (-0.210, 1.280, -0.162),
+            (-0.220, 1.130, -0.156), (0.220, 1.130, -0.171), (0.220, 1.160, -0.172), (-0.220, 1.160, -0.157),
+            (-0.230, 1.010, -0.150), (0.230, 1.010, -0.165), (0.230, 1.040, -0.166), (-0.230, 1.040, -0.151),
+            (-0.235, 0.890, -0.145), (0.235, 0.890, -0.160), (0.235, 0.920, -0.161), (-0.235, 0.920, -0.146),
+            (-0.240, 0.770, -0.139), (0.240, 0.770, -0.154), (0.240, 0.800, -0.155), (-0.240, 0.800, -0.140),
+            (-0.250, 0.635, -0.132), (0.250, 0.635, -0.147), (0.250, 0.665, -0.148), (-0.250, 0.665, -0.133)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        uniform token[] primvars:oathyard_material = ["raised_riveted_mail_rows"]
+        uniform token[] primvars:oathyard_contact = ["ring_pattern_visual", "mail_flex_detail_hint", "not_truth_collision"]
+    }
+}

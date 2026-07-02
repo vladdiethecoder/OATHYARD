@@ -108,7 +108,7 @@
   "created_utc": "2026-06-30T18:44:51Z",
   "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
   "intended_total_slots": 192,
-  "overview_contact_sheet": {
+  "overview_contact_index": {
     "file": "assets_src/reference/concepts/codex_weapon_catalog_20260630T184451Z/codex_weapon_catalog_overview.png",
     "sha256": "09ce38d125acbcbcbfdfa44452e6da3c24040ab38b2f00a83cebeeb8fdb954b6",
     "size": [

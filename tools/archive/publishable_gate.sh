@@ -66,10 +66,9 @@ fi
     artifacts/environment/verify/environment_audit_report.md \
     artifacts/asset_budget/verify/asset_budget.json \
     artifacts/asset_budget/verify/asset_budget_report.md \
-    artifacts/asset_atlas/verify/asset_visual_atlas_manifest.json \
-    artifacts/asset_atlas/verify/asset_visual_atlas_report.md \
-    artifacts/asset_atlas/verify/asset_visual_atlas.svg \
-    artifacts/asset_atlas/verify/asset_visual_atlas_hashes.sha256 \
+    artifacts/asset_atlas/verify/asset_3d_atlas_manifest.json \
+    artifacts/asset_atlas/verify/asset_3d_atlas_report.md \
+    artifacts/asset_atlas/verify/asset_3d_atlas_hashes.sha256 \
     artifacts/asset_atlas/verify/failed_asset_visuals.txt \
     artifacts/runtime_3d/verify/runtime_3d_audit.json \
     artifacts/runtime_3d/verify/runtime_3d_audit_report.md \
@@ -77,13 +76,9 @@ fi
     artifacts/renderer_target/verify/native_presentation_target_report.md \
     artifacts/visual_evidence/verify/visual_evidence_manifest.json \
     artifacts/visual_evidence/verify/visual_evidence_report.md \
-    artifacts/visual_evidence/verify/visual_evidence_contact_sheet.svg \
-    artifacts/visual_evidence/verify/visual_evidence_hashes.sha256 \
     artifacts/visual_evidence/verify/failed_visual_artifacts.txt \
     "$run_dir/visual_evidence/visual_evidence_manifest.json" \
     "$run_dir/visual_evidence/visual_evidence_report.md" \
-    "$run_dir/visual_evidence/visual_evidence_contact_sheet.svg" \
-    "$run_dir/visual_evidence/visual_evidence_hashes.sha256" \
     "$run_dir/visual_evidence/failed_visual_artifacts.txt" \
     artifacts/input_target/verify/native_input_target.json \
     artifacts/input_target/verify/native_input_target_report.md \
@@ -91,7 +86,6 @@ fi
     artifacts/export_bundle/verify/export_bundle_report.md \
     artifacts/export_bundle/verify/bundle_hashes.txt \
     packaging/linux/io.oathyard.OATHYARD.desktop \
-    packaging/linux/io.oathyard.OATHYARD.svg \
     artifacts/input/verify/input_profile.json \
     artifacts/input/verify/steam_deck_checklist.md \
     artifacts/settings/verify/runtime_settings.saved.json \
@@ -152,7 +146,7 @@ Status: $status
 - Verify log: \`$run_dir/verify.log\`
 - Visual evidence log: \`$run_dir/visual_evidence.log\`
 - Visual evidence report: \`$run_dir/visual_evidence/visual_evidence_report.md\`
-- Visual evidence contact sheet: \`$run_dir/visual_evidence/visual_evidence_contact_sheet.svg\`
+- Visual evidence status report: \`$run_dir/visual_evidence/visual_evidence_report.md\`
 - Failed visual artifact reduction: \`$run_dir/visual_evidence/failed_visual_artifacts.txt\`
 - Hash manifest: \`$run_dir/hashes.sha256\`
 - Git status: \`$run_dir/git_status.txt\`

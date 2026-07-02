@@ -107,13 +107,13 @@ Every asset follows the same gate sequence. A candidate may move forward only wh
    - Do not mutate `assets/gltf/` canonical regression outputs until production candidate acceptance is explicitly approved.
 
 7. Native visual evidence lane
-   - Render preview/contact sheets in Blender immediately.
-   - When available, render through Godot or Unreal/native renderer as runtime-presentation evidence.
+   - Render native 3D preview/capture manifests through an approved renderer/engine path only.
+   - When available, render through the selected native renderer as runtime-presentation evidence.
    - Use OATHYARD native capture tools when renderer integration exists.
    - Required perspectives: full-body/whole-asset, contact/action pose, material closeup, silhouette thumbnail, gameplay camera, and arena establishing/gameplay/contact views.
 
 8. Hostile visual audit lane
-   - Inspect actual PNG/contact-sheet pixels with vision tooling.
+   - Inspect actual native 3D capture pixels with vision tooling.
    - Reject if silhouette/category is ambiguous, material reads flat/plastic, scale/contact features are unclear, or atmosphere is generic/borrowed.
    - Machine metrics do not override visual rejection.
 
@@ -165,7 +165,7 @@ Every asset follows the same gate sequence. A candidate may move forward only wh
 
 ## Renderer path while Unreal builds
 
-- Immediate: Blender viewport/render/contact sheets for DCC evidence.
+- Immediate: Blender/DCC viewport renders may be candidate review evidence only when manifest-backed and clearly outside runtime acceptance.
 - Near-term fallback: Godot if installed and import/capture smoke passes, but Godot evidence is still runtime-presentation candidate evidence only.
 - UE path: RodinBridge Unreal plugin is cloned but docs/listing target UE 5.1-5.6/5.7 while local source is UE 5.8. Plugin compatibility is unverified until UnrealEditor binary exists and compile/import smoke passes.
 - OATHYARD native debug renderer remains insufficient for high-fidelity claims until production renderer/asset import is implemented and visual benchmark passes.

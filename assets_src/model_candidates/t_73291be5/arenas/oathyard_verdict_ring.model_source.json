@@ -29,6 +29,19 @@
   "product": "OATHYARD",
   "provenance": "repo_owned_original_procedural_model_candidate",
   "repair_task": "t_49e26ba5",
+  "source_authoring_evidence": {
+    "authoring_method": "repo-authored OpenUSD ASCII source scaffold derived from OATHYARD arena canon and verdict-ring design fields",
+    "dcc_or_openusd_source_present": true,
+    "external_dcc_validation_claimed": false,
+    "external_khronos_validation_claimed": false,
+    "format": "OpenUSD ASCII USDA",
+    "production_ready_after_this_evidence": false,
+    "schema": "oathyard.source_authoring_evidence.v1",
+    "source_file": "assets_src/model_candidates/t_73291be5/arenas/oathyard_verdict_ring.source.usda",
+    "source_sha256": "7c2634d505e2264a020785f0f9da4df0b320c7d8ab66ac1c4d0d49b761c0bf09",
+    "source_status": "source_authored_candidate_not_production_ready",
+    "truth_mutation": false
+  },
   "rig_contract": {
     "canonical_truth_joints": [],
     "grip_frames": [],

@@ -1,7 +1,7 @@
 # Asset Provenance and License Register
 
 Status: Active fail-closed register.
-Date: 2026-06-30
+Date: 2026-07-02
 
 ## Current source classes
 
@@ -11,6 +11,12 @@ Date: 2026-06-30
 | Repo-owned model candidates | `assets_src/model_candidates/t_73291be5`, `assets/model_candidates/t_73291be5`, `assets/presentation_manifest.json` | `repo_owned_original_internal_candidate_pending_project_license_review` | Candidate-only until DCC/source approval, external validation, renderer proof, and owner review. |
 | Rodin/Hyper3D API outputs | No completed local Rodin export packet found by current inspection | Hyper3D docs/pricing suggest plan-dependent export/use rights; no generation-time terms/account/receipt locally recorded | Candidate-only / license-pending until terms and receipts are captured. |
 | Third-party benchmark games | Elden Ring / For Honor references in docs only | No assets may be copied | Quality reference only; not an asset source. |
+
+## Current generated/model-candidate audit state
+
+The Unit-046 generated asset audit packet under `artifacts/asset_audit/latest/` currently records 22 model-candidate assets, 22 quarantined assets, 22 `candidate_only` assets, 22 `license-pending` assets, 0 production-ready assets, and 0 native production-renderer captures. These counts are audit evidence only; they do not grant shipping, public-demo, owner-accepted, legal, trademark, or store readiness.
+
+Each audited model-candidate record must expose source/runtime/texture hashes, source prompt/image or explicit missing status, Rodin task/download/export IDs or explicit missing status, license/commercial status, protected-IP risk status, geometry counts and bounds, material/texture/UV/normal/tangent status, contact/rig/truth-boundary status, capture/package status, `candidate_only`, `production_ready`, blockers, and the next required unblock action.
 
 ## Hyper3D/Rodin source research snapshot
 

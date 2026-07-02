@@ -4,7 +4,7 @@
 
 Partial. The deterministic duel foundation is verified. Full-game completion is not yet claimed.
 
-The high-fidelity production target is now recorded in `docs/decisions/0007-high-fidelity-production-target.md`. Current local raw-X11/software-PPM/low-poly glTF evidence is verification scaffolding only; it does not satisfy the high-fidelity native-PC 3D visual target.
+The high-fidelity production target is now recorded in `docs/decisions/0007-high-fidelity-production-target.md`. Current local native-status/non-native status-manifest/low-poly glTF evidence is verification scaffolding only; it does not satisfy the high-fidelity native-PC 3D visual target.
 
 Known blockers or constraints discovered locally:
 
@@ -27,7 +27,7 @@ Known blockers or constraints discovered locally:
 - truth audit over every Rust source file under `src/`
 - asset build
 - asset validation
-- asset preview render manifest/contact sheet for fighters, weapons, armor, and arenas
+- asset preview render manifest/status report for fighters, weapons, armor, and arenas
 - high-fidelity production target ADR and visual benchmark gap report
 - local structural glTF runtime export and validation
 - asset visual atlas and runtime 3D audit requiring source-backed runtime visuals, nonzero-Z glTF geometry, and native Z-depth projection
@@ -41,16 +41,16 @@ Known blockers or constraints discovered locally:
 - truth edge audit for fixed-point/permille overflow policy, capability clamps, deterministic contact tie ordering, and replay schema compatibility failures
 - negative input audit for malformed scenarios, content manifests, replay files, replay export bundles
 - match sweep with machine-readable scripted-match, deterministic-AI, and adversarial-truth-stress rollup
-- screenshot/render capture
+- native 3D render-capture gate status with manifest-backed evidence only
 - measured performance and asset/package budget benchmark
 - native input map/remapping artifacts with controller profile, glyph preview, and local Steam Deck checklist
 - Linux joystick-interface gamepad smoke artifact
 - native input target ADR/audit, with physical controller hardware, Steam Deck hardware, and owner input acceptance still false
 - accessibility settings artifacts for text scale, contrast, captions, visual equivalents, remapping, reduced motion, and reduced flash
 - runtime settings persistence roundtrip for accessibility, input, and audio preferences, with byte-identical saved/loaded artifacts and no truth or replay-hash mutation
-- native roster 3D showcase for all six default fighter/loadout families from runtime glTF after content hashes
-- native combat overview and state-sequence capture
-- visual evidence reducer with source-run/package-smoke visual manifest, contact-sheet rollup, hashes, and reduced failed-artifact list
+- native roster 3D showcase status for all six default fighter/loadout families from runtime glTF after content hashes, blocked until manifest-backed native 3D captures exist
+- native combat truth-read-only status manifest/report, blocked until native 3D renderer/camera capture exists
+- visual evidence reducer with source-run/package-smoke visual status manifest, hashes, and reduced failed-artifact list; missing native 3D captures remain blocked rather than substituted
 - native presentation target ADR/audit, with production renderer completion and owner visual acceptance still false
 - trace-derived audio/VFX render and captions
 - bounded live audio-device playback smoke through the local backend
@@ -65,11 +65,11 @@ Known blockers or constraints discovered locally:
 Full-game complete requires:
 
 - Native executable launches and runs the local game flow.
-- Native roster 3D showcase captures all six default fighter/loadout families as source-backed runtime glTF 3D PPM frames after content hashes, including fighter/weapon/armor identifiers, depth-sorted filled triangle evidence, contact sheet, report, and false owner/public/release readiness flags.
+- Native roster 3D showcase tracks all six default fighter/loadout families from source-backed runtime glTF after content hashes, emits manifest/report evidence only while native 3D renderer capture is absent, and keeps owner/public/release readiness flags false.
 - Keyboard and mouse-zone input paths are verified; native default gamepad-command navigation reaches every current screen and records glyph coverage; controller profile, glyph preview, and local Steam Deck checklist artifacts are generated; Linux joystick-interface smoke proves local native input visibility when present, but physical controller ergonomics, Steam Deck hardware compliance, and owner input acceptance require explicit external/hardware evidence.
 - Native input target audit proves the current command boundary is presentation-only until replayable committed inputs, validates remapping/controller-schema/native-controller-command/runtime-settings evidence, and keeps physical controller hardware, Steam Deck hardware, and owner input acceptance false.
-- Native combat render captures replay/duel-derived overview, source-backed weapon/armor silhouettes reconstructed from canonical scenario loadouts, active weapon/armor/arena runtime mesh/glTF/preview references, integer-projected generated extruded 3D glTF triangle geometry with Z-depth oblique projection for active weapons/armor/arena, 21 replay-derived motion frames, a 42-frame native X11 playback-loop final capture, a 120-frame truth-rate native live loop with five PPM sample captures and deterministic loop hash, third-person and first-person software-rasterized 3D mesh viewport PPMs, a 21-frame replay-derived software 3D mesh sequence using depth-sorted filled runtime glTF triangles after truth hashes, 1280x720/1280x800 resolution evidence, 12 state-sequence frames from truth-after-hash data, and an automated visual audit/contact sheet covering observe/plan, guard/bind, parry, weapon arc, hit/contact, armor/material solve, injury/capability, grip loss, stagger/collapse-risk, near miss/replan, recovery, and final hash evidence.
-- Visual evidence reducer indexes source-run and package-smoke visual artifacts into a deterministic manifest/report/contact sheet, records artifact hashes, and writes `failed_visual_artifacts.txt` so missing or failing visual evidence is immediately triaged without claiming owner visual acceptance.
+- Native combat render consumes replay/duel data after hashes, records truth-read-only blocked status, and may count as visual evidence only after a native 3D renderer/camera path emits captures with renderer, asset, camera, replay/hash metadata and `truth_mutation=false`.
+- Visual evidence reducer indexes source-run and package-smoke visual status into deterministic manifest/report/hash text evidence and writes `failed_visual_artifacts.txt` so missing native 3D capture evidence is immediately triaged without claiming owner visual acceptance.
 - At least six fighter traditions, eight weapon families, six armor/loadout families, OATHYARD verdict ring, and training arena are present in content and assets.
 - Assets are source-backed, repo-owned, provenance-tagged, built into runtime assets, and loaded or validated by tooling.
 - Runtime production glTF assets are generated from source with nonzero Z depth and local structural validation; external validator/DCC round-trip evidence is required before claiming DCC readiness.

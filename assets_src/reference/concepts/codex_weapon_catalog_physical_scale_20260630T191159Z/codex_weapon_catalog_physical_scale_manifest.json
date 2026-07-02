@@ -129,7 +129,7 @@
   "created_utc": "2026-06-30T19:11:59Z",
   "design_correction": "Regenerate after user rejected prior physically impossible/ridiculous weapons. This version emphasizes physically buildable weapon construction and visible size variety from dagger to polearm/great weapon.",
   "generator": "Hermes image_generate via OpenAI Codex auth, gpt-image-2-high",
-  "overview_contact_sheet": {
+  "overview_contact_index": {
     "file": "assets_src/reference/concepts/codex_weapon_catalog_physical_scale_20260630T191159Z/codex_weapon_catalog_physical_scale_overview.png",
     "sha256": "e04ca097183f7a84ec7a3969e54aae1b24f51b4268f6a57c04403483e6854585",
     "size": [

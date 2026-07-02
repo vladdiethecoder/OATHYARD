@@ -213,9 +213,6 @@ pub fn write_animation_state_machine_artifacts(
         &retargeting_json,
     )?;
 
-    let contact_sheet = render_contact_sheet_ppm(&result, &sequence, &reaction_log);
-    fs::write(out_dir.join("animation_contact_sheet.ppm"), &contact_sheet)?;
-
     let report = render_report_md(
         &result,
         &states,
@@ -269,10 +266,6 @@ pub fn write_presentation_bricks_artifacts(
     fs::write(
         out_dir.join("presentation_bricks_retargeting_bridge.json"),
         render_presentation_bricks_retargeting_json(&result, &retargeting),
-    )?;
-    fs::write(
-        out_dir.join("presentation_bricks_contact_sheet.ppm"),
-        render_contact_sheet_ppm(&result, &sequence, &reaction_log),
     )?;
     fs::write(
         out_dir.join("presentation_bricks_report.md"),
@@ -1362,157 +1355,6 @@ fn render_presentation_bricks_retargeting_json(
     writeln!(&mut out, "  ]").unwrap();
     writeln!(&mut out, "}}").unwrap();
     out
-}
-
-// ---------------------------------------------------------------------------
-// PPM contact sheet
-// ---------------------------------------------------------------------------
-
-fn render_contact_sheet_ppm(
-    result: &DuelResult,
-    sequence: &[AnimationFrame],
-    reaction_log: &[ReactionLogEntry],
-) -> Vec<u8> {
-    let width = 640u32;
-    let height = 480u32;
-    let mut ppm = Vec::with_capacity((width * height * 3 + 64) as usize);
-    ppm.extend_from_slice(format!("P6\n{width} {height}\n255\n").as_bytes());
-
-    let mut buf = vec![16u8; (width * height * 3) as usize];
-
-    // Background
-    fill_rect(&mut buf, width, 0, 0, width, height, 24, 22, 30);
-
-    // Title bar
-    fill_rect(&mut buf, width, 0, 0, width, 28, 40, 38, 52);
-    draw_text(
-        &mut buf,
-        width,
-        8,
-        8,
-        "OATHYARD ANIMATION STATE MACHINE CONTACT SHEET",
-    );
-
-    // Left panel: state matrix (15 states in a grid)
-    let panel_x = 8;
-    let panel_y = 36;
-    let cell_w = 148u32;
-    let cell_h = 26u32;
-    let cols = 3u32;
-
-    draw_text(&mut buf, width, panel_x, panel_y, "STATES (15)");
-    for (i, state) in ANIMATION_STATE_LABELS.iter().enumerate() {
-        let col = i as u32 % cols;
-        let row = i as u32 / cols;
-        let x = panel_x + col * (cell_w + 2);
-        let y = panel_y + 16 + row * (cell_h + 2);
-        let is_present = sequence.iter().any(|f| f.state == *state);
-        let (r, g, b) = if is_present {
-            (50, 80, 50)
-        } else {
-            (35, 35, 40)
-        };
-        fill_rect(&mut buf, width, x, y, cell_w, cell_h, r, g, b);
-        let label = if is_present {
-            format!(
-                "[{}] {}",
-                state.chars().take(1).collect::<String>().to_uppercase(),
-                state
-            )
-        } else {
-            format!("[ ] {}", state)
-        };
-        draw_text(&mut buf, width, x + 4, y + 8, &label);
-    }
-
-    // Middle panel: reactions (5 reactions)
-    let mid_x = panel_x + cols * (cell_w + 2) + 8;
-    draw_text(&mut buf, width, mid_x, panel_y, "REACTIONS (5)");
-    for (i, reaction) in ANIMATION_REACTION_LABELS.iter().enumerate() {
-        let count = reaction_log
-            .iter()
-            .filter(|r| r.reaction == *reaction)
-            .count();
-        let y = panel_y + 16 + i as u32 * (cell_h + 2);
-        let (r, g, b) = if count > 0 {
-            (80, 50, 50)
-        } else {
-            (35, 35, 40)
-        };
-        fill_rect(&mut buf, width, mid_x, y, 148, cell_h, r, g, b);
-        draw_text(
-            &mut buf,
-            width,
-            mid_x + 4,
-            y + 8,
-            &format!("{} x{}", reaction, count),
-        );
-    }
-
-    // Right panel: retargeting summary
-    let right_x = mid_x + 156;
-    draw_text(&mut buf, width, right_x, panel_y, "RETARGETING");
-    let retarget_lines = [
-        format!("truth joints: {}", TRUTH_JOINT_NAMES.len()),
-        format!("pres bones: {}", PRESENTATION_BONE_NAMES.len()),
-        "grip_r: wrist_r".to_string(),
-        "grip_l: wrist_l".to_string(),
-        "head: neck_head".to_string(),
-        "weapon_tip: grip_r".to_string(),
-    ];
-    for (i, line) in retarget_lines.iter().enumerate() {
-        let y = panel_y + 16 + i as u32 * 18;
-        fill_rect(&mut buf, width, right_x, y, 140, 16, 30, 30, 38);
-        draw_text(&mut buf, width, right_x + 4, y + 4, line);
-    }
-
-    // Bottom panel: truth boundary evidence
-    let bottom_y = panel_y + 5 * (cell_h + 2) + 16;
-    fill_rect(&mut buf, width, 8, bottom_y, width - 16, 70, 20, 28, 24);
-    draw_text(&mut buf, width, 16, bottom_y + 6, "TRUTH BOUNDARY");
-    let truth_lines = [
-        format!("presentation_only: true"),
-        format!("truth_mutation: false"),
-        format!(
-            "frames: {}  reactions: {}",
-            sequence.len(),
-            reaction_log.len()
-        ),
-        format!("final_state_hash: {}", &result.final_state_hash),
-    ];
-    for (i, line) in truth_lines.iter().enumerate() {
-        let col = i as u32 % 2;
-        let row = i as u32 / 2;
-        draw_text(
-            &mut buf,
-            width,
-            16 + col as u32 * 300,
-            bottom_y + 24 + row * 16,
-            line,
-        );
-    }
-
-    ppm.extend_from_slice(&buf);
-    ppm
-}
-
-fn fill_rect(buf: &mut [u8], width: u32, x: u32, y: u32, w: u32, h: u32, r: u8, g: u8, b: u8) {
-    let max_y = (480u32).min(y + h);
-    let max_x = (width).min(x + w);
-    for py in y..max_y {
-        for px in x..max_x {
-            let offset = ((py * width + px) * 3) as usize;
-            if offset + 2 < buf.len() {
-                buf[offset] = r;
-                buf[offset + 1] = g;
-                buf[offset + 2] = b;
-            }
-        }
-    }
-}
-
-fn draw_text(buf: &mut [u8], width: u32, x: u32, y: u32, text: &str) {
-    let _ = (buf, width, x, y, text);
 }
 
 // ---------------------------------------------------------------------------

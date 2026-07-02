@@ -23,12 +23,12 @@ safe_empty_generated_dir "$package_root"
 mkdir -p \
   "$package_root/bin" \
   "$package_root/assets" \
+  "$package_root/assets_src" \
   "$package_root/content" \
   "$package_root/docs" \
   "$package_root/docs/packaging" \
   "$package_root/examples" \
-  "$package_root/share/applications" \
-  "$package_root/share/icons/hicolor/scalable/apps"
+  "$package_root/share/applications"
 
 cp target/debug/oathyard "$package_root/bin/oathyard"
 cp README.md AGENTS.md ACCEPTANCE_MAP.md LICENSE "$package_root/"
@@ -38,14 +38,16 @@ cp -R docs/acceptance "$package_root/docs/"
 cp -R docs/asset_pipeline "$package_root/docs/"
 cp -R docs/roadmap "$package_root/docs/"
 cp -R assets/runtime "$package_root/assets/"
-cp -R assets/gltf "$package_root/assets/"
-cp -R assets/previews "$package_root/assets/"
 cp -R assets/textures "$package_root/assets/"
+cp -R assets/presentation_runtime "$package_root/assets/"
+cp -R assets/presentation_gltf "$package_root/assets/"
+cp -R assets/model_candidates "$package_root/assets/"
+cp -R assets/source/model_candidates "$package_root/assets_src/"
 cp assets/runtime_manifest.json assets/asset_provenance_report.md assets/asset_validation_report.md assets/gltf_validation_report.md "$package_root/assets/"
+cp assets/manifests/presentation_manifest.json assets/manifests/production_visual_manifest.json assets/manifests/production_candidate_visual_manifest.json "$package_root/assets/"
 cp content/oathyard_content.manifest "$package_root/content/"
 cp -R examples/duels "$package_root/examples/"
 cp packaging/linux/io.oathyard.OATHYARD.desktop "$package_root/share/applications/"
-cp packaging/linux/io.oathyard.OATHYARD.svg "$package_root/share/icons/hicolor/scalable/apps/"
 cp packaging/linux/README.md "$package_root/docs/packaging/linux-desktop-metadata.md"
 cp packaging/linux/APPSTREAM_BLOCKED.md "$package_root/docs/packaging/linux-appstream-blocked.md"
 
@@ -54,7 +56,7 @@ product=OATHYARD
 schema=oathyard.package.v1
 public_demo_ready=false
 release_candidate_ready=false
-contents=bin/oathyard,assets/runtime,assets/gltf,assets/previews,assets/textures,content,docs,examples,share/applications,share/icons,README.md,AGENTS.md,ACCEPTANCE_MAP.md,LICENSE,package_checksums.sha256
+contents=bin/oathyard,assets/runtime,assets/textures,assets/presentation_runtime,assets/presentation_gltf,assets/model_candidates,assets/source/model_candidates,content,docs,examples,share/applications,README.md,AGENTS.md,ACCEPTANCE_MAP.md,LICENSE,package_checksums.sha256
 MANIFEST
 
 (

@@ -1,11 +1,11 @@
 # 0003: Rodin-to-Production Asset Pipeline
 
 Status: Accepted pipeline target; current Rodin/replacement-batch assets remain candidate evidence only.
-Date: 2026-06-30
+Date: 2026-07-02
 
 ## Context
 
-OATHYARD now has a better visual baseline than the earlier SVG/PPM/debug proof: the replacement-batch turntable/contact-sheet asset evidence shows that higher-detail fighter, armor, weapon, and arena silhouettes are available for review. That evidence is V0.5 candidate evidence. It is not production art, not final visual fidelity, not public-demo readiness, not owner acceptance, and not proof of Elden Ring / For Honor-class presentation.
+OATHYARD now has a better visual baseline than the earlier debug proof: the replacement-batch turntable/image-rollup asset evidence shows that higher-detail fighter, armor, weapon, and arena silhouettes are available for review. That evidence is V0.5 candidate evidence. It is not production art, not final visual fidelity, not public-demo readiness, not owner acceptance, and not proof of Elden Ring / For Honor-class presentation.
 
 The current checked-in candidate lane is source-backed procedural/model-candidate evidence under:
 
@@ -43,10 +43,14 @@ Candidate assets may be cataloged and previewed. They must not be stored as prod
 | State | Meaning | May enter production manifest? |
 | --- | --- | --- |
 | `candidate` | Generated/imported/model-candidate evidence with incomplete source/license/validation/renderer evidence. | No. Candidate manifest only. |
+| `license-pending` | Candidate/source/runtime evidence exists, but project license/commercial-use/terms/receipt evidence is unresolved. | No. |
 | `source-approved` | Source, prompt/image provenance, license/export terms, and IP/originality risk have been reviewed and approved for project use. | Not as runtime production until technical gates pass. |
+| `technical-clean` | Machine validation, DCC/interchange import, glTF/topology/UV/normal/tangent/material-channel evidence passes, but product gates remain. | No; this is a facet, not a production grant. |
+| `gameplay-profiled` | Rig/contact/truth-boundary profiles pass where applicable, but production capture/package/owner/legal gates remain. | No; this is a facet, not a production grant. |
+| `in-engine-candidate` | Native or candidate renderer evidence exists with `truth_mutation=false`, but it is not production-renderer acceptance. | No. |
 | `production-ready` | Source-approved plus DCC/interchange source, cleaned topology/UV/material/rig/contact profiles, runtime export, native in-engine proof, package inclusion, and truth-isolation evidence. | Yes. |
 | `rejected` | Wrong category, IP risk, unverifiable terms, bad topology/material/rig, or visual/technical failure. | No; move to `assets_src/rejected/`. |
-| `debug-only` | Useful local verification primitive/PPM/SVG/procedural asset that should never ship as production art. | No. |
+| `debug-only` | Useful local verification primitive/procedural asset that should never ship as production art. | No. |
 
 ## Rodin/export provenance requirements
 
@@ -92,7 +96,7 @@ Every production asset requires:
 ## Verification commands
 
 ```sh
-./tools/audit_rodin_assets.sh
+./tools/audit_generated_assets.sh
 ./tools/build_assets.sh
 ./tools/validate_assets.sh
 ./tools/render_asset_previews.sh
@@ -104,3 +108,5 @@ Every production asset requires:
 ```
 
 Expected current result: candidate audits produce reports, while production/high-fidelity gates fail closed until licensed/source-approved production assets and a native production renderer exist.
+
+Unit-046 audit hardening requires every generated/model-candidate audit packet to include JSON/MD/CSV records, blocked-evidence reports, state summaries, quarantine manifests, and production-unblock matrices. The current state remains fail-closed: 22 candidate assets audited, 22 quarantined, 22 candidate-only/license-pending, 0 production-ready, and 0 native production-renderer captures. Channel-complete candidate textures are reported separately from production material quality so base/normal/ORM presence cannot launder 32x32 candidate textures into production acceptance.

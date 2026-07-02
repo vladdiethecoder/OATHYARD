@@ -7,7 +7,7 @@ Related research register: `docs/research/FRONTIER_TECH_LEVERAGE.md`
 
 ## Context
 
-OATHYARD currently has deterministic truth, replay verification, source-backed low-poly local 3D runtime assets, raw X11/XWayland and software-PPM evidence, and package/audit tooling. The uploaded and repo-local PPM captures are useful debug proof, but they are not production visual fidelity and must not be described as Elden Ring / For Honor-class presentation.
+OATHYARD currently has deterministic truth, replay verification, source-backed low-poly local 3D runtime assets, status manifests, and package/audit tooling. The uploaded and repo-local visual substitutes are useful debug proof, but they are not production visual fidelity and must not be described as Elden Ring / For Honor-class presentation.
 
 The frontier research pass adds a sharper production target:
 
@@ -17,13 +17,13 @@ The frontier research pass adds a sharper production target:
 - external simulation tools as offline references only;
 - fail-closed visual benchmark and capture gates.
 
-2026-06-30 update: the replacement-batch/Rodin-style turntable/contact-sheet evidence is promoted only to `V0.5 candidate_asset_preview`. It improves geometry and silhouette visibility over the earlier PPM/SVG/debug proof, but it remains candidate evidence until provenance, license/export terms, source/DCC files, material/rig/contact profiles, native-engine loading, 1920x1080 gameplay captures, benchmark review, and owner visual acceptance are complete.
+2026-06-30 update: the replacement-batch/Rodin-style turntable/image-rollup evidence is promoted only to `V0.5 candidate_asset_preview`. It improves geometry and silhouette visibility over the earlier debug proof, but it remains candidate evidence until provenance, license/export terms, source/DCC files, material/rig/contact profiles, native-engine loading, 1920x1080 gameplay captures, benchmark review, and owner visual acceptance are complete.
 
 Current toolchain inspection supersedes the older Blender blocker recorded in earlier snapshots: `/home/vdubrov/.local/bin/blender` reports Blender 4.3.2 successfully. `/usr/bin/godot`, USD tools, `assimp`, `gltf-transform`, shader tools, ImageMagick, FFmpeg, Vulkan, and an RTX 5090 are available. Unreal is not installed. glTF Validator and KTX/Basis texture-compressor tools remain unavailable locally.
 
 ## Decision
 
-OATHYARD targets a complete high-fidelity native-PC 3D emergent melee simulation game. Current raw X11, PPM, SVG, low-poly glTF, software-raster, and diagnostic contact-sheet artifacts remain `Tier 0 / debug-local verification` until a production renderer and asset pipeline produce 1920x1080+ current-run captures with production assets and owner visual acceptance.
+OATHYARD targets a complete high-fidelity native-PC 3D emergent melee simulation game. Current low-poly glTF and diagnostic non-native artifacts remain `Tier 0 / debug-local verification` until a production renderer and asset pipeline produce 1920x1080+ current-run captures with production assets and owner visual acceptance.
 
 The target quality bar may be benchmarked against Elden Ring and For Honor for fidelity/readability only. OATHYARD must remain original and must not copy their assets, silhouettes, factions, UI, animations, lore, music, textures, names, or proprietary mechanics.
 
@@ -47,13 +47,13 @@ A production high-fidelity path must provide:
 
 These artifacts can prove dataflow, determinism, or debugging only. They cannot satisfy high-fidelity product presentation:
 
-- PPM line art;
-- SVG timelines/contact sheets;
+- legacy local debug line art;
+- legacy non-3D diagram timelines or image rollups;
 - debug overlays/readout labels;
 - wireframes;
 - cubes, capsules, primitive silhouettes;
 - untextured or flat-color low-poly meshes;
-- software-raster integer-depth previews;
+- non-native integer-depth previews;
 - upscaled 960x540 or 1280x720 debug captures;
 - screenshots without loaded production assets;
 - automated metadata-only checks.

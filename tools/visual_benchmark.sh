@@ -10,10 +10,35 @@ import sys
 from pathlib import Path
 
 out = Path(sys.argv[1]); root = Path.cwd()
-gap_manifest = out / 'visual_gap_audit.json'
-contact_sheet = out / 'v0_current_visual_baseline_contact_sheet.png'
+
+def first_existing(paths):
+    for path in paths:
+        if path.is_file():
+            return path
+    return None
+
+gap_manifest = first_existing([
+    out / 'visual_gap_audit.json',
+    out.parent / 'visual_gap' / 'visual_gap_audit.json',
+    root / 'artifacts' / 'visual_review' / 'latest' / 'visual_gap_audit.json',
+])
+capture_matrix = first_existing([
+    out / 'high_fidelity_capture_matrix.json',
+    out.parent / 'high_fidelity_screens' / 'high_fidelity_capture_matrix.json',
+    root / 'artifacts' / 'high_fidelity_screens' / 'latest' / 'high_fidelity_capture_matrix.json',
+])
+capture_matrix_data = {}
+if capture_matrix:
+    try:
+        capture_matrix_data = json.loads(capture_matrix.read_text(encoding='utf-8'))
+    except Exception as exc:
+        capture_matrix_data = {'load_error': str(exc)}
+required_capture_slot_count = int(capture_matrix_data.get('required_capture_slot_count', 0) or 0)
+missing_native_capture_count = int(capture_matrix_data.get('missing_native_capture_count', 0) or 0)
+current_native_capture_count = int(capture_matrix_data.get('current_native_capture_count', 0) or 0)
+production_seed_native_capture_count = int(capture_matrix_data.get('production_seed_native_capture_count', 0) or 0)
 sections = [
-    ('current_oathyard_captures', 'FAIL', 'Current capture sheet is made from PPM/SVG/raw-X11/software/native_combat/debug-local artifacts. These are useful deterministic evidence and explicitly failing visual baseline.'),
+    ('current_oathyard_captures', 'FAIL', 'Current native-renderer evidence is absent or blocked; standalone fallback captures are excluded from the current visual benchmark surface.' + (f' Production seed progress: {production_seed_native_capture_count} source-approved native 3D captures exist but are not production-ready.' if production_seed_native_capture_count > 0 else '')),
     ('elden_ring_atmosphere_world_detail_goals', 'FAIL', 'No production renderer, GI/reflection solution, high-quality shadows, cinematic atmosphere, weather/wetness, large-scale dark-fantasy environment richness, or material-depth evidence exists.'),
     ('for_honor_melee_readability_goals','FAIL','Current fighters/weapons are candidate/procedural structural assets; no source-approved high-fidelity DCC production characters, armor/weapon identity, visceral contact response, or best-of-five presentation packet exists.'),
     ('original_art_ip_safety_check', 'PASS', 'Docs/canon define benchmark references as quality bars only and prohibit copying third-party names, assets, silhouettes, UI, lore, animations, music, textures, or proprietary mechanics. Production asset provenance remains absent.'),
@@ -33,7 +58,14 @@ manifest = {
     'passed': False,
     'candidate_evidence_package': True,
     'current_fidelity_tier': 'Tier 0 / failing baseline',
-    'baseline_contact_sheet': contact_sheet.as_posix() if contact_sheet.is_file() else '',
+    'source_visual_gap_audit': gap_manifest.as_posix() if gap_manifest else '',
+    'source_capture_matrix': capture_matrix.as_posix() if capture_matrix else '',
+    'required_capture_slot_count': required_capture_slot_count,
+    'missing_native_capture_count': missing_native_capture_count,
+    'current_native_capture_count': current_native_capture_count,
+    'production_seed_native_capture_count': production_seed_native_capture_count,
+    'native_3d_visual_evidence_required': True,
+    'fallback_visual_substitutes_allowed': False,
     'production_renderer_complete': False,
     'owner_visual_acceptance': False,
     'public_demo_ready': False,
@@ -47,7 +79,7 @@ report = [
     '# OATHYARD Visual Benchmark Report', '',
     'Status: FAILED',
     'Evidence class: candidate evidence package only.', '',
-    'Explicit baseline statement: current PPM/SVG/raw-X11/software/debug/native_combat/primitive/low-poly renders are failing baselines for the final visual target. They do not satisfy production visual quality, high-fidelity 3D, native public demo readiness, owner visual acceptance, Elden Ring-class atmosphere, or For Honor-class melee presentation.', '',
+    'Explicit baseline statement: current non-production render artifacts are failing baselines for the final visual target. Standalone fallback previews are excluded from the visual benchmark surface. Current captures do not satisfy production visual quality, high-fidelity 3D, native public demo readiness, owner visual acceptance, Elden Ring-class atmosphere, or For Honor-class melee presentation.', '',
     'Forbidden readiness statements remain false:', '',
     '- Production renderer complete: `false`',
     '- Owner visual acceptance: `false`',
@@ -55,8 +87,13 @@ report = [
     '- Release candidate ready: `false`',
     '- Elden Ring quality achieved: `false`',
     '- For Honor quality achieved: `false`', '',
-    '## Side-by-side contact sheet of current OATHYARD captures', '',
-    f"- Contact sheet: `{manifest['baseline_contact_sheet'] or 'missing; run ./tools/visual_gap_audit.sh first'}`", '',
+    'Capture matrix integration:', '',
+    f'- Source capture matrix: `{capture_matrix.as_posix() if capture_matrix else "missing"}`',
+    f'- Required high-fidelity capture slots: `{required_capture_slot_count}`',
+    f'- Current native capture slots: `{current_native_capture_count}`',
+    f'- Production seed native capture slots: `{production_seed_native_capture_count}`',
+    f'- Missing native capture slots: `{missing_native_capture_count}`',
+    '- Fallback visual substitutes: `forbidden`', '',
     '## Benchmark sections', '',
     '| Section | Verdict | Review |', '| --- | --- | --- |',
 ]
@@ -65,7 +102,7 @@ for sid, verdict, summary in sections:
 report.extend(['', '## Next fixes', '',
     '1. Use the now-working Blender 4.3.2 or OpenUSD/Godot/Bevy path to create real DCC/interchange production source assets; candidate JSON/glTF remains insufficient.',
     '2. Execute the V1 renderer/backend spike or superseding ADR with measured native 3D renderer evidence and truth isolation.',
-    '3. Populate `assets/production_visual_manifest.json` only with real source-approved production assets; keep candidate-only assets in `assets/production_candidate_visual_manifest.json`.',
+    '3. Populate `assets/manifests/production_visual_manifest.json` only with real source-approved production assets; keep candidate-only assets in `assets/manifests/production_candidate_visual_manifest.json`.',
     '4. Generate the complete 1920x1080+ capture matrix with native production renderer and production assets loaded.',
     '5. Re-run `./tools/presentation_truth_isolation.sh`, `./tools/validate_assets.sh`, `./tools/capture_high_fidelity_screens.sh`, and this benchmark.',
     '6. Submit the packet for owner/human visual review; until then owner visual acceptance remains pending/false.',
@@ -77,6 +114,12 @@ gap_lines = [
     'Status: FAILED',
     '',
     'Blocking high-fidelity visual gaps:',
+    '',
+    f'- Required high-fidelity capture slots: `{required_capture_slot_count}`',
+    f'- Current native capture slots: `{current_native_capture_count}`',
+    f'- Production seed native capture slots: `{production_seed_native_capture_count}`',
+    f'- Missing native capture slots: `{missing_native_capture_count}`',
+    '- Fallback visual substitutes: `forbidden`',
     '',
 ]
 for sid, verdict, summary in sections:

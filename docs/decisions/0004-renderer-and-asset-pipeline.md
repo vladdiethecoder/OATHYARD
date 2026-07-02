@@ -6,7 +6,7 @@ Related: `docs/asset_pipeline/ASSET_PIPELINE.md`, `docs/research/FRONTIER_TECH_L
 
 ## Context
 
-The current renderer path is raw X11/XWayland drawing plus software PPM rasterization. It is useful as deterministic local evidence, but it is not a production renderer and it does not prove premium 3D product presentation.
+The current renderer path is blocked native-renderer status drawing plus non-native status-manifest rasterization. It is useful as deterministic local evidence, but it is not a production renderer and it does not prove premium 3D product presentation.
 
 The asset pipeline currently generates repo-owned low-poly local glTF/runtime assets from deterministic text sources. That is a good regression and determinism lane, but it is not a production art pipeline.
 

@@ -6,7 +6,7 @@ Date: 2026-06-29
 
 ## Context
 
-OATHYARD's current verified local gate proves deterministic truth, replay, source-backed low-poly 3D runtime glTF assets, raw X11/XWayland and software-PPM presentation evidence, packaging, and broad audit tooling. That evidence is valuable, but it is not a high-fidelity native-PC product renderer, not a production asset set, and not visual acceptance.
+OATHYARD's current verified local gate proves deterministic truth, replay, source-backed low-poly 3D runtime glTF assets, packaging, and broad audit tooling. That evidence is valuable, but it is not a high-fidelity native-PC product renderer, not a production asset set, and not visual acceptance.
 
 The production target is now a complete native-PC 3D planned-time physical melee duel game with visual fidelity and melee readability ambition benchmarked against Elden Ring and For Honor. Those titles are references for quality bar only: dark-fantasy atmosphere, rich material response, complex arenas, readable melee intent, physical-feeling weapons, duel clarity, training/readability tooling, and best-of-five presentation. OATHYARD must remain original and must not copy names, assets, silhouettes, factions, UI, animations, lore, characters, textures, music, or proprietary mechanics from either reference.
 
@@ -14,7 +14,7 @@ The production target is now a complete native-PC 3D planned-time physical melee
 
 OATHYARD's production visual target is high-fidelity native 3D. Completion requires a continuous player-facing native 3D renderer or legally available high-fidelity engine integration that preserves deterministic truth isolation.
 
-The current raw X11/XWayland plus software PPM path remains a local verification backend only. It can prove determinism, replay-to-render data flow, source-backed nonzero-Z geometry, and package-smoke capture mechanics. It cannot satisfy production visual completion, premium high-fidelity rendering, owner visual acceptance, public-demo readiness, or release-candidate readiness.
+The current status-manifest path remains a local verification backend only. It can prove determinism, replay-to-presentation data flow, and source-backed nonzero-Z geometry. It cannot satisfy production visual completion, premium high-fidelity rendering, owner visual acceptance, public-demo readiness, or release-candidate readiness.
 
 Frontier-tech leverage and fail-closed layering are specified in `docs/research/FRONTIER_TECH_LEVERAGE.md`, `docs/decisions/0002-high-fidelity-production-target.md`, `docs/decisions/0003-truth-vs-presentation-layering.md`, and `docs/decisions/0004-renderer-and-asset-pipeline.md`. Those files classify MotionBricks-style presentation motion, external solvers, renderer targets, asset interchange, and facial/generative tools as offline research/authoring or runtime presentation unless a separate deterministic truth ADR promotes them.
 
@@ -75,7 +75,7 @@ Current pixel-level visual audit evidence:
 - `artifacts/baseline/20260629T164832Z/visual_inspection/native_combat_3d_third_person_gemma4_visual_audit.txt`
 - `artifacts/baseline/20260629T164832Z/visual_inspection/native_roster_showcase_01_saltreach_duelist_gemma4_visual_audit.txt`
 
-Those audits inspected actual converted PNGs from current SVG/PPM evidence and rejected the visuals as prototype/placeholder-level: primitive geometry, flat colors, no production anatomy, no PBR texture detail, minimal or nonexistent lighting, and no high-fidelity arena/material richness.
+Those audits inspected current local visual substitutes and rejected them as prototype/placeholder-level: primitive geometry, flat colors, no production anatomy, no PBR texture detail, minimal or nonexistent lighting, and no high-fidelity arena/material richness.
 
 ## Acceptance Gates
 
@@ -92,6 +92,6 @@ High-fidelity visual completion remains false until current-run evidence include
 
 - Existing first-slice/bootstrap docs are historical baseline only when they conflict with this target.
 - Current local package gates may pass while high-fidelity production completion remains false.
-- Raw X11 silhouettes, SVGs, PPM primitives, cubes, capsules, low-poly text-generated meshes, debug renders, and contact sheets cannot be called high fidelity.
+- Blocked native-renderer status silhouettes, debug renders, cubes, capsules, low-poly text-generated meshes, and metadata-only outputs cannot be called high fidelity.
 - Production renderer, production assets, DCC/glTF validation, animation, audio/VFX, UI, and packaging must continue to preserve deterministic truth isolation and false external readiness flags until their gates are actually complete.
 - Public-demo-ready, release-candidate-ready, owner-final-accepted, legal clearance, trademark clearance, and store readiness remain false.

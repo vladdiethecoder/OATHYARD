@@ -1,0 +1,89 @@
+#usda 1.0
+(
+    defaultPrim = "BILLHOOK"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "billhook"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "BILLHOOK"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "long blackened-ash polearm with forward hook, pruning edge, thrusting beak, socket collars, back spike, and edge/hook/pierce/bind contact semantics"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:weapon_contact_profile = "edge_hook_pierce_bind"
+        int oathyard:length_mm = 1680
+    }
+
+    def Mesh "blackened_ash_long_shaft"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.030, 0.000, -0.710), (0.030, 0.000, -0.710), (0.028, 0.000, 0.705), (-0.028, 0.000, 0.705),
+            (-0.024, 0.050, -0.705), (0.024, 0.050, -0.705), (0.022, 0.050, 0.695), (-0.022, 0.050, 0.695)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        uniform token[] primvars:oathyard_material = ["blackened_ash_wood_worn_grain"]
+        uniform token[] primvars:oathyard_contact = ["shaft_brace_surface", "two_hand_grip_reference", "blunt_check"]
+    }
+
+    def Mesh "forward_hook_pruning_blade"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.052, 0.000, 0.585), (0.056, 0.000, 0.605), (0.135, 0.000, 0.735), (0.125, 0.000, 0.875),
+            (0.030, 0.000, 0.960), (-0.050, 0.000, 0.905), (-0.018, 0.000, 0.790), (-0.150, 0.000, 0.810),
+            (-0.198, 0.000, 0.715), (-0.112, 0.000, 0.662),
+            (-0.042, 0.024, 0.592), (0.050, 0.024, 0.612), (0.116, 0.024, 0.735), (0.106, 0.024, 0.854),
+            (0.026, 0.024, 0.934), (-0.040, 0.024, 0.886), (-0.014, 0.024, 0.790), (-0.132, 0.024, 0.805),
+            (-0.170, 0.024, 0.724), (-0.100, 0.024, 0.672)
+        ]
+        int[] faceVertexCounts = [10, 10, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 18, 17, 16, 15, 14, 13, 12, 11, 0, 10, 11, 1, 1, 11, 12, 2, 2, 12, 13, 3, 4, 14, 15, 5, 6, 16, 17, 7, 7, 17, 18, 8, 8, 18, 19, 9]
+        uniform token[] primvars:oathyard_material = ["blackened_iron_edge_worn"]
+        uniform token[] primvars:oathyard_contact = ["forward_hook_bind", "inside_hook_edge", "outer_pruning_edge", "limb_control_notch"]
+    }
+
+    def Mesh "thrust_beak_and_back_spike"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.042, 0.000, 0.875), (0.042, 0.000, 0.875), (0.000, 0.000, 1.070),
+            (-0.030, 0.025, 0.882), (0.030, 0.025, 0.882), (0.000, 0.025, 1.045),
+            (-0.160, 0.004, 0.735), (-0.052, 0.004, 0.690), (-0.052, 0.004, 0.780),
+            (-0.145, 0.032, 0.735), (-0.050, 0.032, 0.696), (-0.050, 0.032, 0.772)
+        ]
+        int[] faceVertexCounts = [3, 3, 4, 4, 3, 3, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 5, 4, 0, 3, 4, 1, 1, 4, 5, 2, 6, 7, 8, 9, 11, 10, 6, 9, 10, 7, 7, 10, 11, 8]
+        uniform token[] primvars:oathyard_material = ["bright_steel_tip_and_back_spike"]
+        uniform token[] primvars:oathyard_contact = ["piercing_beak", "back_spike_pierce", "bind_pick"]
+    }
+
+    def Mesh "socket_collars_and_butt_cap"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.060, 0.000, 0.560), (0.060, 0.000, 0.560), (0.052, 0.000, 0.705), (-0.052, 0.000, 0.705),
+            (-0.050, 0.052, 0.568), (0.050, 0.052, 0.568), (0.044, 0.052, 0.696), (-0.044, 0.052, 0.696),
+            (-0.044, 0.000, -0.790), (0.044, 0.000, -0.790), (0.036, 0.000, -0.710), (-0.036, 0.000, -0.710),
+            (-0.035, 0.052, -0.782), (0.035, 0.052, -0.782), (0.029, 0.052, -0.716), (-0.029, 0.052, -0.716)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["dark_socket_collar", "iron_butt_cap"]
+        uniform token[] primvars:oathyard_contact = ["socket_bind_shoulder", "butt_blunt_surface", "brace_stop"]
+    }
+}

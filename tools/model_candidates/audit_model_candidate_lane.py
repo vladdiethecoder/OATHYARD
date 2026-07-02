@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Fail-closed structural audit and detail contact-sheet renderer for OATHYARD model candidates.
+"""Fail-closed structural audit and detail image-rollup renderer for OATHYARD model candidates.
 
-This lane audits candidate packages under assets_src/model_candidates/<run_id>,
+This lane audits candidate packages under assets/source/model_candidates/<run_id>,
 assets/model_candidates/<run_id>, and artifacts/model_candidates/<run_id> without
 promoting them into assets/gltf or the deterministic low-poly regression lane.
 """
@@ -32,10 +32,10 @@ REQUIRED_CLIPS = {"idle", "walk", "attack"}
 REQUIRED_STYLE_BASIS = {
     "docs/design/ART_DIRECTION_BRIEF.md",
     "content/oathyard_content.manifest",
-    "assets_src/fighters/traditions.oysrc",
-    "assets_src/weapons/weapons.oysrc",
-    "assets_src/armor/armor.oysrc",
-    "assets_src/arenas/arenas.oysrc",
+    "assets/source/oysrc/traditions.oysrc",
+    "assets/source/oysrc/weapons.oysrc",
+    "assets/source/oysrc/armor.oysrc",
+    "assets/source/oysrc/arenas.oysrc",
 }
 COMPONENT_INFO = {5120: ("b", 1), 5121: ("B", 1), 5122: ("h", 2), 5123: ("H", 2), 5125: ("I", 4), 5126: ("f", 4)}
 TYPE_COMPS = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
@@ -161,65 +161,6 @@ def darken(color, factor: float) -> tuple[int, int, int]:
     )
 
 
-def render_detail_contact_sheet(manifest, out_path: Path, legend_path: Path) -> None:
-    entries = manifest.get("entries", [])
-    cols = 4
-    cell_w, cell_h = 420, 330
-    rows = max(1, math.ceil(len(entries) / cols))
-    width, height = cols * cell_w, rows * cell_h
-    pixels = [[(28, 26, 22) for _ in range(width)] for _ in range(height)]
-    legend_lines = ["# OATHYARD model-candidate detail contact sheet legend", ""]
-    for idx, entry in enumerate(entries, start=1):
-        col, row = (idx - 1) % cols, (idx - 1) // cols
-        ox, oy = col * cell_w, row * cell_h
-        for y in range(oy + 4, min(height, oy + cell_h - 4)):
-            for x in range(ox + 4, min(width, ox + cell_w - 4)):
-                pixels[y][x] = (42, 38, 31) if entry.get("kind") != "arena" else (31, 39, 37)
-        gltf_path = ROOT / entry["runtime_gltf"]
-        triangles = load_triangles(gltf_path)
-        pts = [p for _, a, b, c in triangles for p in (a, b, c)]
-        if not pts:
-            continue
-        xs = [p[0] for p in pts]
-        ys = [p[1] for p in pts]
-        zs = [p[2] for p in pts]
-        # OATHYARD candidates use X/Y as the visible silhouette plane; Z is depth/height.
-        minx, maxx, miny, maxy = min(xs), max(xs), min(ys), max(ys)
-        sx = max(maxx - minx, 0.001)
-        sy = max(maxy - miny, 0.001)
-        scale = min((cell_w - 54) / sx, (cell_h - 62) / sy)
-        cx = ox + cell_w / 2
-        cy = oy + cell_h / 2 + 10
-        def project(p):
-            x, y, z = p
-            px = cx + (x - (minx + maxx) / 2) * scale
-            py = cy - (y - (miny + maxy) / 2) * scale
-            return px, py, z
-        draw = []
-        minz, maxz = min(zs), max(zs)
-        zspan = max(maxz - minz, 0.001)
-        for color, a, b, c in triangles:
-            pa, pb, pc = project(a), project(b), project(c)
-            zavg = (pa[2] + pb[2] + pc[2]) / 3.0
-            shade = 0.78 + 0.32 * ((zavg - minz) / zspan)
-            draw.append((zavg, darken(color, shade), pa, pb, pc))
-        draw.sort(key=lambda item: item[0])
-        step = max(1, len(draw) // 9000)
-        for _, color, pa, pb, pc in draw[::step]:
-            fill_tri(pixels, pa, pb, pc, color)
-        # Category color stripe at the bottom; legend carries exact ids and paths.
-        stripe = {"fighter": (107, 32, 27), "weapon": (110, 98, 72), "armor": (64, 82, 92), "arena": (92, 74, 47)}.get(entry.get("kind"), (80, 80, 80))
-        for y in range(oy + cell_h - 18, oy + cell_h - 6):
-            for x in range(ox + 10, ox + cell_w - 10):
-                pixels[y][x] = stripe
-        legend_lines.append(
-            f"{idx}. `{entry['id']}` — `{entry['kind']}` — triangles `{entry.get('triangles')}` — "
-            f"glTF `{entry['runtime_gltf']}` — source `{entry['source']}`"
-        )
-    write_png_rgb(out_path, width, height, pixels)
-    legend_path.write_text("\n".join(legend_lines) + "\n", encoding="utf-8")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
@@ -239,11 +180,8 @@ def main() -> int:
     source_manifest_path = src_root / "model_source_manifest.json"
     generator_path = ROOT / "tools" / "model_candidates" / "publish_t73291be5_animation_ready.py"
     animation_validation_path = validation_dir / "model_candidate_animation_ready_validation.json"
-    base_contact_sheet = art_root / "model_candidate_contact_sheet.png"
-    detail_contact_sheet = art_root / "model_candidate_detail_contact_sheet.png"
-    detail_legend = art_root / "model_candidate_detail_contact_sheet_legend.md"
-    visual_audit_md = visual_dir / "model_candidate_detail_contact_sheet_vision_audit.md"
-    visual_audit_json = visual_dir / "model_candidate_detail_contact_sheet_vision_audit.json"
+    visual_audit_md = visual_dir / "model_candidate_detail_visual_audit.md"
+    visual_audit_json = visual_dir / "model_candidate_detail_visual_audit.json"
 
     failures: list[str] = []
     checks: list[dict] = []
@@ -373,15 +311,6 @@ def main() -> int:
     for kind, required in REQUIRED_COUNTS.items():
         check(f"count_{kind}", counts.get(kind, 0) >= required, f"{counts.get(kind, 0)} / {required}")
 
-    if manifest.get("entries"):
-        try:
-            render_detail_contact_sheet(manifest, detail_contact_sheet, detail_legend)
-            check("detail_contact_sheet_png", is_png(detail_contact_sheet), detail_contact_sheet.relative_to(ROOT))
-            check("detail_contact_sheet_legend", detail_legend.is_file() and detail_legend.stat().st_size > 0, detail_legend.relative_to(ROOT))
-        except Exception as error:  # noqa: BLE001
-            check("detail_contact_sheet_render", False, repr(error))
-
-    check("base_contact_sheet_png", is_png(base_contact_sheet), base_contact_sheet.relative_to(ROOT) if base_contact_sheet.exists() else base_contact_sheet)
     if args.require_vision_audit:
         check("vision_audit_markdown_present", visual_audit_md.is_file() and visual_audit_md.stat().st_size > 0, visual_audit_md.relative_to(ROOT) if visual_audit_md.exists() else visual_audit_md)
         check("vision_audit_json_present", visual_audit_json.is_file() and visual_audit_json.stat().st_size > 0, visual_audit_json.relative_to(ROOT) if visual_audit_json.exists() else visual_audit_json)
@@ -403,9 +332,6 @@ def main() -> int:
         "artifact_root": art_root.relative_to(ROOT).as_posix(),
         "source_manifest": source_manifest_path.relative_to(ROOT).as_posix(),
         "manifest": manifest_path.relative_to(ROOT).as_posix(),
-        "detail_contact_sheet": detail_contact_sheet.relative_to(ROOT).as_posix(),
-        "detail_contact_sheet_legend": detail_legend.relative_to(ROOT).as_posix(),
-        "base_contact_sheet": base_contact_sheet.relative_to(ROOT).as_posix(),
         "vision_audit_markdown": visual_audit_md.relative_to(ROOT).as_posix(),
         "vision_audit_json": visual_audit_json.relative_to(ROOT).as_posix(),
         "tool_hashes": tool_hashes,
@@ -439,7 +365,6 @@ def main() -> int:
         f"- Artifact root: `{report['artifact_root']}`",
         f"- Manifest: `{report['manifest']}`",
         f"- Source manifest: `{report['source_manifest']}`",
-        f"- Detail contact sheet: `{report['detail_contact_sheet']}`",
         f"- Vision audit markdown: `{report['vision_audit_markdown']}`",
         "- Truth authoritative: `false`",
         "- Public demo ready: `false`",
@@ -471,7 +396,7 @@ def main() -> int:
             "",
             "## Scope boundary",
             "",
-            "This audit validates the source-backed candidate lane structure, local glTF/package shape, triangle-budget floors/ceilings, material sidecars, fighter rig/motion structure, contact-sheet artifacts, and readiness boundaries. It does not claim high-fidelity completion, external Khronos validation, Blender/DCC round trip, native renderer acceptance, owner visual acceptance, public-demo readiness, or release-candidate readiness.",
+            "This audit validates the source-backed candidate lane structure, local glTF/package shape, triangle-budget floors/ceilings, material sidecars, fighter rig/motion structure, and readiness boundaries. It does not claim high-fidelity completion, external Khronos validation, Blender/DCC round trip, native renderer acceptance, owner visual acceptance, public-demo readiness, or release-candidate readiness.",
         ]
     )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -479,7 +404,7 @@ def main() -> int:
     if failures:
         print(f"model candidate lane audit failed with {len(failures)} failure(s); see {md_path}", file=sys.stderr)
         return 1
-    print(json.dumps({"passed": True, "audit_json": json_path.as_posix(), "audit_report": md_path.as_posix(), "detail_contact_sheet": detail_contact_sheet.as_posix()}, indent=2, sort_keys=True))
+    print(json.dumps({"passed": True, "audit_json": json_path.as_posix(), "audit_report": md_path.as_posix()}, indent=2, sort_keys=True))
     return 0
 
 

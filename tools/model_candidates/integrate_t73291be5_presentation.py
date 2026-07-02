@@ -152,7 +152,7 @@ def presentation_integration_lock():
     """Serialize shared presentation asset writes for parallel cargo tests.
 
     `cargo test` runs integration tests concurrently by default. This script
-    rewrites assets/presentation_manifest.json plus the shared t_73291be5
+    rewrites assets/manifests/presentation_manifest.json plus the shared t_73291be5
     preview/product-capture PNGs before validating their hashes. Without a
     process lock, two subprocesses can interleave build/validate and one process
     observes the other's PNG bytes against its own freshly written manifest.

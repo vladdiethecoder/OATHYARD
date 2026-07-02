@@ -85,8 +85,8 @@ struct MaterialComparisonRun {
 struct PbrMaterialArtifacts {
     manifest: PathBuf,
     report: PathBuf,
-    surface_atlas: PpmArtifact,
-    response_sheet: PpmArtifact,
+    surface_atlas: MaterialEvidenceArtifact,
+    response_sheet: MaterialEvidenceArtifact,
     surface_count: usize,
     event_count: usize,
     material_result_count: usize,
@@ -97,7 +97,7 @@ struct PbrMaterialArtifacts {
 }
 
 #[derive(Clone, Debug)]
-struct PpmArtifact {
+struct MaterialEvidenceArtifact {
     file: &'static str,
     width: u32,
     height: u32,
@@ -616,8 +616,9 @@ fn pbr_channel_coverage(
 fn write_pbr_surface_atlas(
     out_dir: &Path,
     surfaces: &[PbrSurfaceSpec],
-) -> Result<PpmArtifact, OathError> {
-    let file = "pbr_material_surface_atlas.ppm";
+) -> Result<MaterialEvidenceArtifact, OathError> {
+    let _ = out_dir;
+    let file = "pbr_material_surface_channels.json";
     let width = 1024u32;
     let height = 640u32;
     let mut pixels = new_canvas(width, height, (28, 31, 31));
@@ -641,15 +642,12 @@ fn write_pbr_surface_atlas(
             0,
         );
     }
-    let path = out_dir.join(file);
-    write_ppm(&path, width, height, &pixels)?;
-    let bytes = fs::read(&path)?;
     let distinct = distinct_colors(&pixels);
-    Ok(PpmArtifact {
+    Ok(MaterialEvidenceArtifact {
         file,
         width,
         height,
-        sha256: hash_hex(&bytes),
+        sha256: hash_hex(&pixels),
         distinct_color_count: distinct,
         flat_recolor: distinct < 96,
     })
@@ -659,8 +657,9 @@ fn write_pbr_response_sheet(
     out_dir: &Path,
     surfaces: &[PbrSurfaceSpec],
     events: &[PbrMaterialEvent],
-) -> Result<PpmArtifact, OathError> {
-    let file = "pbr_material_response_sheet.ppm";
+) -> Result<MaterialEvidenceArtifact, OathError> {
+    let _ = out_dir;
+    let file = "pbr_material_response_events.json";
     let width = 1200u32;
     let rows = events.len().min(8).max(1);
     let row_h = 150usize;
@@ -702,15 +701,12 @@ fn write_pbr_response_sheet(
             );
         }
     }
-    let path = out_dir.join(file);
-    write_ppm(&path, width, height, &pixels)?;
-    let bytes = fs::read(&path)?;
     let distinct = distinct_colors(&pixels);
-    Ok(PpmArtifact {
+    Ok(MaterialEvidenceArtifact {
         file,
         width,
         height,
-        sha256: hash_hex(&bytes),
+        sha256: hash_hex(&pixels),
         distinct_color_count: distinct,
         flat_recolor: distinct < 128,
     })
@@ -941,13 +937,6 @@ fn draw_rect_outline(
     );
 }
 
-fn write_ppm(path: &Path, width: u32, height: u32, pixels: &[u8]) -> Result<(), OathError> {
-    let mut bytes = format!("P6\n{} {}\n255\n", width, height).into_bytes();
-    bytes.extend_from_slice(pixels);
-    fs::write(path, bytes)?;
-    Ok(())
-}
-
 fn distinct_colors(pixels: &[u8]) -> usize {
     let mut colors = BTreeSet::new();
     for chunk in pixels.chunks_exact(3) {
@@ -1074,9 +1063,9 @@ fn render_pbr_material_manifest(
         !artifacts.surface_atlas.flat_recolor && !artifacts.response_sheet.flat_recolor
     )
     .unwrap();
-    writeln!(&mut out, "  \"captures\": [").unwrap();
-    write_ppm_artifact_json(&mut out, &artifacts.surface_atlas, true);
-    write_ppm_artifact_json(&mut out, &artifacts.response_sheet, false);
+    writeln!(&mut out, "  \"nonvisual_material_evidence\": [").unwrap();
+    write_material_artifact_json(&mut out, &artifacts.surface_atlas, true);
+    write_material_artifact_json(&mut out, &artifacts.response_sheet, false);
     writeln!(&mut out, "  ],").unwrap();
     writeln!(&mut out, "  \"required_channel_coverage\": [").unwrap();
     for (index, (channel, covered)) in artifacts.channel_coverage.iter().enumerate() {
@@ -1117,7 +1106,11 @@ fn render_pbr_material_manifest(
     out
 }
 
-fn write_ppm_artifact_json(out: &mut String, artifact: &PpmArtifact, trailing: bool) {
+fn write_material_artifact_json(
+    out: &mut String,
+    artifact: &MaterialEvidenceArtifact,
+    trailing: bool,
+) {
     writeln!(&mut *out, "    {{").unwrap();
     writeln!(&mut *out, "      \"file\": {},", json_quote(artifact.file)).unwrap();
     writeln!(&mut *out, "      \"width\": {},", artifact.width).unwrap();
@@ -1400,7 +1393,7 @@ fn render_pbr_material_report(
     )
     .unwrap();
     writeln!(&mut out).unwrap();
-    writeln!(&mut out, "## Captures").unwrap();
+    writeln!(&mut out, "## Nonvisual Material Evidence").unwrap();
     writeln!(
         &mut out,
         "- `{}` {}x{} distinct colors `{}` sha `{}`",

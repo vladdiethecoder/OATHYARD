@@ -1,0 +1,86 @@
+#usda 1.0
+(
+    defaultPrim = "HEAVY_PLATE"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "heavy_plate"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "HEAVY_PLATE"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "tempered heavy plate armor source, breastplate, pauldrons, vambraces, greaves, and leather hinges; coverage/gap/deformation metadata only, no truth authority"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:armor_material = "tempered_plate"
+        string oathyard:armor_pieces = "breastplate,pauldrons,vambraces,greaves"
+        string oathyard:armor_straps = "leather_hinges"
+        bool oathyard:truth_mutation = 0
+    }
+
+    def Scope "armor_contract"
+    {
+        customData = {
+            string oathyard:armor_physics_contract = "pieces,mass,inertia,coverage,gaps,deformation,deflection,blunt_transfer,binding,damage,detachment"
+            string oathyard:plate_response_hint = "rigid tempered plate, strong deflection, hinge/gap vulnerability at armpit, elbow, knee, and waist"
+            string oathyard:truth_collision_status = "not_authoritative_candidate_visual_source"
+            string oathyard:runtime_validation_needed = "external_geometry_validation,material_texture_uv_completion,rig_truth_contact_profile_validation,native_renderer_capture_matrix,owner_visual_acceptance"
+        }
+    }
+
+    def Mesh "breastplate_and_backplate"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.260, 0.825, -0.135), (0.260, 0.825, -0.150), (0.225, 1.350, -0.165), (-0.225, 1.350, -0.135),
+            (-0.245, 0.825, 0.125), (0.245, 0.825, 0.105), (0.210, 1.340, 0.088), (-0.210, 1.345, 0.115),
+            (-0.200, 1.120, -0.182), (0.200, 1.120, -0.195), (0.185, 1.170, -0.198), (-0.185, 1.170, -0.184),
+            (-0.250, 0.820, -0.170), (0.250, 0.820, -0.185), (0.235, 0.875, -0.188), (-0.235, 0.875, -0.173)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 13, 14, 15]
+        uniform token[] primvars:oathyard_material = ["tempered_steel_breastplate", "inked_plate_edge_lines"]
+        uniform token[] primvars:oathyard_contact = ["torso_plate_coverage_visual", "waist_gap_visual", "non_authoritative_armor_source"]
+    }
+
+    def Mesh "pauldrons_and_vambraces"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.205, 1.335, -0.155), (0.355, 1.310, -0.170), (0.390, 1.225, -0.150), (0.240, 1.245, -0.138),
+            (-0.355, 1.310, -0.125), (-0.205, 1.335, -0.110), (-0.240, 1.245, -0.105), (-0.390, 1.225, -0.118),
+            (0.340, 1.050, -0.128), (0.440, 1.030, -0.140), (0.460, 0.785, -0.118), (0.360, 0.805, -0.108),
+            (-0.440, 1.030, -0.105), (-0.340, 1.050, -0.094), (-0.360, 0.805, -0.082), (-0.460, 0.785, -0.094)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["tempered_plate_pauldrons", "tempered_plate_vambraces"]
+        uniform token[] primvars:oathyard_contact = ["shoulder_coverage_visual", "forearm_coverage_visual", "elbow_gap_visual"]
+    }
+
+    def Mesh "greaves_and_hinges"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.085, 0.560, -0.080), (0.205, 0.545, -0.092), (0.215, 0.220, -0.070), (0.095, 0.230, -0.060),
+            (-0.205, 0.545, -0.066), (-0.085, 0.560, -0.055), (-0.095, 0.230, -0.045), (-0.215, 0.220, -0.055),
+            (0.205, 1.035, -0.182), (0.245, 1.028, -0.190), (0.245, 0.850, -0.178), (0.205, 0.858, -0.170),
+            (-0.245, 1.028, -0.142), (-0.205, 1.035, -0.134), (-0.205, 0.858, -0.124), (-0.245, 0.850, -0.132)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["tempered_plate_greaves", "dark_leather_hinges"]
+        uniform token[] primvars:oathyard_contact = ["shin_coverage_visual", "knee_gap_visual", "hinge_strap_visual"]
+    }
+}

@@ -40,18 +40,26 @@ def main() -> int:
     render_manifest = json.loads((render_dir / "native_combat_render_manifest.json").read_text(encoding="utf-8"))
     manifest = json.loads((ROOT / "assets" / "runtime_manifest.json").read_text(encoding="utf-8"))
     observed_frames = observed_truth_frames(trace)
-    playback_frame_count = int(render_manifest["playback_loop"]["playback_frame_count"])
-    live_loop_frame_count = int(render_manifest["live_render_loop"]["rendered_frame_count"])
+    native_render_status = render_manifest.get("visual_evidence_status", "unknown")
+    native_render_blocked = native_render_status == "blocked_pending_native_3d_renderer_capture"
+    playback_loop = render_manifest.get("playback_loop", {})
+    live_render_loop = render_manifest.get("live_render_loop", {})
+    playback_frame_count = int(playback_loop.get("playback_frame_count", 0))
+    live_loop_frame_count = int(live_render_loop.get("rendered_frame_count", 0))
     software_3d_viewports = render_manifest.get("software_3d_viewports", [])
     software_3d_sequence = render_manifest.get("software_3d_sequence", {})
     software_3d_sequence_frames = software_3d_sequence.get("frames", [])
-    captured_frame_count = (
-        int(render_manifest["state_frame_count"])
-        + int(render_manifest["motion_frame_count"])
-        + int(render_manifest["live_render_loop"]["sample_capture_count"])
+    state_frame_count = int(render_manifest.get("state_frame_count", 0))
+    motion_frame_count = int(render_manifest.get("motion_frame_count", 0))
+    live_loop_sample_capture_count = int(live_render_loop.get("sample_capture_count", 0))
+    resolution_captures = render_manifest.get("resolution_captures", [])
+    captured_frame_count = 0 if native_render_blocked else (
+        state_frame_count
+        + motion_frame_count
+        + live_loop_sample_capture_count
         + len(software_3d_viewports)
         + int(software_3d_sequence.get("frame_count", 0))
-        + len(render_manifest["resolution_captures"])
+        + len(resolution_captures)
         + 2
     )
     summary = {
@@ -67,15 +75,20 @@ def main() -> int:
         "turn_count": len(trace["turns"]),
         "observed_truth_frames_from_trace": observed_frames,
         "native_render": {
-            "state_frame_count": int(render_manifest["state_frame_count"]),
-            "motion_frame_count": int(render_manifest["motion_frame_count"]),
+            "schema": render_manifest.get("schema", ""),
+            "native_render_status": native_render_status,
+            "production_renderer_complete": bool(render_manifest.get("production_renderer_complete", False)),
+            "native_3d_visual_evidence_present": bool(render_manifest.get("native_3d_visual_evidence_present", False)),
+            "forbidden_visual_fallbacks_emitted": bool(render_manifest.get("forbidden_visual_fallbacks_emitted", False)),
+            "state_frame_count": state_frame_count,
+            "motion_frame_count": motion_frame_count,
             "playback_frame_count": playback_frame_count,
-            "playback_cycles": int(render_manifest["playback_loop"]["cycles"]),
-            "nominal_playback_duration_ms": int(render_manifest["playback_loop"]["nominal_duration_ms"]),
+            "playback_cycles": int(playback_loop.get("cycles", 0)),
+            "nominal_playback_duration_ms": int(playback_loop.get("nominal_duration_ms", 0)),
             "live_loop_frame_count": live_loop_frame_count,
-            "live_loop_sample_capture_count": int(render_manifest["live_render_loop"]["sample_capture_count"]),
-            "nominal_live_loop_duration_ms": int(render_manifest["live_render_loop"]["nominal_duration_ms"]),
-            "live_loop_hash": render_manifest["live_render_loop"]["loop_hash"],
+            "live_loop_sample_capture_count": live_loop_sample_capture_count,
+            "nominal_live_loop_duration_ms": int(live_render_loop.get("nominal_duration_ms", 0)),
+            "live_loop_hash": live_render_loop.get("loop_hash", ""),
             "software_3d_viewport_count": len(software_3d_viewports),
             "software_3d_shaded_triangle_count": sum(
                 int(viewport.get("shaded_triangle_count", 0))
@@ -93,8 +106,8 @@ def main() -> int:
                 for frame in software_3d_sequence_frames
             ),
             "captured_frame_artifacts": captured_frame_count,
-            "playback_final_hash": render_manifest["playback_loop"]["final_frame_hash"],
-            "live_loop_final_hash": render_manifest["live_render_loop"]["final_frame_hash"],
+            "playback_final_hash": playback_loop.get("final_frame_hash", ""),
+            "live_loop_final_hash": live_render_loop.get("final_frame_hash", ""),
         },
         "timings": timings,
         "derived": {
@@ -119,9 +132,8 @@ def main() -> int:
         "notes": [
             "Measured by tools/performance_benchmark.py outside authoritative truth.",
             "Wall-clock timing is QA evidence only and never enters replay hashes.",
-            "Native combat render timing measures the X11/XWayland overview, state frames, motion frames, 120-frame live loop, playback loop, resolution captures, and reports.",
-            "Software 3D viewport captures are presentation-only filled mesh raster artifacts generated from runtime glTF after truth hashes.",
-            "Software 3D replay sequence frames are presentation-only mesh motion artifacts generated from replay-derived motion frames after truth hashes.",
+            "When native 3D renderer capture is blocked, native combat render timing measures blocked-manifest generation only and does not imply frame performance.",
+            "Software/native render frame timing is recorded only when the manifest contains post-hash frame-loop evidence.",
         ],
     }
     (out_dir / "performance_summary.json").write_text(
@@ -214,6 +226,9 @@ def render_markdown(summary):
         f"- Final state hash: `{summary['final_state_hash']}`",
         f"- Turn count: `{summary['turn_count']}`",
         f"- Observed trace frame span: `{summary['observed_truth_frames_from_trace']}`",
+        f"- Native render status: `{native_render['native_render_status']}`",
+        f"- Native 3D visual evidence present: `{str(native_render['native_3d_visual_evidence_present']).lower()}`",
+        f"- Forbidden visual fallbacks emitted: `{str(native_render['forbidden_visual_fallbacks_emitted']).lower()}`",
         f"- Native render state frames: `{native_render['state_frame_count']}`",
         f"- Native render motion frames: `{native_render['motion_frame_count']}`",
         f"- Native playback loop frames: `{native_render['playback_frame_count']}`",

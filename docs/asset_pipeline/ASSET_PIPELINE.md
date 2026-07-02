@@ -6,7 +6,7 @@ All production assets must be repo-owned, source-backed, provenance-tagged, and 
 
 Copied, scraped, unlicensed, unverifiable, or placeholder production assets are forbidden. Debug-only primitives must be labeled debug-only and excluded from production manifests.
 
-Production runtime meshes must be 3D. Flat glTF geometry with no Z depth is a validation failure, because the native combat renderer must project actual source-backed 3D runtime geometry instead of 2D silhouettes.
+Production runtime meshes must be 3D. Flat glTF geometry with no Z depth is a validation failure, because the native combat renderer must project actual source-backed 3D runtime geometry instead of flat silhouettes.
 
 ## Directories
 
@@ -48,7 +48,7 @@ Additional visual/3D gates:
 ./tools/audit_3d_runtime.sh artifacts/runtime_3d/latest assets/runtime_manifest.json artifacts/native_combat/verify/native_combat_render_manifest.json
 ```
 
-The asset preview renderer emits source-backed local preview manifests/contact sheets while keeping high-fidelity/owner-readiness claims false. The asset atlas checks source/runtime/preview/provenance coverage and rejects flat glTF geometry. The runtime 3D audit checks every runtime glTF asset for nonzero Z depth and confirms the native combat projection uses Z depth after truth hashes.
+The asset preview renderer emits source-backed local preview manifests/reports while keeping high-fidelity/owner-readiness claims false; accepted visual preview evidence requires native 3D renderer captures with metadata. The asset atlas checks source/runtime/preview/provenance coverage and rejects flat glTF geometry. The runtime 3D audit checks every runtime glTF asset for nonzero Z depth and confirms the native combat projection uses Z depth after truth hashes.
 
 ## Production source-to-runtime target
 

@@ -29,6 +29,19 @@
   "product": "OATHYARD",
   "provenance": "repo_owned_original_procedural_model_candidate",
   "repair_task": "t_49e26ba5",
+  "source_authoring_evidence": {
+    "authoring_method": "repo-authored OpenUSD ASCII source scaffold derived from OATHYARD arming-sword source fields and weapon canon",
+    "dcc_or_openusd_source_present": true,
+    "external_dcc_validation_claimed": false,
+    "external_khronos_validation_claimed": false,
+    "format": "OpenUSD ASCII USDA",
+    "production_ready_after_this_evidence": false,
+    "schema": "oathyard.source_authoring_evidence.v1",
+    "source_file": "assets_src/model_candidates/t_73291be5/weapons/arming_sword.source.usda",
+    "source_sha256": "e090df39a49dfd5f6b1e583d985550e35a063705a066e36a92c3d11b24b4f25f",
+    "source_status": "source_authored_candidate_not_production_ready",
+    "truth_mutation": false
+  },
   "rig_contract": {
     "canonical_truth_joints": [],
     "grip_frames": [],

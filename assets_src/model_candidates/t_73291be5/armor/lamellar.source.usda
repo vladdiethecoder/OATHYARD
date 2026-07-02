@@ -1,0 +1,87 @@
+#usda 1.0
+(
+    defaultPrim = "LAMELLAR"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "lamellar"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "LAMELLAR"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "lamellar iron-leather armor source, scale cuirass, tassets, bracers, and side laces; coverage/gap/deformation metadata only, no truth authority"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:armor_material = "lamellar_iron_leather"
+        string oathyard:armor_pieces = "scale_cuirass,tassets,bracers"
+        string oathyard:armor_straps = "side_laces"
+        bool oathyard:truth_mutation = 0
+    }
+
+    def Scope "armor_contract"
+    {
+        customData = {
+            string oathyard:armor_physics_contract = "pieces,mass,inertia,coverage,gaps,deformation,deflection,blunt_transfer,binding,damage,detachment"
+            string oathyard:lamellar_response_hint = "overlapping plate scales, directional deflection, lace/edge vulnerability at sides, armpit, hip, elbow, and hem"
+            string oathyard:truth_collision_status = "not_authoritative_candidate_visual_source"
+            string oathyard:runtime_validation_needed = "external_geometry_validation,material_texture_uv_completion,rig_truth_contact_profile_validation,native_renderer_capture_matrix,owner_visual_acceptance"
+        }
+    }
+
+    def Mesh "scale_cuirass_core"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.255, 0.820, -0.130), (0.255, 0.820, -0.145), (0.220, 1.345, -0.160), (-0.220, 1.345, -0.130),
+            (-0.245, 0.820, 0.120), (0.245, 0.820, 0.102), (0.210, 1.335, 0.085), (-0.210, 1.340, 0.112),
+            (-0.255, 1.220, -0.172), (0.255, 1.220, -0.187), (0.245, 1.270, -0.188), (-0.245, 1.270, -0.174),
+            (-0.265, 1.080, -0.164), (0.265, 1.080, -0.180), (0.255, 1.130, -0.181), (-0.255, 1.130, -0.166),
+            (-0.275, 0.940, -0.156), (0.275, 0.940, -0.172), (0.265, 0.990, -0.173), (-0.265, 0.990, -0.158)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        uniform token[] primvars:oathyard_material = ["iron_lamellar_scales", "dark_leather_backing"]
+        uniform token[] primvars:oathyard_contact = ["torso_lamellar_coverage_visual", "overlap_direction_hint", "non_authoritative_armor_source"]
+    }
+
+    def Mesh "tassets_and_side_laces"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.250, 0.800, -0.132), (-0.045, 0.800, -0.138), (-0.055, 0.540, -0.122), (-0.270, 0.555, -0.112),
+            (0.045, 0.800, -0.142), (0.250, 0.800, -0.148), (0.270, 0.555, -0.122), (0.055, 0.540, -0.116),
+            (-0.290, 1.155, -0.114), (-0.255, 1.150, -0.118), (-0.260, 0.875, -0.100), (-0.300, 0.885, -0.094),
+            (0.255, 1.150, -0.150), (0.290, 1.155, -0.154), (0.300, 0.885, -0.128), (0.260, 0.875, -0.124)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["lamellar_tasset_tiles", "side_lace_leather"]
+        uniform token[] primvars:oathyard_contact = ["hip_tasset_visual", "side_gap_visual", "lace_binding_visual"]
+    }
+
+    def Mesh "bracers_and_layered_tiles"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.330, 1.045, -0.125), (0.435, 1.025, -0.138), (0.455, 0.790, -0.116), (0.350, 0.810, -0.106),
+            (-0.435, 1.025, -0.102), (-0.330, 1.045, -0.091), (-0.350, 0.810, -0.080), (-0.455, 0.790, -0.092),
+            (0.340, 0.985, -0.150), (0.440, 0.965, -0.162), (0.445, 0.930, -0.158), (0.345, 0.950, -0.147),
+            (-0.440, 0.965, -0.124), (-0.340, 0.985, -0.112), (-0.345, 0.950, -0.109), (-0.445, 0.930, -0.120)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["lamellar_bracer_tiles", "visible_layered_tile_edges"]
+        uniform token[] primvars:oathyard_contact = ["forearm_coverage_visual", "elbow_gap_visual", "tile_layer_readability_hint"]
+    }
+}

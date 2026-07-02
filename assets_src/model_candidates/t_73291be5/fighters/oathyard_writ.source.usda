@@ -1,0 +1,113 @@
+#usda 1.0
+(
+    defaultPrim = "OATHYARD_WRIT"
+    metersPerUnit = 1
+    upAxis = "Y"
+    customLayerData = {
+        string oathyard:schema = "oathyard.openusd_source_authoring.v1"
+        string oathyard:asset_id = "oathyard_writ"
+        string oathyard:source_status = "source_authored_candidate_not_production_ready"
+        string oathyard:truth_boundary = "presentation_only_after_truth_hash"
+        bool oathyard:truth_mutation = 0
+        bool oathyard:owner_visual_acceptance = 0
+        bool oathyard:public_demo_ready = 0
+        bool oathyard:release_candidate_ready = 0
+        bool oathyard:external_dcc_validation_claimed = 0
+        bool oathyard:external_khronos_validation_claimed = 0
+    }
+)
+
+def Xform "OATHYARD_WRIT"
+{
+    customData = {
+        string oathyard:canon_source = "docs/design/GAME_CANON.md"
+        string oathyard:identity = "balanced OATHYARD writ fighter, 81.6kg truth mass basis, mail-hauberk armor, black oath tabard, longsword loadout, canonical 16 truth joints plus grip frames"
+        string oathyard:source_scope = "authored OpenUSD source scaffold for production-asset provenance; current runtime glTF remains candidate evidence"
+        string oathyard:loadout_weapon = "longsword"
+        string oathyard:loadout_armor = "mail_hauberk"
+        int oathyard:body_mass_g = 81600
+        int oathyard:reach_bias_mm = 50
+        int oathyard:stance_bias_permille = 1030
+    }
+
+    def Scope "truth_joint_markers"
+    {
+        def Xform "root" { double3 xformOp:translate = (0.000, 0.940, 0.000) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "spine_lower" { double3 xformOp:translate = (0.000, 1.055, 0.000) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "spine_upper" { double3 xformOp:translate = (0.000, 1.330, -0.015) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "neck_head" { double3 xformOp:translate = (0.000, 1.635, -0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "shoulder_r" { double3 xformOp:translate = (0.190, 1.410, -0.015) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "elbow_r" { double3 xformOp:translate = (0.390, 1.175, -0.045) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "wrist_r" { double3 xformOp:translate = (0.455, 0.935, -0.065) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "shoulder_l" { double3 xformOp:translate = (-0.190, 1.410, -0.005) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "elbow_l" { double3 xformOp:translate = (-0.365, 1.170, -0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "wrist_l" { double3 xformOp:translate = (-0.400, 0.925, -0.035) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "hip_r" { double3 xformOp:translate = (0.120, 0.905, 0.010) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "knee_r" { double3 xformOp:translate = (0.150, 0.485, -0.015) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "ankle_r" { double3 xformOp:translate = (0.160, 0.080, -0.035) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "hip_l" { double3 xformOp:translate = (-0.120, 0.905, 0.020) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "knee_l" { double3 xformOp:translate = (-0.155, 0.485, 0.035) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "ankle_l" { double3 xformOp:translate = (-0.170, 0.080, 0.055) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "grip_r" { double3 xformOp:translate = (0.480, 0.910, -0.082) uniform token[] xformOpOrder = ["xformOp:translate"] }
+        def Xform "grip_l" { double3 xformOp:translate = (-0.420, 0.900, -0.048) uniform token[] xformOpOrder = ["xformOp:translate"] }
+    }
+
+    def Mesh "balanced_body_blockout"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.135, 0.890, -0.085), (0.135, 0.890, -0.095), (0.145, 1.380, -0.115), (-0.145, 1.375, -0.090),
+            (-0.130, 0.890, 0.090), (0.130, 0.890, 0.080), (0.140, 1.370, 0.055), (-0.140, 1.370, 0.075),
+            (-0.085, 1.395, -0.075), (0.085, 1.400, -0.085), (0.100, 1.660, -0.080), (-0.090, 1.660, -0.070),
+            (-0.080, 1.395, 0.070), (0.080, 1.400, 0.055), (0.092, 1.650, 0.045), (-0.085, 1.650, 0.060)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 0, 4, 5, 1, 1, 5, 6, 2, 8, 9, 10, 11, 12, 15, 14, 13, 8, 12, 13, 9, 9, 13, 14, 10]
+        uniform token[] primvars:oathyard_material = ["black_oath_tabard_over_mail_mass"]
+        uniform token[] primvars:oathyard_contact = ["torso_mass_visual", "balanced_silhouette", "non_authoritative_render_body"]
+    }
+
+    def Mesh "limb_pose_blocks"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.150, 1.385, -0.075), (0.220, 1.375, -0.080), (0.475, 0.915, -0.095), (0.405, 0.905, -0.085),
+            (-0.220, 1.375, -0.055), (-0.150, 1.382, -0.050), (-0.390, 0.900, -0.055), (-0.455, 0.895, -0.050),
+            (0.090, 0.890, -0.005), (0.170, 0.885, -0.015), (0.170, 0.080, -0.040), (0.105, 0.080, -0.030),
+            (-0.170, 0.890, 0.020), (-0.090, 0.890, 0.030), (-0.160, 0.080, 0.060), (-0.225, 0.080, 0.055)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 15, 14, 13]
+        uniform token[] primvars:oathyard_material = ["mail_sleeves_and_black_wrapped_boots"]
+        uniform token[] primvars:oathyard_contact = ["canonical_limb_pose_visual", "future_skinning_reference", "not_truth_collision"]
+    }
+
+    def Mesh "black_oath_tabard_mail_and_writ_marks"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (-0.160, 1.330, -0.130), (0.160, 1.330, -0.140), (0.135, 0.790, -0.130), (-0.135, 0.790, -0.120),
+            (-0.155, 1.330, 0.095), (0.155, 1.330, 0.085), (0.135, 0.800, 0.078), (-0.135, 0.800, 0.090),
+            (-0.115, 1.200, -0.150), (0.115, 1.200, -0.158), (0.115, 1.252, -0.160), (-0.115, 1.252, -0.150),
+            (-0.105, 1.105, -0.151), (0.105, 1.105, -0.159), (0.105, 1.157, -0.161), (-0.105, 1.157, -0.151),
+            (-0.085, 1.010, -0.150), (0.085, 1.010, -0.158), (0.085, 1.062, -0.160), (-0.085, 1.062, -0.150)
+        ]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 7, 6, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        uniform token[] primvars:oathyard_material = ["black_oath_tabard", "dark_mail_hauberk", "chalked_writ_marks"]
+        uniform token[] primvars:oathyard_contact = ["armor_visual_coverage_hint", "mail_mass_silhouette", "writ_identity_marks"]
+    }
+
+    def Mesh "hand_grip_frames"
+    {
+        uniform token subdivisionScheme = "none"
+        point3f[] points = [
+            (0.435, 0.875, -0.102), (0.510, 0.875, -0.102), (0.510, 0.950, -0.060), (0.435, 0.950, -0.060),
+            (-0.455, 0.865, -0.070), (-0.380, 0.865, -0.070), (-0.380, 0.940, -0.025), (-0.455, 0.940, -0.025)
+        ]
+        int[] faceVertexCounts = [4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 4, 5, 6, 7]
+        uniform token[] primvars:oathyard_material = ["black_oath_hand_wraps"]
+        uniform token[] primvars:oathyard_contact = ["grip_r_visual_frame", "grip_l_visual_frame", "longsword_loadout_socket"]
+    }
+}
