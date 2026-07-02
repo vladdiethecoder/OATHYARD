@@ -2225,3 +2225,54 @@ fn wgpu_renderer_spike_lane_is_source_buildable_and_truth_isolated() {
         hifi_tool.contains("capture file is not a production_renderer_*.png native evidence file")
     );
 }
+
+#[test]
+fn unit050_native_3d_game_flow_planning_loop_truth_isolated() {
+    let tool = std::fs::read_to_string("tools/run_native_3d_game_flow.sh")
+        .expect("missing native 3D game flow tool");
+
+    // Verify the script exists and has correct structure
+    assert!(tool.contains("#!/usr/bin/env bash"));
+    assert!(tool.contains("run_duel.sh"));
+    assert!(tool.contains("replay_verify.sh"));
+    assert!(tool.contains("presentation-bricks"));
+    assert!(tool.contains("wgpu_renderer_spike.sh"));
+    assert!(tool.contains("native_3d_game_flow_manifest"));
+
+    // Verify the Python manifest generator includes required fields
+    assert!(tool.contains("OBSERVE"));
+    assert!(tool.contains("PLAN"));
+    assert!(tool.contains("COMMIT_REVEAL"));
+    assert!(tool.contains("RESOLVE"));
+    assert!(tool.contains("CONSEQUENCE"));
+    assert!(tool.contains("REPLAN"));
+    assert!(tool.contains("truth_mutation"));
+    assert!(tool.contains("production_seed_capture_count"));
+    assert!(tool.contains("presentation_bricks_frames"));
+    assert!(tool.contains("ui_role"));
+    assert!(tool.contains("committed_actions"));
+    assert!(tool.contains("contact_packets"));
+    assert!(tool.contains("capability_changes"));
+    assert!(tool.contains("cost_preview"));
+
+    // Verify large-file policy exists
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+    assert!(lfs_policy.contains("50 MiB"));
+
+    // Verify skeleton definition exists
+    let skeleton = std::fs::read_to_string("content/skeletons/production_seed_skeleton.json")
+        .expect("missing skeleton definition");
+    assert!(skeleton.contains("truth_joint_count"));
+    assert!(skeleton.contains("grip_r"));
+    assert!(skeleton.contains("grip_l"));
+    assert!(skeleton.contains("presentation_bone_count"));
+
+    // Verify animation manifest exists
+    let anim = std::fs::read_to_string("content/animations/production_seed_animations.json")
+        .expect("missing animation manifest");
+    assert!(anim.contains("MotionBricks-inspired PresentationBricks"));
+    assert!(anim.contains("retargeting_bridge"));
+    assert!(anim.contains("truth_mutation"));
+}
