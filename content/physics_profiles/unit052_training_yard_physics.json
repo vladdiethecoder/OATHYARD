@@ -1,0 +1,48 @@
+{
+  "schema": "oathyard.unit052_training_yard_physics_production_ready_candidate.v1",
+  "unit": "unit052",
+  "asset_id": "training_yard",
+  "asset_class": "arena",
+  "physics_profile": {
+    "static_object": false,
+    "friction_coefficient": 0.6,
+    "restitution": 0.1,
+    "mass_kg": null,
+    "contact_regions": [
+      {
+        "region_id": "footing_dirt_grass",
+        "coverage_fraction": 0.85,
+        "footing_stability": "stable"
+      },
+      {
+        "region_id": "footing_stone_path",
+        "coverage_fraction": 0.10,
+        "footing_stability": "stable"
+      },
+      {
+        "region_id": "fence_collision",
+        "coverage_fraction": 0.05,
+        "footing_stability": "blocked"
+      }
+    ]
+  },
+  "collision_profile": {
+    "collision_type": "static_mesh",
+    "footing_surface": true,
+    "boundary_enclosure": "partial_fence_boundary",
+    "collision_regions": [
+      {
+        "region_id": "ground_plane",
+        "coverage_fraction": 0.95,
+        "collision_enabled": true
+      },
+      {
+        "region_id": "fence_boundary",
+        "coverage_fraction": 0.05,
+        "collision_enabled": true
+      }
+    ]
+  },
+  "production_ready_candidate": true,
+  "truth_mutation": false
+}

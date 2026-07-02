@@ -144,6 +144,15 @@ fn clip_id_for_capture(capture_id: &str) -> &'static str {
         "planning_timeline" => "guard_pose",
         "material_armor_damage_frame" => "recover",
         "injury_capability_consequence_frame" => "recover",
+        // Unit-052: expanded capture poses
+        "training_yard_establishing" => "idle",
+        "recovery_replan_frame" => "recover",
+        "first_person_combat_view" => "thrust",
+        "third_person_combat_view" => "cut",
+        "replay_verification_ui_or_packet_view" => "idle",
+        "performance_debug_overlay" => "guard_pose",
+        "settings_accessibility" => "idle",
+        "arena_select" => "idle",
         _ => "idle",
     }
 }
@@ -220,6 +229,15 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "planning_timeline" => CameraMode { eye: [0.0, 1.1, 3.4], look_at: [0.0, 0.40, -0.1], fov_radians: 0.68 },
         "material_armor_damage_frame" => CameraMode { eye: [0.1, 0.65, 1.8], look_at: [0.0, 0.30, -0.05], fov_radians: 0.55 },
         "injury_capability_consequence_frame" => CameraMode { eye: [-0.15, 0.85, 2.2], look_at: [0.0, 0.35, -0.1], fov_radians: 0.58 },
+        // Unit-052: expanded capture cameras
+        "training_yard_establishing" => CameraMode { eye: [0.0, 1.6, 5.0], look_at: [0.0, 0.1, -0.3], fov_radians: 0.78 },
+        "recovery_replan_frame" => CameraMode { eye: [-0.2, 0.90, 2.6], look_at: [0.0, 0.38, -0.1], fov_radians: 0.62 },
+        "first_person_combat_view" => CameraMode { eye: [0.0, 0.70, 0.15], look_at: [0.0, 0.55, -1.5], fov_radians: 1.05 },
+        "third_person_combat_view" => CameraMode { eye: [0.0, 1.3, 2.8], look_at: [0.0, 0.50, -0.5], fov_radians: 0.82 },
+        "replay_verification_ui_or_packet_view" => CameraMode { eye: [0.0, 1.5, 4.0], look_at: [0.0, 0.60, -0.5], fov_radians: 0.70 },
+        "performance_debug_overlay" => CameraMode { eye: [0.0, 1.0, 3.5], look_at: [0.0, 0.45, -0.2], fov_radians: 0.72 },
+        "settings_accessibility" => CameraMode { eye: [0.0, 1.6, 3.8], look_at: [0.0, 0.80, -0.8], fov_radians: 0.68 },
+        "arena_select" => CameraMode { eye: [0.0, 1.8, 4.2], look_at: [0.0, 0.20, -0.5], fov_radians: 0.74 },
         // Production seed single-asset closeups
         "production_seed_weapon_longsword" => CameraMode { eye: [0.0, 0.45, 1.4], look_at: [0.0, 0.20, -0.08], fov_radians: 0.48 },
         "production_seed_armor_gambeson" => CameraMode { eye: [0.0, 0.80, 2.2], look_at: [0.0, 0.40, -0.1], fov_radians: 0.58 },
@@ -403,7 +421,9 @@ fn real_main() -> Result<(), String> {
             "unit051_ssao_approximation": true,
             "unit051_ground_contact_darkening": true,
             "unit051_multi_region_materials": true,
-            "unit051_guard_cut_thrust_recover_poses": true
+            "unit051_guard_cut_thrust_recover_poses": true,
+            "unit052_training_yard_promoted": true,
+            "unit052_camera_breadth_expanded": true
         },
         "presentation_truth_isolation_passed": false,
         "presentation_only": true,

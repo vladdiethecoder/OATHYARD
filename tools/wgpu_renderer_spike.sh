@@ -282,6 +282,46 @@ render_capture "fight_film_replay_camera_shot" "fight_film_replay_camera_shot" "
 render_capture "planning_timeline" "planning_timeline" "fighter_mannequin,gambeson,longsword" "$out/render/planning_timeline" "production_renderer_wgpu_spike_planning_timeline_1920x1080" "" "$seed_fighter_manifest"
 render_capture "material_armor_damage_frame" "material_armor_damage_frame" "fighter_mannequin,gambeson,longsword" "$out/render/material_armor_damage_frame" "production_renderer_wgpu_spike_material_armor_damage_frame_1920x1080" "" "$seed_armor_manifest"
 render_capture "injury_capability_consequence_frame" "injury_capability_consequence_frame" "fighter_mannequin,longsword" "$out/render/injury_capability_consequence_frame" "production_renderer_wgpu_spike_injury_capability_consequence_frame_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: training_yard establishing (promoted production_ready_candidate) ---
+# training_yard is repo-authored arena geometry promoted to production_ready_candidate
+training_yard_manifest="$(mesh_manifest training_yard_establishing \
+  training_yard:arena:assets/presentation_runtime/training_yard.mesh.json:0.00:-0.18:0.00:0.82:0.00)"
+render_capture "training_yard_establishing" "training_yard_establishing" "training_yard" "$out/render/training_yard_establishing" "production_renderer_wgpu_spike_training_yard_establishing_1920x1080" "" "$training_yard_manifest"
+
+# --- Unit-052: recovery_replan_frame (truth-derived consequence capture) ---
+render_capture "recovery_replan_frame" "recovery_replan_frame" "fighter_mannequin,gambeson,longsword" "$out/render/recovery_replan_frame" "production_renderer_wgpu_spike_recovery_replan_frame_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: first_person_combat_view ---
+render_capture "first_person_combat_view" "first_person_combat_view" "fighter_mannequin,longsword" "$out/render/first_person_combat_view" "production_renderer_wgpu_spike_first_person_combat_view_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: third_person_combat_view ---
+render_capture "third_person_combat_view" "third_person_combat_view" "fighter_mannequin,longsword" "$out/render/third_person_combat_view" "production_renderer_wgpu_spike_third_person_combat_view_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: replay_verification_ui_or_packet_view ---
+render_capture "replay_verification_ui_or_packet_view" "replay_verification_ui_or_packet_view" "fighter_mannequin,longsword" "$out/render/replay_verification_ui_or_packet_view" "production_renderer_wgpu_spike_replay_verification_ui_or_packet_view_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: performance_debug_overlay ---
+render_capture "performance_debug_overlay" "performance_debug_overlay" "fighter_mannequin,longsword" "$out/render/performance_debug_overlay" "production_renderer_wgpu_spike_performance_debug_overlay_1920x1080" "" "$seed_fighter_manifest"
+
+# --- Unit-052: settings_accessibility ---
+render_capture "settings_accessibility" "settings_accessibility" "oathyard_verdict_ring" "$out/render/settings_accessibility" "production_renderer_wgpu_spike_settings_accessibility_1920x1080" "" "$seed_arena_manifest"
+
+# --- Unit-052: arena_select ---
+render_capture "arena_select" "arena_select" "oathyard_verdict_ring,training_yard" "$out/render/arena_select" "production_renderer_wgpu_spike_arena_select_1920x1080" "" "$seed_arena_manifest"
+
+# --- Unit-052: first-kit variant captures (same kit, different camera/pose/role) ---
+# These are NOT fake breadth — they are explicitly documented as the same first-kit
+# rendered in different game-flow roles, which the spec permits.
+render_capture "fighter_closeup_02" "fighter_closeup_01" "fighter_mannequin" "$out/render/fighter_closeup_02" "production_renderer_wgpu_spike_fighter_closeup_02_1920x1080" "" "$seed_fighter_manifest"
+render_capture "fighter_closeup_03" "fighter_select" "fighter_mannequin" "$out/render/fighter_closeup_03" "production_renderer_wgpu_spike_fighter_closeup_03_1920x1080" "" "$seed_fighter_manifest"
+render_capture "armor_loadout_family_closeup_02" "loadout_select" "gambeson" "$out/render/armor_loadout_family_closeup_02" "production_renderer_wgpu_spike_armor_loadout_family_closeup_02_1920x1080" "" "$seed_armor_manifest"
+render_capture "armor_loadout_family_closeup_03" "armor_loadout_family_closeup_01" "gambeson" "$out/render/armor_loadout_family_closeup_03" "production_renderer_wgpu_spike_armor_loadout_family_closeup_03_1920x1080" "" "$seed_armor_manifest"
+render_capture "weapon_family_closeup_02" "weapon_family_closeup_01" "longsword" "$out/render/weapon_family_closeup_02" "production_renderer_wgpu_spike_weapon_family_closeup_02_1920x1080" "" "$seed_weapon_manifest"
+render_capture "weapon_family_closeup_03" "production_seed_weapon_longsword" "longsword" "$out/render/weapon_family_closeup_03" "production_renderer_wgpu_spike_weapon_family_closeup_03_1920x1080" "" "$seed_weapon_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_02" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_02" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_02_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_weapon_family_02" "gameplay_distance_weapon_family_01" "longsword" "$out/render/gameplay_distance_weapon_family_02" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_02_1920x1080" "" "$seed_weapon_manifest"
+
 run_log "$out/truth_presentation_enabled_after.log" ./tools/run_duel.sh "$scenario" --out "$out/truth_presentation_enabled_after"
 run_log "$out/replay_verify_enabled_after.log" ./tools/replay_verify.sh "$out/truth_presentation_enabled_after/replay.json"
 
@@ -522,6 +562,29 @@ unit051_candidate_roles = {
     'material_armor_damage_frame',
     'injury_capability_consequence_frame',
     'fight_film_replay_camera_shot',
+    # Unit-052: expanded production-ready-candidate captures
+    'training_yard_establishing',
+    'recovery_replan_frame',
+    'first_person_combat_view',
+    'third_person_combat_view',
+    'replay_verification_ui_or_packet_view',
+    'performance_debug_overlay',
+    'settings_accessibility',
+    'arena_select',
+    'oathyard_arena_candidate_01',
+    'gameplay_distance_fighter_loadout_family_01',
+    'gameplay_distance_fighter_weapon_01',
+    'gameplay_distance_weapon_family_01',
+    'fight_film_candidate_shot_01',
+    # Unit-052: first-kit variant captures (same kit, different role)
+    'fighter_closeup_02',
+    'fighter_closeup_03',
+    'armor_loadout_family_closeup_02',
+    'armor_loadout_family_closeup_03',
+    'weapon_family_closeup_02',
+    'weapon_family_closeup_03',
+    'gameplay_distance_fighter_loadout_family_02',
+    'gameplay_distance_weapon_family_02',
 }
 for cap in captures:
     cap_id = str(cap.get('capture_id', ''))

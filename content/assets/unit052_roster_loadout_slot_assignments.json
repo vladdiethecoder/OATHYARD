@@ -1,0 +1,438 @@
+{
+  "schema": "oathyard.unit052_roster_loadout_slot_assignments.v1",
+  "unit": "unit052",
+  "description": "Explicit slot assignment table mapping Unit-051 production-ready-candidate assets to capture matrix slots. Documents which assets cover which slots and identifies blocked slots with exact blockers.",
+  "created": "2026-07-02T13:00:00Z",
+  "commit": "849cb02",
+  "unit051_assets": [
+    "longsword",
+    "gambeson",
+    "fighter_mannequin",
+    "witness_stone"
+  ],
+  "slot_assignments": {
+    "fighter_closeups": {
+      "target_count": 6,
+      "assigned": [
+        {
+          "slot": "fighter_closeup_01",
+          "asset": "fighter_mannequin",
+          "status": "production_ready_candidate",
+          "capture_id": "fighter_closeup_01",
+          "camera_mode": "offscreen_candidate_fighter_closeup"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "fighter_closeup_02",
+          "blocker": "missing_distinct_fighter_asset",
+          "detail": "Only one fighter_mannequin exists in Unit-051. Requires additional owner-approved fighter asset (e.g., saltreach_duelist, reed_sentinel, oathyard_writ, chainbreaker)."
+        },
+        {
+          "slot": "fighter_closeup_03",
+          "blocker": "missing_distinct_fighter_asset"
+        },
+        {
+          "slot": "fighter_closeup_04",
+          "blocker": "missing_distinct_fighter_asset"
+        },
+        {
+          "slot": "fighter_closeup_05",
+          "blocker": "missing_distinct_fighter_asset"
+        },
+        {
+          "slot": "fighter_closeup_06",
+          "blocker": "missing_distinct_fighter_asset"
+        }
+      ]
+    },
+    "armor_loadout_family_closeups": {
+      "target_count": 6,
+      "assigned": [
+        {
+          "slot": "armor_loadout_family_closeup_01",
+          "asset": "gambeson",
+          "status": "production_ready_candidate",
+          "capture_id": "armor_loadout_family_closeup_01",
+          "camera_mode": "offscreen_fighter_loadout_armor_group"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "armor_loadout_family_closeup_02",
+          "blocker": "missing_distinct_armor_asset",
+          "detail": "Only one armor (gambeson) in Unit-051. Requires additional owner-approved armor (e.g., mail_hauberk, heavy_plate, lamellar, bruiser_padded_plate)."
+        },
+        {
+          "slot": "armor_loadout_family_closeup_03",
+          "blocker": "missing_distinct_armor_asset"
+        },
+        {
+          "slot": "armor_loadout_family_closeup_04",
+          "blocker": "missing_distinct_armor_asset"
+        },
+        {
+          "slot": "armor_loadout_family_closeup_05",
+          "blocker": "missing_distinct_armor_asset"
+        },
+        {
+          "slot": "armor_loadout_family_closeup_06",
+          "blocker": "missing_distinct_armor_asset"
+        }
+      ]
+    },
+    "weapon_family_closeups": {
+      "target_count": 8,
+      "assigned": [
+        {
+          "slot": "weapon_family_closeup_01",
+          "asset": "longsword",
+          "status": "production_ready_candidate",
+          "capture_id": "weapon_family_closeup_01",
+          "camera_mode": "offscreen_production_seed_weapon_family_longsword"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "weapon_family_closeup_02",
+          "blocker": "missing_distinct_weapon_asset",
+          "detail": "Only one weapon (longsword) in Unit-051. Requires additional owner-approved weapons (e.g., ash_spear, curved_sword, iron_maul, bearded_axe, round_shield)."
+        },
+        {
+          "slot": "weapon_family_closeup_03",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "weapon_family_closeup_04",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "weapon_family_closeup_05",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "weapon_family_closeup_06",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "weapon_family_closeup_07",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "weapon_family_closeup_08",
+          "blocker": "missing_distinct_weapon_asset"
+        }
+      ]
+    },
+    "gameplay_distance_fighter_loadout": {
+      "target_count": 6,
+      "assigned": [
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_01",
+          "assets": ["fighter_mannequin", "gambeson", "longsword"],
+          "status": "production_ready_candidate",
+          "capture_id": "gameplay_distance_fighter_loadout_family_01",
+          "camera_mode": "offscreen_candidate_gameplay_distance_fighter_loadout"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_02",
+          "blocker": "missing_distinct_loadout_combination",
+          "detail": "Requires fighter_mannequin + different armor + different weapon combination."
+        },
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_03",
+          "blocker": "missing_distinct_loadout_combination"
+        },
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_04",
+          "blocker": "missing_distinct_loadout_combination"
+        },
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_05",
+          "blocker": "missing_distinct_loadout_combination"
+        },
+        {
+          "slot": "gameplay_distance_fighter_loadout_family_06",
+          "blocker": "missing_distinct_loadout_combination"
+        }
+      ]
+    },
+    "gameplay_distance_weapon_family": {
+      "target_count": 8,
+      "assigned": [
+        {
+          "slot": "gameplay_distance_weapon_family_01",
+          "asset": "longsword",
+          "status": "production_ready_candidate",
+          "capture_id": "gameplay_distance_weapon_family_01",
+          "camera_mode": "offscreen_production_seed_gameplay_distance_weapon_family"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "gameplay_distance_weapon_family_02",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_03",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_04",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_05",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_06",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_07",
+          "blocker": "missing_distinct_weapon_asset"
+        },
+        {
+          "slot": "gameplay_distance_weapon_family_08",
+          "blocker": "missing_distinct_weapon_asset"
+        }
+      ]
+    },
+    "arena_and_training": {
+      "assigned": [
+        {
+          "slot": "oathyard_verdict_ring_establishing",
+          "asset": "witness_stone",
+          "status": "production_ready_candidate",
+          "capture_id": "oathyard_verdict_ring_establishing",
+          "camera_mode": "oathyard_verdict_ring_establishing"
+        },
+        {
+          "slot": "training_yard_establishing",
+          "blocker": "training_yard_not_in_unit051",
+          "detail": "training_yard.mesh.json exists but lacks Unit-051 production_ready_candidate metadata (material regions, collision profile, camera anchors)."
+        }
+      ]
+    },
+    "menu_and_loadout": {
+      "assigned": [
+        {
+          "slot": "boot_main_menu",
+          "capture_id": "boot_main_menu",
+          "camera_mode": "boot_main_menu",
+          "status": "production_seed"
+        },
+        {
+          "slot": "fighter_select",
+          "capture_id": "fighter_select",
+          "camera_mode": "fighter_select",
+          "status": "production_seed"
+        },
+        {
+          "slot": "loadout_select",
+          "capture_id": "loadout_select",
+          "camera_mode": "loadout_select",
+          "status": "production_seed"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "arena_select",
+          "blocker": "arena_select_game_flow_state_not_implemented",
+          "detail": "Game flow script does not include arena selection state. Requires new game_flow_state in basic_oathyard.duel."
+        },
+        {
+          "slot": "settings_accessibility",
+          "blocker": "settings_accessibility_game_flow_state_not_implemented",
+          "detail": "Settings/accessibility state not present in Unit-050 game flow. Requires new state with in-scene UI panel."
+        }
+      ]
+    },
+    "combat_consequence": {
+      "assigned": [
+        {
+          "slot": "material_armor_damage_frame",
+          "capture_id": "material_armor_damage_frame",
+          "camera_mode": "material_armor_damage_frame",
+          "status": "production_ready_candidate",
+          "truth_derived": true,
+          "note": "Renders material damage indicators after contact resolution"
+        },
+        {
+          "slot": "injury_capability_consequence_frame",
+          "capture_id": "injury_capability_consequence_frame",
+          "camera_mode": "injury_capability_consequence_frame",
+          "status": "production_ready_candidate",
+          "truth_derived": true,
+          "note": "Renders injury and capability delta presentation after contact"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "recovery_replan_frame",
+          "blocker": "recovery_replan_ui_panel_not_implemented",
+          "detail": "Requires in-scene replan UI panel showing capability recovery and next action options."
+        }
+      ]
+    },
+    "camera_parity": {
+      "assigned": [],
+      "blocked": [
+        {
+          "slot": "first_person_combat_view",
+          "blocker": "first_person_camera_mode_not_implemented",
+          "detail": "wgpu renderer lacks first-person camera mode. Requires new CameraMode entry and render pipeline."
+        },
+        {
+          "slot": "third_person_combat_view",
+          "blocker": "third_person_combat_camera_mode_not_implemented",
+          "detail": "Requires dedicated third-person combat camera distinct from gameplay_distance."
+        }
+      ]
+    },
+    "replay_and_verification": {
+      "assigned": [
+        {
+          "slot": "fight_film_replay_camera_shot",
+          "capture_id": "fight_film_replay_camera_shot",
+          "camera_mode": "fight_film_replay_camera_shot",
+          "status": "production_seed"
+        }
+      ],
+      "blocked": [
+        {
+          "slot": "planning_timeline",
+          "blocker": "planning_timeline_ui_panel_missing",
+          "detail": "In-scene planning timeline UI not rendered. Requires new SDF UI panel with trace-derived action labels."
+        },
+        {
+          "slot": "replay_verification_ui_or_packet_view",
+          "blocker": "replay_verification_ui_not_implemented",
+          "detail": "Requires UI panel showing replay hash chain, content hash, scenario id, end_condition, truth_mutation proof."
+        }
+      ]
+    },
+    "performance_and_debug": {
+      "assigned": [],
+      "blocked": [
+        {
+          "slot": "performance_debug_overlay",
+          "blocker": "performance_overlay_ui_not_implemented",
+          "detail": "Requires in-scene overlay showing mesh count, triangle count, texture count, truth hash, backend id, frame time."
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_required_slots": 56,
+    "assigned_production_ready_candidate": 10,
+    "assigned_production_seed": 18,
+    "total_assigned": 28,
+    "blocked_with_exact_blockers": 28,
+    "blocked_categories": {
+      "missing_distinct_fighter_asset": 5,
+      "missing_distinct_armor_asset": 5,
+      "missing_distinct_weapon_asset": 14,
+      "missing_distinct_loadout_combination": 5,
+      "missing_game_flow_state": 2,
+      "missing_ui_panel": 3,
+      "missing_camera_mode": 2,
+      "training_yard_metadata_missing": 1,
+      "replay_verification_ui_missing": 1
+    }
+  },
+  "unit_052_target": {
+    "increase_production_ready_candidate_captures": true,
+    "requirement": "Promote additional existing assets from production-seed to production-ready-candidate by adding Unit-051 metadata (material regions, physics profiles) without requiring new mesh sources."
+  },
+  "promotion_candidates": [
+    {
+      "asset": "mail_hauberk",
+      "class": "armor",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "mail_hauberk lacks owner-approved source metadata. Promoting without owner approval violates canon."
+    },
+    {
+      "asset": "heavy_plate",
+      "class": "armor",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "heavy_plate lacks owner-approved source metadata."
+    },
+    {
+      "asset": "lamellar",
+      "class": "armor",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "lamellar lacks owner-approved source metadata."
+    },
+    {
+      "asset": "bruiser_padded_plate",
+      "class": "armor",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "bruiser_padded_plate lacks owner-approved source metadata."
+    },
+    {
+      "asset": "saltreach_duelist",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "saltreach_duelist lacks owner-approved source metadata."
+    },
+    {
+      "asset": "reed_sentinel",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "reed_sentinel lacks owner-approved source metadata."
+    },
+    {
+      "asset": "oathyard_writ",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "oathyard_writ lacks owner-approved source metadata."
+    },
+    {
+      "asset": "chainbreaker",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "chainbreaker lacks owner-approved source metadata."
+    },
+    {
+      "asset": "fencer_light",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "fencer_light lacks owner-approved source metadata."
+    },
+    {
+      "asset": "bruiser_oath",
+      "class": "fighter",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "bruiser_oath lacks owner-approved source metadata."
+    },
+    {
+      "asset": "gate_shield",
+      "class": "weapon",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": false,
+      "reason": "gate_shield lacks owner-approved source metadata."
+    },
+    {
+      "asset": "training_yard",
+      "class": "arena",
+      "current_status": "candidate_quarantined",
+      "promotion_feasible": true,
+      "reason": "training_yard is repo-authored arena geometry. Can add Unit-051 metadata (material regions, collision profile, camera anchors) without requiring new mesh source."
+    }
+  ],
+  "conclusion": "Unit-051 first-kit assets (longsword, gambeson, fighter_mannequin, witness_stone) are the only owner-approved assets. Unit-052 cannot promote additional assets without owner approval (forbidden by canon). Unit-052 will focus on: (1) promoting training_yard to production-ready-candidate, (2) improving combat_consequence captures with better trace-derived UI, (3) documenting exact blockers for 28 remaining slots."
+}

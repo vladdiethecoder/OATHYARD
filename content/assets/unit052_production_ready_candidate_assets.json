@@ -1,0 +1,121 @@
+{
+  "schema": "oathyard.unit052_training_yard_production_ready_candidate.v1",
+  "unit": "unit052",
+  "asset_id": "training_yard",
+  "asset_class": "arena",
+  "source_path": "assets/presentation_runtime/training_yard.mesh.json",
+  "source_sha256": "training_yard.mesh.json",
+  "runtime_path": "assets/presentation_runtime/training_yard.mesh.json",
+  "runtime_sha256": "training_yard.mesh.json",
+  "vertex_count": 2400,
+  "triangle_count": 4400,
+  "bounds": {
+    "min": [-50.0, -5.0, -30.0],
+    "max": [50.0, 5.0, 30.0]
+  },
+  "uv_status": "present",
+  "normal_status": "present",
+  "tangent_status": "computed",
+  "material_regions": [
+    {
+      "region_id": "training_yard_ground",
+      "material_type": "dirt_grass",
+      "coverage_fraction": 0.85,
+      "roughness": 0.8,
+      "metalness": 0.0
+    },
+    {
+      "region_id": "training_yard_stone_path",
+      "material_type": "worn_stone",
+      "coverage_fraction": 0.10,
+      "roughness": 0.7,
+      "metalness": 0.0
+    },
+    {
+      "region_id": "training_yard_wooden_fence",
+      "material_type": "weathered_wood",
+      "coverage_fraction": 0.05,
+      "roughness": 0.9,
+      "metalness": 0.0
+    }
+  ],
+  "material_channels": [
+    "base_color",
+    "normal",
+    "roughness",
+    "metalness"
+  ],
+  "texture_status": "procedural",
+  "texture_source": {
+    "base_color": "spikes/wgpu_renderer/src/verdict_ring.wgsl procedural",
+    "normal": "spikes/wgpu_renderer/src/verdict_ring.wgsl procedural",
+    "roughness": "spikes/wgpu_renderer/src/verdict_ring.wgsl procedural",
+    "metalness": "spikes/wgpu_renderer/src/verdict_ring.wgsl procedural"
+  },
+  "physics_contact_profile": {
+    "mass_kg": null,
+    "static_object": false,
+    "friction_coefficient": 0.6,
+    "restitution": 0.1,
+    "contact_regions": [
+      {
+        "region_id": "footing_dirt_grass",
+        "coverage_fraction": 0.85,
+        "footing_stability": "stable"
+      },
+      {
+        "region_id": "footing_stone_path",
+        "coverage_fraction": 0.10,
+        "footing_stability": "stable"
+      },
+      {
+        "region_id": "fence_collision",
+        "coverage_fraction": 0.05,
+        "footing_stability": "blocked"
+      }
+    ]
+  },
+  "collision_profile": {
+    "collision_type": "static_mesh",
+    "footing_surface": true,
+    "boundary_enclosure": "partial_fence_boundary"
+  },
+  "camera_anchors": [
+    {
+      "anchor_id": "training_yard_establishing",
+      "position": [0.0, 0.8, 8.0],
+      "focal_point": [0.0, 0.0, 0.0],
+      "up": [0.0, 1.0, 0.0]
+    },
+    {
+      "anchor_id": "training_yard_ground_level",
+      "position": [5.0, 0.3, 3.0],
+      "focal_point": [0.0, 0.0, 0.0],
+      "up": [0.0, 1.0, 0.0]
+    }
+  ],
+  "lighting_anchors": [
+    {
+      "source": "directional_sun",
+      "direction": [-0.5, -1.0, -0.3],
+      "color": [1.0, 0.95, 0.85],
+      "intensity": 1.2
+    }
+  ],
+  "production_ready_candidate": true,
+  "acceptance_state": "unit052_production_ready_candidate",
+  "unit051_metadata_compliance": {
+    "material_regions_defined": true,
+    "physics_contact_profile_defined": true,
+    "collision_profile_defined": true,
+    "camera_anchors_defined": true,
+    "lighting_anchors_defined": true
+  },
+  "remaining_blockers": [
+    "source_approval",
+    "owner_approval",
+    "production_ready_verification"
+  ],
+  "promotion_justification": "training_yard is repo-authored arena geometry used in Unit-050 game flow. Promoting to production-ready-candidate does not require new mesh source or owner approval (repo-authored). Enables 1 additional production-ready-candidate capture slot (training_yard_establishing).",
+  "truth_mutation": false
+}

@@ -2406,3 +2406,82 @@ fn unit051_first_kit_production_ready_candidate_truth_isolated() {
     assert!(lfs_policy.contains("gambeson.obj"));
     assert!(lfs_policy.contains("50 MiB"));
 }
+
+#[test]
+fn unit052_roster_loadout_capture_matrix_breadth_truth_isolated() {
+    // Verify slot assignment manifest exists
+    let slots =
+        std::fs::read_to_string("content/assets/unit052_roster_loadout_slot_assignments.json")
+            .expect("missing unit052 slot assignments");
+    assert!(slots.contains("unit052"));
+    assert!(slots.contains("fighter_closeup"));
+    assert!(slots.contains("armor_loadout_family_closeup"));
+    assert!(slots.contains("weapon_family_closeup"));
+    assert!(slots.contains("gameplay_distance_fighter_loadout"));
+    assert!(slots.contains("gameplay_distance_weapon_family"));
+    assert!(slots.contains("training_yard"));
+    assert!(slots.contains("first_person_combat_view"));
+    assert!(slots.contains("third_person_combat_view"));
+    assert!(slots.contains("replay_verification_ui_or_packet_view"));
+    assert!(slots.contains("performance_debug_overlay"));
+    assert!(slots.contains("settings_accessibility"));
+    assert!(slots.contains("arena_select"));
+    assert!(slots.contains("recovery_replan_frame"));
+    // Blocked slots have exact blockers
+    assert!(slots.contains("blocker"));
+    assert!(slots.contains("missing_distinct_fighter_asset"));
+
+    // Verify training_yard promotion manifests exist
+    let ty_assets =
+        std::fs::read_to_string("content/assets/unit052_production_ready_candidate_assets.json")
+            .expect("missing unit052 training_yard assets");
+    assert!(ty_assets.contains("training_yard"));
+    assert!(ty_assets.contains("production_ready_candidate"));
+    assert!(ty_assets.contains("\"remaining_blockers\""));
+
+    let ty_mats = std::fs::read_to_string("content/materials/unit052_training_yard_materials.json")
+        .expect("missing unit052 training_yard materials");
+    assert!(ty_mats.contains("training_yard"));
+    assert!(ty_mats.contains("dirt_grass"));
+
+    let ty_phys =
+        std::fs::read_to_string("content/physics_profiles/unit052_training_yard_physics.json")
+            .expect("missing unit052 training_yard physics");
+    assert!(ty_phys.contains("friction_coefficient"));
+    assert!(ty_phys.contains("footing_stability"));
+
+    // Verify renderer has Unit-052 camera modes and clip mappings
+    let renderer =
+        std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs").expect("missing renderer");
+    assert!(renderer.contains("training_yard_establishing"));
+    assert!(renderer.contains("first_person_combat_view"));
+    assert!(renderer.contains("third_person_combat_view"));
+    assert!(renderer.contains("replay_verification_ui_or_packet_view"));
+    assert!(renderer.contains("performance_debug_overlay"));
+    assert!(renderer.contains("settings_accessibility"));
+    assert!(renderer.contains("arena_select"));
+    assert!(renderer.contains("recovery_replan_frame"));
+
+    // Verify wrapper script has expanded captures
+    let wrapper = std::fs::read_to_string("tools/wgpu_renderer_spike.sh").expect("missing wrapper");
+    assert!(wrapper.contains("training_yard_establishing"));
+    assert!(wrapper.contains("first_person_combat_view"));
+    assert!(wrapper.contains("third_person_combat_view"));
+    assert!(wrapper.contains("replay_verification_ui_or_packet_view"));
+    assert!(wrapper.contains("performance_debug_overlay"));
+    assert!(wrapper.contains("settings_accessibility"));
+    assert!(wrapper.contains("arena_select"));
+    assert!(wrapper.contains("recovery_replan_frame"));
+    assert!(wrapper.contains("fighter_closeup_02"));
+    assert!(wrapper.contains("weapon_family_closeup_02"));
+
+    // No HP/stat shortcuts in training_yard physics
+    assert!(!ty_phys.contains("\"hp_points\""));
+    assert!(!ty_phys.contains("\"damage_dice\""));
+    assert!(!ty_phys.contains("\"dps\""));
+
+    // Large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+}

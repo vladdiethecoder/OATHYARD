@@ -1,0 +1,51 @@
+{
+  "schema": "oathyard.unit052_training_yard_materials_production_ready_candidate.v1",
+  "unit": "unit052",
+  "asset_id": "training_yard",
+  "asset_class": "arena",
+  "procedural_textures": true,
+  "texture_source": "spikes/wgpu_renderer/src/verdict_ring.wgsl procedural",
+  "materials": [
+    {
+      "material_id": "training_yard_dirt_grass",
+      "material_type": "natural_groud",
+      "base_color": {
+        "r": 0.35,
+        "g": 0.45,
+        "b": 0.25,
+        "source": "procedural_noise"
+      },
+      "roughness": 0.8,
+      "metalness": 0.0,
+      "procedural_description": "Grass and dirt ground texture using multi-octave noise for variation"
+    },
+    {
+      "material_id": "training_yard_stone_path",
+      "material_type": "worn_stone",
+      "base_color": {
+        "r": 0.55,
+        "g": 0.52,
+        "b": 0.48,
+        "source": "procedural_noise"
+      },
+      "roughness": 0.7,
+      "metalness": 0.0,
+      "procedural_description": "Worn stone path with subtle crack patterns using noise-based displacement"
+    },
+    {
+      "material_id": "training_yard_wooden_fence",
+      "material_type": "weathered_wood",
+      "base_color": {
+        "r": 0.45,
+        "g": 0.32,
+        "b": 0.18,
+        "source": "procedural_lines"
+      },
+      "roughness": 0.9,
+      "metalness": 0.0,
+      "procedural_description": "Weathered wooden fence with procedural grain lines"
+    }
+  ],
+  "production_ready_candidate": true,
+  "truth_mutation": false
+}
