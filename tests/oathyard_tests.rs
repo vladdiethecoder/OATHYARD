@@ -2544,3 +2544,88 @@ fn unit053_capture_matrix_completion_truth_isolated() {
         .expect("missing large-file policy");
     assert!(lfs_policy.contains("gambeson.obj"));
 }
+
+#[test]
+fn unit054_production_quality_certification_truth_isolated() {
+    // Verify capture quality certification manifest exists
+    let cert = std::fs::read_to_string("content/assets/unit054_capture_quality_certification.json")
+        .expect("missing unit054 quality certification manifest");
+    assert!(cert.contains("unit054"));
+    assert!(cert.contains("\"certified_count\": 12"));
+    assert!(cert.contains("\"certified_target\": 12"));
+    assert!(cert.contains("RI-01"));
+    assert!(cert.contains("RI-02"));
+    assert!(cert.contains("fresnel_rim_lighting"));
+    assert!(cert.contains("enhanced_specular_response"));
+    // All 12 key captures must be listed
+    for capture_id in [
+        "boot_main_menu",
+        "fighter_select",
+        "loadout_select",
+        "oathyard_verdict_ring_establishing",
+        "fighter_closeup_01",
+        "armor_loadout_family_closeup_01",
+        "weapon_family_closeup_01",
+        "planning_timeline",
+        "pre_contact_frame",
+        "contact_frame",
+        "injury_capability_consequence_frame",
+        "fight_film_replay_camera_shot",
+    ] {
+        assert!(
+            cert.contains(capture_id),
+            "certification manifest missing capture: {capture_id}"
+        );
+    }
+    // Production-ready count must be 0 (global gates not passed)
+    assert!(cert.contains("\"production_ready_count\": 0"));
+
+    // Verify renderer improvements are in shader code
+    let wgsl = std::fs::read_to_string("spikes/wgpu_renderer/src/verdict_ring.wgsl")
+        .expect("missing WGSL shader");
+    assert!(
+        wgsl.contains("Unit-054 RI-01"),
+        "WGSL missing Unit-054 RI-01"
+    );
+    assert!(
+        wgsl.contains("Unit-054 RI-02"),
+        "WGSL missing Unit-054 RI-02"
+    );
+    assert!(wgsl.contains("fresnel"), "WGSL missing fresnel calculation");
+    assert!(
+        wgsl.contains("enhanced_spec"),
+        "WGSL missing enhanced specular"
+    );
+
+    // Verify visual_features manifest records improvements
+    let renderer = std::fs::read_to_string("spikes/wgpu_renderer/src/main.rs")
+        .expect("missing renderer main.rs");
+    assert!(
+        renderer.contains("unit054_fresnel_rim_lighting"),
+        "renderer manifest missing fresnel feature"
+    );
+    assert!(
+        renderer.contains("unit054_enhanced_specular_response"),
+        "renderer manifest missing enhanced specular feature"
+    );
+
+    // Verify seed capture promotions are in wrapper
+    let wrapper = std::fs::read_to_string("tools/wgpu_renderer_spike.sh").expect("missing wrapper");
+    assert!(
+        wrapper.contains("boot_main_menu"),
+        "wrapper missing boot_main_menu in PRC list"
+    );
+    assert!(
+        wrapper.contains("fighter_select"),
+        "wrapper missing fighter_select in PRC list"
+    );
+    assert!(
+        wrapper.contains("loadout_select"),
+        "wrapper missing loadout_select in PRC list"
+    );
+
+    // Large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+}

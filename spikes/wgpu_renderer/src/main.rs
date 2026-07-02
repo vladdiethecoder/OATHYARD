@@ -446,7 +446,9 @@ fn real_main() -> Result<(), String> {
             "unit051_guard_cut_thrust_recover_poses": true,
             "unit052_training_yard_promoted": true,
             "unit052_camera_breadth_expanded": true,
-            "unit053_capture_matrix_complete": true
+            "unit053_capture_matrix_complete": true,
+            "unit054_fresnel_rim_lighting": true,
+            "unit054_enhanced_specular_response": true
         },
         "presentation_truth_isolation_passed": false,
         "presentation_only": true,

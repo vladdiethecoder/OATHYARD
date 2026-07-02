@@ -1,0 +1,152 @@
+{
+  "schema": "oathyard.unit054_capture_quality_certification.v1",
+  "unit": "unit054",
+  "description": "Local production-quality certification for 12 key captures. Each capture passes objective quality checks or has exact blockers.",
+  "key_capture_ids": [
+    "boot_main_menu",
+    "fighter_select",
+    "loadout_select",
+    "oathyard_verdict_ring_establishing",
+    "fighter_closeup_01",
+    "armor_loadout_family_closeup_01",
+    "weapon_family_closeup_01",
+    "planning_timeline",
+    "pre_contact_frame",
+    "contact_frame",
+    "injury_capability_consequence_frame",
+    "fight_film_replay_camera_shot"
+  ],
+  "quality_checks": [
+    {"check": "resolution_1920x1080_or_higher", "description": "Capture must be at least 1920x1080 native 3D"},
+    {"check": "renderer_backend_id_present", "description": "Renderer backend ID must be present in manifest"},
+    {"check": "camera_mode_present", "description": "Camera mode must be present in manifest"},
+    {"check": "capture_sha256_present", "description": "Capture SHA256 must be computed and recorded"},
+    {"check": "truth_mutation_false", "description": "truth_mutation must be false"},
+    {"check": "no_svg_ppm_browser_fallback", "description": "No SVG, PPM, browser/canvas, or 2D substitute"},
+    {"check": "truth_final_hash_present", "description": "Truth final hash present for gameplay/replay/consequence states"},
+    {"check": "asset_hashes_present", "description": "Asset/material/profile hashes present where relevant"}
+  ],
+  "certifications": [
+    {
+      "capture_id": "boot_main_menu",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Boot menu capture passes all objective quality checks"
+    },
+    {
+      "capture_id": "fighter_select",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Fighter select capture passes all objective quality checks"
+    },
+    {
+      "capture_id": "loadout_select",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Loadout select capture passes all objective quality checks"
+    },
+    {
+      "capture_id": "oathyard_verdict_ring_establishing",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Arena establishing shot passes all objective quality checks"
+    },
+    {
+      "capture_id": "fighter_closeup_01",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Fighter closeup passes all objective quality checks"
+    },
+    {
+      "capture_id": "armor_loadout_family_closeup_01",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Armor loadout closeup passes all objective quality checks"
+    },
+    {
+      "capture_id": "weapon_family_closeup_01",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Weapon closeup passes all objective quality checks"
+    },
+    {
+      "capture_id": "planning_timeline",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Planning timeline capture passes all objective quality checks"
+    },
+    {
+      "capture_id": "pre_contact_frame",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Pre-contact frame passes all objective quality checks, truth-derived"
+    },
+    {
+      "capture_id": "contact_frame",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Contact frame passes all objective quality checks, truth-derived"
+    },
+    {
+      "capture_id": "injury_capability_consequence_frame",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Injury consequence frame passes all objective quality checks, truth-derived"
+    },
+    {
+      "capture_id": "fight_film_replay_camera_shot",
+      "status": "certified_local",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "target_status": "production_ready_candidate",
+      "notes": "Fight film replay shot passes all objective quality checks, truth-derived"
+    }
+  ],
+  "certified_count": 12,
+  "certified_target": 12,
+  "renderer_improvements": [
+    {
+      "id": "RI-01",
+      "name": "Fresnel Rim Lighting",
+      "description": "Warm glow at glancing angles for edge separation and depth perception",
+      "shader": "spikes/wgpu_renderer/src/verdict_ring.wgsl",
+      "manifest_key": "unit054_fresnel_rim_lighting",
+      "active": true
+    },
+    {
+      "id": "RI-02",
+      "name": "Enhanced Specular Response",
+      "description": "Material-dependent specular power: metals get sharper highlights, non-metals get broader highlights",
+      "shader": "spikes/wgpu_renderer/src/verdict_ring.wgsl",
+      "manifest_key": "unit054_enhanced_specular_response",
+      "active": true
+    }
+  ],
+  "renderer_improvement_count": 2,
+  "production_ready_count": 0,
+  "production_ready_blocker": "owner_final_visual_acceptance not performed; production_renderer_complete false; license_and_commercial_clearance pending",
+  "truth_mutation": false,
+  "final_truth_hash": "f17c8f76b9dfae86"
+}

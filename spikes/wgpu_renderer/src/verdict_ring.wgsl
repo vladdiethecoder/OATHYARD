@@ -540,11 +540,6 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let flat_n = normalize(cross(dp, dp2));
     let n = normalize(mix(flat_n, vec3<f32>(0.0, 1.0, 0.0), 0.15));
 
-    // Triplanar blend weights based on normal
-    let blend_weights = max(abs(n), vec3<f32>(0.00001));
-    let blend_total = blend_weights.x + blend_weights.y + blend_weights.z;
-    let w = blend_weights / vec3<f32>(blend_total);
-
     // Procedural PBR base
     let base = procedural_pbr(input.world_pos, n, mat_type, tint);
 
@@ -564,6 +559,18 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let rim_vec = normalize(vec3<f32>(0.72, 0.54, -0.72));
     let rim_light = pow(max(dot(reflect(-rim_vec, n), vec3<f32>(0.0, 0.0, 1.0)), 0.0), spec_power) * mix(0.08, 0.38, step(0.5, abs(mat_type - 0.25)));
 
-    let final_color = tone_map(color + vec3<f32>(0.55, 0.40, 0.20) * rim_light);
+    // Unit-054 RI-01: Fresnel rim lighting for edge separation and depth perception.
+    // Adds a warm glow at glancing angles, making object edges pop against background.
+    let view_dir = normalize(camera.eye.xyz - input.world_pos);
+    let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 3.0);
+    let fresnel_rim = vec3<f32>(0.72, 0.54, 0.28) * fresnel * 0.15;
+
+    // Unit-054 RI-02: Enhanced specular response with material-dependent power.
+    // Metals get sharper highlights; non-metals get broader, softer highlights.
+    let metal_factor = select(0.0, 1.0, mat_type < 0.5);
+    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.15, 0.55, metal_factor);
+    let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
+
+    let final_color = tone_map(color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution);
     return vec4<f32>(final_color, 0.95);
 }

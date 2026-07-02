@@ -1,0 +1,155 @@
+{
+  "schema_version": "oathyard.unit054.capture-quality-certification.v1",
+  "unit": "054",
+  "parent_unit": "053",
+  "goal": {
+    "title": "Production-Quality Certification",
+    "description": "Promote remaining seed captures to PRC where evidence supports, add objective quality review gate, implement 2 renderer improvements, certify 12 key captures locally"
+  },
+  "capture_audit": {
+    "total_required_slots": 56,
+    "total_filled": 56,
+    "status_breakdown": {
+      "production_seed": 13,
+      "production_ready_candidate": 52,
+      "production_ready": 0
+    },
+    "key_capture_ids": [
+      "boot_main_menu",
+      "fighter_select",
+      "loadout_select",
+      "oathyard_verdict_ring_establishing",
+      "fighter_closeup_01",
+      "armor_loadout_family_closeup_01",
+      "weapon_family_closeup_01",
+      "planning_timeline",
+      "pre_contact_frame",
+      "contact_frame",
+      "injury_capability_consequence_frame",
+      "fight_film_replay_camera_shot"
+    ]
+  },
+  "quality_review_gate": {
+    "checks": [
+      "resolution >= 1920x1080",
+      "renderer_backend_id present",
+      "camera_mode present",
+      "capture_sha256 present",
+      "asset/content/material/profile hashes where relevant",
+      "truth final hash present for gameplay/replay/consequence states",
+      "truth_mutation=false",
+      "not SVG/PPM/browser/canvas fallback",
+      "not duplicate image for unrelated slot",
+      "consequence/replay slots have trace data"
+    ],
+    "passes_required_for_local_certification": 12
+  },
+  "renderer_improvements": [
+    {
+      "id": "RI-01",
+      "name": "Depth-Based Fog Tuning per Role",
+      "description": "Adjust fog density and color based on capture role (menu=light fog, combat=moderate fog, cinematic=heavy fog)",
+      "shader_file": "spikes/wgpu_renderer/src/sdf_raymarcher.wgsl",
+      "implementation_notes": "Add fog_density and fog_color uniforms controlled by game-flow state"
+    },
+    {
+      "id": "RI-02",
+      "name": "Camera Depth Precision Fix",
+      "description": "Adjust near/far plane and use logarithmic depth to reduce z-fighting and improve depth buffer precision for distant objects",
+      "shader_file": "spikes/wgpu_renderer/src/sdf_raymarcher.wgsl",
+      "implementation_notes": "Update projection matrix calculation to use log-depth buffer"
+    }
+  ],
+  "execution_plan": [
+    {
+      "step": 1,
+      "action": "Capture status audit",
+      "description": "Inspect all 65 captures, categorize by status (seed/PRC/ready), identify which of 13 seed captures can be promoted to PRC",
+      "output": "capture_quality_audit.json",
+      "tool": "python3 tools/audit_capture_status.py"
+    },
+    {
+      "step": 2,
+      "action": "Promote seed captures to PRC",
+      "description": "For each seed capture, check if asset+material+physics+profile metadata exists. If yes, promote to PRC and update renderer classification logic",
+      "output": "promoted_seed_capture_list.csv",
+      "tool": "python3 tools/promote_seed_captures.py"
+    },
+    {
+      "step": 3,
+      "action": "Implement renderer improvement RI-01: depth-based fog tuning",
+      "description": "Add fog_control uniform to shader, compute fog based on game-flow state, regenerate affected captures",
+      "output": "sdf_raymarcher.wgsl modified + new captures",
+      "tool": "cargo build && tools/render_all_captures.sh"
+    },
+    {
+      "step": 4,
+      "action": "Implement renderer improvement RI-02: camera depth precision fix",
+      "description": "Update projection matrix to use log-depth buffer, regenerate affected captures",
+      "output": "sdf_raymarcher.wgsl modified + new captures",
+      "tool": "cargo build && tools/render_all_captures.sh"
+    },
+    {
+      "step": 5,
+      "action": "Run objective quality review gate on 12 key captures",
+      "description": "For each key capture, run all 10 quality checks, record pass/fail/exact blocker",
+      "output": "quality_review_report.json",
+      "tool": "python3 tools/capture_quality_review.py"
+    },
+    {
+      "step": 6,
+      "action": "Compare before/after image hashes",
+      "description": "For captures affected by renderer improvements, compute perceptual hash delta between Unit-053 and Unit-054",
+      "output": "image_hash_comparison.csv",
+      "tool": "python3 tools/compare_capture_hashes.py"
+    },
+    {
+      "step": 7,
+      "action": "Generate duplicate-capture audit report",
+      "description": "Verify no two captures with different IDs share identical image hashes (unless documented as explicit variants)",
+      "output": "duplicate_capture_audit.json",
+      "tool": "python3 tools/audit_duplicates.py"
+    },
+    {
+      "step": 8,
+      "action": "Write unit054_production_quality_certification_truth_isolated test",
+      "description": "Test asserts: 56/56 slots filled, no duplicates, 12 key captures pass quality review, 2 renderer improvements active, image hashes changed for affected captures",
+      "output": "tests/unit_054_tests.rs",
+      "tool": "cargo test"
+    },
+    {
+      "step": 9,
+      "action": "Run full verification suite and write final report",
+      "description": "Run cargo build/test/verify, tools/verify.sh, audit_truth.sh, presentation_truth_isolation, capture_high_fidelity_screens.sh, visual_benchmark, final_acceptance",
+      "output": "unit054_final_report.md",
+      "tool": "bash tools/run_unit_verification.sh"
+    },
+    {
+      "step": 10,
+      "action": "Update atomic_ledger.md and commit+push",
+      "description": "Document Unit-054 outcomes in ledger, commit with message 'Unit-054: production-quality certification + 2 renderer improvements + 12 key captures locally certified', push to origin",
+      "output": "git commit + git push",
+      "tool": "git add .hermes/atomic_ledger.md && git commit -m '...' && git push"
+    }
+  ],
+  "expected_outcomes": {
+    "capture_status_changes": {
+      "seed_to_prc_promotions": "target: 8-13 captures promoted",
+      "remaining_seed": "target: 0-5 captures (if exact blockers documented)"
+    },
+    "quality_review": {
+      "key_captures_certified": 12,
+      "key_captures_blocked_with_exact_reason": "target: 0"
+    },
+    "renderer_improvements": {
+      "improvements_active": 2,
+      "captures_with_changed_hashes": "target: 40-55 captures"
+    },
+    "global_gates": {
+      "production_renderer_complete": false,
+      "owner_finalize_visual_acceptance": false,
+      "public_demo_ready": false,
+      "commercial_license_complete": false
+    }
+  }
+}
