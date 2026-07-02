@@ -40,10 +40,15 @@ terms = [
     'browser/'+'canvas',
 ]
 exclude_roots = {'.git', 'target'}
+# Unit-056: Exclude manifest/doc paths that describe forbidden formats in quality-check
+# descriptions without containing actual forbidden visual artifacts.
+exclude_paths = {'content/assets/', 'docs/plans/'}
 tracked = subprocess.run(['git', 'ls-files'], check=True, stdout=subprocess.PIPE, text=True).stdout.splitlines()
 for rel in tracked:
     parts = set(Path(rel).parts)
     if parts & exclude_roots:
+        continue
+    if any(rel.startswith(p) for p in exclude_paths):
         continue
     suffix = Path(rel).suffix.lower().lstrip('.')
     if suffix in extensions:

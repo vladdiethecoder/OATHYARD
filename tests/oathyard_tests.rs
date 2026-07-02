@@ -2679,3 +2679,87 @@ fn unit055_production_renderer_path_truth_isolated() {
         .expect("missing large-file policy");
     assert!(lfs_policy.contains("gambeson.obj"));
 }
+
+#[test]
+fn unit056_local_production_ready_owner_review_packet_truth_isolated() {
+    // Verify local production-ready checklist exists
+    let checklist =
+        std::fs::read_to_string("content/assets/unit056_local_production_ready_checklist.json")
+            .expect("missing unit056 local production ready checklist");
+    assert!(checklist.contains("\"unit\": \"Unit-056\""));
+    assert!(checklist.contains("fighter_mannequin"));
+    assert!(checklist.contains("gambeson"));
+    assert!(checklist.contains("longsword"));
+    assert!(checklist.contains("witness_stone"));
+    assert!(checklist.contains("owner_visual_acceptance"));
+    // Checklist must have stricter requirements than PRC
+    assert!(checklist.contains("owner_approved"));
+    assert!(checklist.contains("technical_clean"));
+    assert!(checklist.contains("runtime_asset_hash"));
+    assert!(checklist.contains("material_manifest"));
+    assert!(checklist.contains("physics_profile"));
+
+    // Verify local production-ready certification exists
+    let cert =
+        std::fs::read_to_string("content/assets/unit056_local_production_ready_certification.json")
+            .expect("missing unit056 local production ready certification");
+    assert!(cert.contains("local_production_ready"));
+    // All 5 first-kit assets must be present
+    for asset in [
+        "fighter_mannequin",
+        "gambeson",
+        "longsword",
+        "witness_stone",
+        "training_yard",
+    ] {
+        assert!(cert.contains(asset), "certification missing asset: {asset}");
+    }
+    // All 12 key captures must be present
+    for capture in [
+        "boot_main_menu",
+        "fighter_select",
+        "loadout_select",
+        "oathyard_verdict_ring_establishing",
+        "fighter_closeup_01",
+        "armor_loadout_family_closeup_01",
+        "weapon_family_closeup_01",
+        "planning_timeline",
+        "pre_contact_frame",
+        "contact_frame",
+        "injury_capability_consequence_frame",
+        "fight_film_replay_camera_shot",
+    ] {
+        assert!(
+            cert.contains(capture),
+            "certification missing capture: {capture}"
+        );
+    }
+    // Production renderer complete must be true (local criteria met)
+    assert!(cert.contains("\"production_renderer_complete\": true"));
+    // Owner acceptance must NOT be claimed — check the review packet manifest
+    let packet_manifest = std::fs::read_to_string(
+        "artifacts/verification/20260702T110130_unit056/owner_review_packet/owner_review_manifest.json",
+    )
+    .expect("missing owner review manifest");
+    assert!(packet_manifest.contains("\"owner_visual_acceptance\": false"));
+    assert!(packet_manifest.contains("\"public_demo_ready\": false"));
+    assert!(packet_manifest.contains("\"release_candidate_ready\": false"));
+
+    // Verify owner review packet exists
+    let packet_summary = std::fs::read_to_string(
+        "artifacts/verification/20260702T120000Z_unit056_owner_review_packet/owner_review_summary.md",
+    )
+    .expect("missing owner review packet summary");
+    assert!(packet_summary.contains("owner_visual_acceptance = false"));
+    assert!(packet_summary.contains("oathyard-native-wgpu-production-v1"));
+
+    // Verify no HP/stat shortcuts in certification
+    assert!(!cert.contains("\"hp_points\""));
+    assert!(!cert.contains("\"damage_dice\""));
+    assert!(!cert.contains("\"dps\""));
+
+    // Large asset policy still enforced
+    let lfs_policy = std::fs::read_to_string("docs/decisions/0010-large-file-policy.md")
+        .expect("missing large-file policy");
+    assert!(lfs_policy.contains("gambeson.obj"));
+}

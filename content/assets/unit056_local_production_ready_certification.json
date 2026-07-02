@@ -1,0 +1,255 @@
+{
+  "unit": "Unit-056",
+  "certified": "2026-07-02",
+  "production_renderer_complete": true,
+  "assets": {
+    "fighter_mannequin": {
+      "state": "local_production_ready",
+      "evidence": [
+        "owner_approved",
+        "technical_clean",
+        "runtime_hash_computed",
+        "material_manifest_linked",
+        "physics_profile_linked",
+        "skeleton_definition_present",
+        "4_poses_defined",
+        "6_captures_available",
+        "package_included"
+      ],
+      "remaining_blockers": [
+        "owner_visual_acceptance (requires external review)",
+        "license_commercial_clearance (requires legal process)"
+      ]
+    },
+    "gambeson": {
+      "state": "local_production_ready",
+      "evidence": [
+        "owner_approved",
+        "technical_clean",
+        "runtime_hash_computed",
+        "material_manifest_linked",
+        "physics_profile_linked",
+        "4_material_regions",
+        "6_captures_available",
+        "package_included"
+      ],
+      "remaining_blockers": [
+        "owner_visual_acceptance (requires external review)",
+        "license_commercial_clearance (requires legal process)"
+      ]
+    },
+    "longsword": {
+      "state": "local_production_ready",
+      "evidence": [
+        "owner_approved",
+        "technical_clean",
+        "runtime_hash_computed",
+        "material_manifest_linked",
+        "physics_profile_linked",
+        "5_contact_regions",
+        "2_grip_frames",
+        "8_captures_available",
+        "package_included"
+      ],
+      "remaining_blockers": [
+        "owner_visual_acceptance (requires external review)",
+        "license_commercial_clearance (requires legal process)"
+      ]
+    },
+    "witness_stone": {
+      "state": "local_production_ready",
+      "evidence": [
+        "owner_approved",
+        "technical_clean",
+        "runtime_hash_computed",
+        "material_manifest_linked",
+        "4_material_regions",
+        "4_captures_available",
+        "package_included"
+      ],
+      "remaining_blockers": [
+        "owner_visual_acceptance (requires external review)",
+        "license_commercial_clearance (requires legal process)"
+      ]
+    },
+    "training_yard": {
+      "state": "local_production_ready",
+      "evidence": [
+        "owner_approved",
+        "technical_clean",
+        "runtime_hash_computed",
+        "material_manifest_linked",
+        "4_material_regions",
+        "4_captures_available",
+        "package_included"
+      ],
+      "remaining_blockers": [
+        "owner_visual_acceptance (requires external review)",
+        "license_commercial_clearance (requires legal process)"
+      ]
+    }
+  },
+  "captures": {
+    "boot_main_menu": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_arena",
+      "asset_ids": ["fighter_mannequin", "gambeson", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "fighter_select": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_fighter_closeup",
+      "asset_ids": ["fighter_mannequin"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "loadout_select": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_armor_group",
+      "asset_ids": ["gambeson"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "oathyard_verdict_ring_establishing": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_arena_establishing",
+      "asset_ids": ["witness_stone", "fighter_mannequin", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "fighter_closeup_01": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_fighter_closeup",
+      "asset_ids": ["fighter_mannequin"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "armor_loadout_family_closeup_01": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_armor_group",
+      "asset_ids": ["gambeson"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "weapon_family_closeup_01": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_weapon_group",
+      "asset_ids": ["longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "planning_timeline": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "planning_timeline",
+      "asset_ids": ["fighter_mannequin", "gambeson", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "trace_linkage": "presentation_bricks_sequence.json",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "pre_contact_frame": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_dynamic_wide",
+      "asset_ids": ["fighter_mannequin", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "trace_linkage": "replay.json",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "contact_frame": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_contact",
+      "asset_ids": ["fighter_mannequin", "gambeson", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "trace_linkage": "replay.json",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "injury_capability_consequence_frame": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_consequence",
+      "asset_ids": ["fighter_mannequin", "gambeson", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "trace_linkage": "replay.json",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    },
+    "fight_film_replay_camera_shot": {
+      "state": "local_production_ready",
+      "backend_id": "oathyard-native-wgpu-production-v1",
+      "resolution": "1920x1080",
+      "hash": "verified",
+      "camera_mode": "offscreen_candidate_replay_wide",
+      "asset_ids": ["fighter_mannequin", "longsword"],
+      "material_hash": "unit051_materials",
+      "profile_hash": "unit051_profiles",
+      "final_hash": "f17c8f76b9dfae86",
+      "quality_review": "8_of_8",
+      "trace_linkage": "replay.json",
+      "remaining_blockers": ["owner_visual_acceptance"]
+    }
+  }
+}
