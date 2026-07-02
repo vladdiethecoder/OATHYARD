@@ -40,6 +40,7 @@ run_step package ./tools/package.sh
 run_step package_smoke ./tools/smoke_package.sh artifacts/package/oathyard-linux-x86_64.tar
 run_step visual_gap_audit ./tools/visual_gap_audit.sh "$out/visual_gap"
 run_step capture_high_fidelity_screens ./tools/capture_high_fidelity_screens.sh "$out/high_fidelity_screens"
+run_step visual_qa ./tools/visual_qa.sh "$out/visual_qa" --report-only
 run_step visual_benchmark ./tools/visual_benchmark.sh "$out/visual_review"
 
 python3 - "$out" "$summary_tsv" <<'PY'
@@ -75,6 +76,7 @@ artifact_specs = [
     ('high_fidelity_capture_matrix_json', out / 'high_fidelity_screens/high_fidelity_capture_matrix.json'),
     ('high_fidelity_capture_matrix_md', out / 'high_fidelity_screens/high_fidelity_capture_matrix.md'),
     ('visual_benchmark_report', out / 'visual_review/visual_benchmark_report.md'),
+    ('visual_qa_report', out / 'visual_qa/visual_qa_report.json'),
     ('visual_gap_list', out / 'visual_review/visual_gap_list.md'),
     ('package_tar', Path('artifacts/package/oathyard-linux-x86_64.tar')),
 ]

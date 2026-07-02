@@ -37,6 +37,7 @@ manifest = {
     'current_fidelity_tier': 'blocked_pending_native_3d_renderer_capture' if failures else 'native_3d_renderer_evidence_present',
     'native_3d_visual_evidence_required': True,
     'production_renderer_complete': False,
+    'visual_qa_integrated': True,
     'owner_visual_acceptance': False,
     'public_demo_ready': False,
     'release_candidate_ready': False,

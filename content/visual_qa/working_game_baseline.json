@@ -1,0 +1,26 @@
+{
+  "schema": "oathyard.visual_qa_baseline.v1",
+  "baseline_id": "working_game_candidate_v1",
+  "renderer_backend_id": "oathyard-native-wgpu-production-v1",
+  "renderer_version": "Unit-057 production renderer path",
+  "game_flow_scenario_id": "unit057_local_duel",
+  "canonical_truth_hash": "f17c8f76b9dfae86",
+  "working_game_hash": "5d5ddfe9e42ca166",
+  "min_resolution": "1920x1080",
+  "capture_roles": {},
+  "environment": {
+    "renderer_backend_id": "oathyard-native-wgpu-production-v1",
+    "os": "Linux",
+    "notes": "candidate baseline; roles populated by --update-baseline from current-run captures"
+  },
+  "candidate_baseline_pending_review": true,
+  "reviewer": "",
+  "review_status": "pending",
+  "review_date": "",
+  "source": "Unit-058 candidate baseline from Unit-057 working-game evidence",
+  "owner_visual_acceptance": false,
+  "public_demo_ready": false,
+  "release_candidate_ready": false,
+  "local_playable_game_ready": true,
+  "truth_mutation": false
+}
