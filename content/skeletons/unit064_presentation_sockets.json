@@ -1,0 +1,156 @@
+{
+  "schema": "oathyard.presentation_sockets.v1",
+  "unit": "Unit-064",
+  "description": "Presentation-only skeleton/socket sidecar for socketed rigid attachment of equipment to fighter meshes. No skinning data exists in source GLBs — this is a rigid attachment layer.",
+  "truth_mutation": false,
+  "presentation_only": true,
+  "source": "Manual calibration from mesh bounds analysis of Meshy-6 seed assets",
+  "fighter_asset_id": "fighter_mannequin",
+  "fighter_mesh_sha256": "944974ace20904d3394a8c8276dcfe78d86db7df9d1b2037fb9a1d26b94528bc",
+  "sockets": {
+    "root": {
+      "parent": null,
+      "local_translation": [0.0, 0.0, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "fighter_base",
+      "notes": "Fighter mesh origin"
+    },
+    "pelvis": {
+      "parent": "root",
+      "local_translation": [0.0, -0.18, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "fighter_lower",
+      "notes": "Lower body / leg attachment"
+    },
+    "spine": {
+      "parent": "root",
+      "local_translation": [0.0, 0.0, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "fighter_spine",
+      "notes": "Center of body mass"
+    },
+    "chest": {
+      "parent": "root",
+      "local_translation": [0.0, 0.08, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "armor_torso",
+      "notes": "Upper torso for gambeson/chest armor attachment"
+    },
+    "head": {
+      "parent": "root",
+      "local_translation": [0.0, 0.32, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "helmet",
+      "notes": "Head top"
+    },
+    "shoulder_l": {
+      "parent": "root",
+      "local_translation": [-0.22, 0.18, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "armor_shoulder",
+      "notes": "Left shoulder"
+    },
+    "shoulder_r": {
+      "parent": "root",
+      "local_translation": [0.22, 0.18, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "armor_shoulder",
+      "notes": "Right shoulder"
+    },
+    "hand_l": {
+      "parent": "root",
+      "local_translation": [-0.28, 0.05, 0.05],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon_grip",
+      "notes": "Left hand / off-hand weapon grip"
+    },
+    "hand_r": {
+      "parent": "root",
+      "local_translation": [0.28, 0.05, 0.05],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon_grip",
+      "notes": "Right hand / main weapon grip"
+    },
+    "grip_l": {
+      "parent": "hand_l",
+      "local_translation": [0.0, -0.02, 0.12],
+      "local_rotation_deg": [0.0, 90.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon",
+      "notes": "Left grip point — weapon handle extends forward (+Z after yaw rotation)"
+    },
+    "grip_r": {
+      "parent": "hand_r",
+      "local_translation": [0.0, -0.02, 0.12],
+      "local_rotation_deg": [0.0, -90.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon",
+      "notes": "Right grip point — weapon handle extends forward (+Z after yaw rotation)"
+    },
+    "torso_front": {
+      "parent": "chest",
+      "local_translation": [0.0, 0.02, 0.08],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "armor",
+      "notes": "Front of torso for gambeson/chest plate"
+    },
+    "torso_back": {
+      "parent": "chest",
+      "local_translation": [0.0, 0.02, -0.08],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "armor",
+      "notes": "Back of torso"
+    },
+    "weapon_tip": {
+      "parent": "grip_r",
+      "local_translation": [0.0, 0.0, 0.65],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon",
+      "notes": "Blade tip for contact detection / trace markers"
+    },
+    "weapon_edge_mid": {
+      "parent": "grip_r",
+      "local_translation": [0.0, 0.02, 0.35],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "weapon",
+      "notes": "Mid-blade edge point"
+    },
+    "target_torso": {
+      "parent": "chest",
+      "local_translation": [0.0, 0.05, 0.12],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "target_marker",
+      "notes": "Torso target region for opponent marking"
+    },
+    "target_head": {
+      "parent": "head",
+      "local_translation": [0.0, 0.05, 0.05],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "target_marker",
+      "notes": "Head target region"
+    },
+    "ground_anchor": {
+      "parent": "root",
+      "local_translation": [0.0, -0.42, 0.0],
+      "local_rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 1.0,
+      "intended_asset_class": "ground",
+      "notes": "Ground plane anchor at foot level"
+    }
+  }
+}

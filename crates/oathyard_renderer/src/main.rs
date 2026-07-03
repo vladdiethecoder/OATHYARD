@@ -191,7 +191,7 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
         id if id == "opponent_fighter_mannequin" => MeshMaterial {
             material_type: -1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.72, tint_g: 0.18, tint_b: 0.12, tint_a: 1.0,
+            tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // Unit-064: brighter crimson
         },
         id if id == "opponent_gambeson" => MeshMaterial {
             material_type: -1.0,

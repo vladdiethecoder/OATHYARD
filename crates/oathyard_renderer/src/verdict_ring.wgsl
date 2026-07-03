@@ -241,7 +241,7 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
     // Use per-asset tint with subtle world-space variation only.
     if (material_type < -0.5) {
         let subtle = (noise2(fract(vec2<f32>(world_pos.x * 0.5 + world_pos.z * 0.5, world_pos.y * 0.5))) - 0.5) * 0.06;
-        return tint * (0.92 + subtle);
+        return tint * (0.98 + subtle);  // Unit-064: full tint for color readability
     }
 
     if (material_type < 0.5) {

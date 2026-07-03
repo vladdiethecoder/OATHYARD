@@ -1,0 +1,42 @@
+{
+  "schema": "oathyard.attachment_calibration.v1",
+  "unit": "Unit-064",
+  "description": "Presentation-side rigid attachment calibration for first-kit seed meshes. Maps equipment meshes to fighter sockets using deterministic transforms. Full skinning is blocked — no JOINTS/WEIGHTS in source GLBs.",
+  "truth_mutation": false,
+  "presentation_only": true,
+  "source": "Calculated from fighter_mannequin mesh bounds ([-0.62,-0.42,-0.95] to [0.61,0.42,0.95]) and equipment mesh bounds",
+  "fighter_asset_id": "fighter_mannequin",
+  "attach_origin": "local",
+  "coordinate_convention": "right_handed_y_up",
+  "attachments": {
+    "longsword_to_grip_r": {
+      "source_asset_id": "longsword",
+      "target_socket": "grip_r",
+      "translation": [0.0, 0.03, 0.10],
+      "rotation_deg": [0.0, 90.0, 0.0],
+      "scale": 0.55,
+      "notes": "Longsword attached to right grip socket. Yaw=90 degrees aligns the blade (which extends along Z in local space) to extend forward/right for a cutting stance. The scale 0.55 matches the renderer's per-asset scale from the seed manifest (was 0.90 for standalone display).",
+      "blocker": "presentation_rigid_attachment — no skin data. Weapon will not follow hand animation beyond the socket transform.",
+      "full_skinning_blocked": true
+    },
+    "gambeson_to_torso_front": {
+      "source_asset_id": "gambeson",
+      "target_socket": "torso_front",
+      "translation": [0.0, 0.0, 0.05],
+      "rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 0.72,
+      "notes": "Gambeson placed on front torso. Scale 0.72 matches the seed manifest's gambeson scale. The gambeson mesh bounds ([-0.75,-0.44,-0.95] to [0.75,0.44,0.95]) are larger than the fighter's torso, so the scale reduces it to fit.",
+      "blocker": "presentation_rigid_attachment — gambeson will not deform with fighter pose. May clip or float on extreme poses.",
+      "full_skinning_blocked": true
+    },
+    "witness_stone_ground": {
+      "source_asset_id": "witness_stone",
+      "target_socket": "ground_anchor",
+      "translation": [0.0, 0.04, -0.80],
+      "rotation_deg": [0.0, 0.0, 0.0],
+      "scale": 0.60,
+      "notes": "Witness stone placed at ground level, slightly behind the fighters. Scale 0.60 from the seed manifest.",
+      "blocker": "none"
+    }
+  }
+}
