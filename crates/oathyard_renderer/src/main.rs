@@ -2849,6 +2849,7 @@ enum InteractiveState {
     ArenaSelect,
     MatchIntro,
     Observe,
+    Timeline,
     Plan,
     CommitReveal,
     Resolve,
@@ -2871,6 +2872,7 @@ impl InteractiveState {
             Self::ArenaSelect => "ARENA_SELECT",
             Self::MatchIntro => "MATCH_INTRO",
             Self::Observe => "OBSERVE",
+            Self::Timeline => "TIMELINE",
             Self::Plan => "PLAN",
             Self::CommitReveal => "COMMIT_REVEAL",
             Self::Resolve => "RESOLVE_CONTACT",
@@ -2893,6 +2895,7 @@ impl InteractiveState {
             Self::ArenaSelect => "arena_select",
             Self::MatchIntro => "oathyard_verdict_ring_establishing",
             Self::Observe => "oathyard_verdict_ring_establishing",
+            Self::Timeline => "planning_timeline",
             Self::Plan => "planning_timeline",
             Self::CommitReveal => "pre_contact_frame",
             Self::Resolve => "contact_frame",
@@ -2915,7 +2918,8 @@ impl InteractiveState {
             Self::LoadoutSelect => Self::ArenaSelect,
             Self::ArenaSelect => Self::MatchIntro,
             Self::MatchIntro => Self::Observe,
-            Self::Observe => Self::Plan,
+            Self::Observe => Self::Timeline,
+            Self::Timeline => Self::Plan,
             Self::Plan => Self::CommitReveal,
             Self::CommitReveal => Self::Resolve,
             Self::Resolve => Self::Consequence,
@@ -2977,6 +2981,9 @@ struct WindowedApp {
     interactive_state: InteractiveState,
     states_visited: Vec<String>,
     transitions: Vec<String>,
+    timeline_slots: Vec<String>,
+    timeline_cursor: usize,
+    timeline_slot_count: usize,
     event_log: Vec<InteractiveEvent>,
     camera_buffer: wgpu::Buffer,
     packet_json: Value,
@@ -3189,6 +3196,7 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
     if first_person {
         match state {
             InteractiveState::Observe
+            | InteractiveState::Timeline
             | InteractiveState::Plan
             | InteractiveState::CommitReveal
             | InteractiveState::Resolve
@@ -3199,6 +3207,7 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
     } else {
         match state {
             InteractiveState::Observe
+            | InteractiveState::Timeline
             | InteractiveState::Plan
             | InteractiveState::CommitReveal
             | InteractiveState::Resolve
@@ -3532,6 +3541,9 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             interactive_state: InteractiveState::Boot,
             states_visited: vec![InteractiveState::Boot.as_str().to_string()],
             transitions: Vec::new(),
+            timeline_slots: vec!["guard".to_string(); 10],
+            timeline_cursor: 0,
+            timeline_slot_count: 10,
             event_log: Vec::new(),
             camera_buffer,
             packet_json: self.packet_json.clone(),
@@ -3659,11 +3671,59 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         }
                         winit::keyboard::KeyCode::ArrowLeft | winit::keyboard::KeyCode::KeyA => {
                             logical = "prev".to_string();
-                            // Presentation-only: cycle camera mode backward
+                            // Timeline mode: move cursor left
+                            if app.interactive_state == InteractiveState::Timeline
+                                && app.timeline_cursor > 0
+                            {
+                                app.timeline_cursor -= 1;
+                                logical = format!("timeline_cursor_{}", app.timeline_cursor);
+                            }
                         }
                         winit::keyboard::KeyCode::ArrowRight | winit::keyboard::KeyCode::KeyD => {
                             logical = "next".to_string();
-                            // Presentation-only: cycle camera mode forward
+                            // Timeline mode: move cursor right
+                            if app.interactive_state == InteractiveState::Timeline
+                                && app.timeline_cursor + 1 < app.timeline_slot_count
+                            {
+                                app.timeline_cursor += 1;
+                                logical = format!("timeline_cursor_{}", app.timeline_cursor);
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit1 | winit::keyboard::KeyCode::Numpad1 => {
+                            logical = "action_step".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "step".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit2 | winit::keyboard::KeyCode::Numpad2 => {
+                            logical = "action_pivot".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "pivot".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit3 | winit::keyboard::KeyCode::Numpad3 => {
+                            logical = "action_guard".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "guard".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit4 | winit::keyboard::KeyCode::Numpad4 => {
+                            logical = "action_cut".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "cut".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit5 | winit::keyboard::KeyCode::Numpad5 => {
+                            logical = "action_thrust".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "thrust".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit6 | winit::keyboard::KeyCode::Numpad6 => {
+                            logical = "action_recover".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "recover".to_string();
+                            }
                         }
                         winit::keyboard::KeyCode::ArrowUp | winit::keyboard::KeyCode::KeyW => {
                             logical = "up".to_string();
@@ -3869,6 +3929,36 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 if app.first_person_default { "first_person" } else { "third_person" }
                             ));
                         }
+                        "place_guard" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "guard".to_string();
+                            }
+                        }
+                        "place_cut" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "cut".to_string();
+                            }
+                        }
+                        "place_thrust" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "thrust".to_string();
+                            }
+                        }
+                        "place_step" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "step".to_string();
+                            }
+                        }
+                        "place_recover" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "recover".to_string();
+                            }
+                        }
+                        "timeline_right" => {
+                            if app.timeline_cursor + 1 < app.timeline_slot_count {
+                                app.timeline_cursor += 1;
+                            }
+                        }
                         _ => {}
                     }
 
@@ -3960,6 +4050,7 @@ fn write_window_manifest(app: &WindowedApp) {
             "Up/Down/W/S": "menu selection",
             "Left/Right/A/D": "prev/next",
             "V": "toggle first-person/third-person camera",
+            "1-6": "timeline action placement (step/pivot/guard/cut/thrust/recover)",
             "CloseRequested": "window close button",
         },
         "event_log_path": "windowed_interactive_event_log.jsonl",
@@ -4000,6 +4091,8 @@ fn write_window_manifest(app: &WindowedApp) {
         "surface_reconfigure_count": app.surface_reconfigure_count,
         "states_visited": app.states_visited,
         "transitions": app.transitions,
+        "timeline_slots": app.timeline_slots,
+        "timeline_slot_count": app.timeline_slot_count,
         "controls_map": manifest.get("controls_map").cloned().unwrap_or(Value::Null),
         "event_log_path": "windowed_interactive_event_log.jsonl",
         "scenario_id": app.packet_json.get("scenario_id").and_then(Value::as_str).unwrap_or("unknown"),

@@ -2971,3 +2971,73 @@ fn unit075_first_person_default_camera_truth_isolated() {
     assert!(source.contains("public_demo_ready\": false"));
     assert!(source.contains("release_candidate_ready\": false"));
 }
+
+#[test]
+fn unit076_timeline_ui_truth_isolated() {
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
+
+    // Timeline state exists in InteractiveState enum
+    assert!(source.contains("InteractiveState::Timeline"));
+    assert!(source.contains("\"TIMELINE\""));
+
+    // Timeline fields on WindowedApp
+    assert!(source.contains("timeline_slots"));
+    assert!(source.contains("timeline_cursor"));
+    assert!(source.contains("timeline_slot_count"));
+
+    // Timeline initialized with 10 guard slots
+    assert!(source.contains("vec![\"guard\".to_string(); 10]"));
+
+    // Timeline state appears in next() chain: Observe -> Timeline -> Plan
+    assert!(source.contains("Self::Observe => Self::Timeline"));
+    assert!(source.contains("Self::Timeline => Self::Plan"));
+
+    // Timeline in camera_for_state (first-person combat state)
+    assert!(source.contains("| InteractiveState::Timeline"));
+
+    // Timeline action placement keys (1-6 digit keys)
+    assert!(source.contains("\"action_step\""));
+    assert!(source.contains("\"action_pivot\""));
+    assert!(source.contains("\"action_guard\""));
+    assert!(source.contains("\"action_cut\""));
+    assert!(source.contains("\"action_thrust\""));
+    assert!(source.contains("\"action_recover\""));
+
+    // Timeline cursor navigation
+    assert!(source.contains("timeline_cursor_"));
+    assert!(source.contains("app.timeline_cursor -= 1"));
+    assert!(source.contains("app.timeline_cursor += 1"));
+
+    // Scripted input supports timeline placement
+    assert!(source.contains("\"place_guard\""));
+    assert!(source.contains("\"place_cut\""));
+    assert!(source.contains("\"place_thrust\""));
+    assert!(source.contains("\"place_step\""));
+    assert!(source.contains("\"place_recover\""));
+    assert!(source.contains("\"timeline_right\""));
+
+    // Manifest includes timeline data
+    assert!(source.contains("\"timeline_slots\": app.timeline_slots"));
+    assert!(source.contains("\"timeline_slot_count\": app.timeline_slot_count"));
+
+    // Controls map includes timeline actions
+    assert!(source.contains("\"1-6\": \"timeline action placement"));
+
+    // Scripted input file exists with timeline actions
+    let script = std::fs::read_to_string("content/input/unit076_windowed_script.json")
+        .expect("unit076 script file");
+    assert!(script.contains("oathyard.windowed_scripted_input.v1"));
+    assert!(script.contains("\"place_step\""));
+    assert!(script.contains("\"place_cut\""));
+    assert!(script.contains("\"place_thrust\""));
+    assert!(script.contains("\"TIMELINE slot"));
+    assert!(script.contains("OBSERVE -> TIMELINE"));
+    assert!(script.contains("TIMELINE -> PLAN"));
+
+    // Truth isolation preserved
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}
