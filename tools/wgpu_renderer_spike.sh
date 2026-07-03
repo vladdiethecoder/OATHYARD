@@ -282,9 +282,10 @@ seed_fighter_manifest="$(seed_mesh_manifest production_seed_fighter_mannequin \
 # Use mesh_manifest (candidate path) for correct texture paths.
 # Unit-066: Use rigged saltreach_duelist (has JOINTS_0/WEIGHTS_0/skin/IBMs/anims)
 # Both fighters use same asset_id for texture mapping; tinting by position.
+# Unit-068: Use skinned runtime mesh JSON with JOINTS_0/WEIGHTS_0/IBMs/animations
 all_seed_manifest="$(mesh_manifest all_seed_first_kit \
-  saltreach_duelist:fighter:assets/presentation_runtime/saltreach_duelist.mesh.json:-0.72:0.00:0.00:0.72:0.10 \
-  saltreach_duelist:fighter:assets/presentation_runtime/saltreach_duelist.mesh.json:0.72:0.00:0.00:0.72:0.10 \
+  saltreach_duelist:fighter:assets/runtime/saltreach_duelist_skinned.mesh.json:-0.72:0.00:0.00:0.72:0.10 \
+  saltreach_duelist:fighter:assets/runtime/saltreach_duelist_skinned.mesh.json:0.72:0.00:0.00:0.72:0.10 \
   training_yard:arena:assets/presentation_runtime/training_yard.mesh.json:0.00:-0.18:0.00:0.82:0.00)"
 
 render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "player_fighter_mannequin,player_longsword,player_gambeson,opponent_fighter_mannequin,opponent_gambeson,opponent_longsword,witness_stone" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$all_seed_manifest"

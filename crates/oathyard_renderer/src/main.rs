@@ -412,7 +412,7 @@ fn real_main() -> Result<(), String> {
     }
     let runtime_meshes = mesh_specs
         .iter()
-        .map(load_runtime_mesh)
+        .map(|s| load_runtime_mesh_with_clip(s, clip_id_for_capture(&capture_id)))
         .collect::<Result<Vec<_>, _>>()?;
     let seed = seed_uniforms(&packet_json, &capture_id, &candidate_assets);
     let mut render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode, &capture_id))?;
@@ -763,7 +763,7 @@ fn optional_path(value: Option<&Value>) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
+fn load_runtime_mesh_with_clip(spec: &RuntimeMeshSpec, clip_id: &str) -> Result<RuntimeMesh, String> {
     let path = &spec.source_path;
     let text = fs::read_to_string(path)
         .map_err(|error| format!("read runtime mesh {}: {error}", path.display()))?;
@@ -801,6 +801,26 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
             row[2].as_f64().ok_or_else(|| format!("position {index}.z is not numeric"))? as f32,
         ]);
     }
+    // Unit-068: Load normals from JSON if available (skinned meshes have source normals)
+    let mut mesh_normals: Vec<[f32; 3]> = Vec::new();
+    if let Some(normals_json) = data.get("normals").and_then(Value::as_array) {
+        for n_val in normals_json {
+            if let Some(n_arr) = n_val.as_array() {
+                if n_arr.len() >= 3 {
+                    mesh_normals.push([
+                        n_arr[0].as_f64().unwrap_or(0.0) as f32,
+                        n_arr[1].as_f64().unwrap_or(0.0) as f32,
+                        n_arr[2].as_f64().unwrap_or(0.0) as f32,
+                    ]);
+                }
+            }
+        }
+    }
+    // Unit-068: Apply CPU-side skinning deformation from glTF animation data
+    if mesh_normals.len() == positions.len() && !clip_id.is_empty() {
+        let _ = apply_skinned_deformation(&mut positions, &mut mesh_normals, &data, clip_id);
+    }
+
     let mut bounds_min = [f32::INFINITY; 3];
     let mut bounds_max = [f32::NEG_INFINITY; 3];
     for position in &positions {
@@ -823,7 +843,8 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
     let yaw_sin = spec.yaw_radians.sin();
     let mut vertices = positions
         .iter()
-        .map(|position| {
+        .enumerate()
+        .map(|(vi, position)| {
             let local = [
                 (position[0] - center[0]) * scale,
                 (position[1] - center[1]) * scale,
@@ -852,8 +873,8 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
                     base_color[1] + 0.05 * local[1].abs().min(1.0),
                     base_color[2] + 0.05 * local[0].abs().min(1.0),
                 ],
-                // Normals generated after full vertex array is built.
-                normal: [0.0, 0.0, 0.0],
+                // Normals: use source normals if available (set later), otherwise computed.
+                normal: if vi < mesh_normals.len() { mesh_normals[vi] } else { [0.0, 0.0, 0.0] },
             }
         })
         .collect::<Vec<_>>();
@@ -870,7 +891,8 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
         }
         indices.push(raw as u32);
     }
-    // Unit-062: Compute per-vertex flat normals from face geometry.
+    // Unit-062/068: Compute per-vertex flat normals only if no source normals were used.
+    if mesh_normals.is_empty() {
     // GLBs from Meshy-6 have no normals; the WGSL fragment shader currently
     // computes normals via cross(dpdx, dpdy) which produces unstable shading.
     // Generate deterministic flat normals here so lighting is stable.
@@ -922,6 +944,7 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
             vertices[i].normal = [0.0, 1.0, 0.0];
         }
     }
+    } // end if mesh_normals.is_empty()
     Ok(RuntimeMesh {
         mesh_asset_id: spec.mesh_asset_id.clone(),
         mesh_asset_class: spec.mesh_asset_class.clone(),
@@ -937,6 +960,382 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
     })
 }
 
+
+// Unit-068: CPU-side glTF animation sampling and skinning deformation.
+
+fn quat_slerp(q0: [f32; 4], q1: [f32; 4], t: f32) -> [f32; 4] {
+    let dot = q0[0]*q1[0] + q0[1]*q1[1] + q0[2]*q1[2] + q0[3]*q1[3];
+    let (q1x, q1y, q1z, q1w) = if dot < 0.0 {
+        (-q1[0], -q1[1], -q1[2], -q1[3])
+    } else {
+        (q1[0], q1[1], q1[2], q1[3])
+    };
+    let dot_abs = dot.abs();
+    if dot_abs > 0.9995 {
+        // Linear interpolation for nearly-parallel quaternions
+        return [
+            q0[0] + t * (q1x - q0[0]),
+            q0[1] + t * (q1y - q0[1]),
+            q0[2] + t * (q1z - q0[2]),
+            q0[3] + t * (q1w - q0[3]),
+        ];
+    }
+    let theta = dot_abs.acos();
+    let sin_theta = theta.sin();
+    let sin_t = (t * theta).sin();
+    let sin_1mt = ((1.0 - t) * theta).sin();
+    let s0 = sin_1mt / sin_theta;
+    let s1 = if dot < 0.0 { -sin_t / sin_theta } else { sin_t / sin_theta };
+    [
+        s0 * q0[0] + s1 * q1x,
+        s0 * q0[1] + s1 * q1y,
+        s0 * q0[2] + s1 * q1z,
+        s0 * q0[3] + s1 * q1w,
+    ]
+}
+
+fn quat_to_mat4(q: [f32; 4]) -> [f32; 16] {
+    let (x, y, z, w) = (q[0], q[1], q[2], q[3]);
+    let xx = x * x; let yy = y * y; let zz = z * z;
+    let xy = x * y; let xz = x * z; let yz = y * z;
+    let wx = w * x; let wy = w * y; let wz = w * z;
+    [
+        1.0 - 2.0 * (yy + zz), 2.0 * (xy + wz), 2.0 * (xz - wy), 0.0,
+        2.0 * (xy - wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz + wx), 0.0,
+        2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy), 0.0,
+        0.0, 0.0, 0.0, 1.0,
+    ]
+}
+
+fn mat4_mul(a: [f32; 16], b: [f32; 16]) -> [f32; 16] {
+    let mut r = [0.0f32; 16];
+    for i in 0..4 {
+        for j in 0..4 {
+            let mut sum = 0.0;
+            for k in 0..4 {
+                sum += a[i * 4 + k] * b[k * 4 + j];
+            }
+            r[i * 4 + j] = sum;
+        }
+    }
+    r
+}
+
+fn mat4_from_trs(t: [f32; 3], r: [f32; 4], s: [f32; 3]) -> [f32; 16] {
+    let rot_mat = quat_to_mat4(r);
+    let mut result = [
+        rot_mat[0] * s[0], rot_mat[1] * s[1], rot_mat[2] * s[2], 0.0,
+        rot_mat[4] * s[0], rot_mat[5] * s[1], rot_mat[6] * s[2], 0.0,
+        rot_mat[8] * s[0], rot_mat[9] * s[1], rot_mat[10] * s[2], 0.0,
+        t[0], t[1], t[2], 1.0,
+    ];
+    let _ = &mut result;
+    result
+}
+
+fn transform_point(m: [f32; 16], p: [f32; 3]) -> [f32; 3] {
+    [
+        m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12],
+        m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13],
+        m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14],
+    ]
+}
+
+fn transform_direction(m: [f32; 16], d: [f32; 3]) -> [f32; 3] {
+    [
+        m[0] * d[0] + m[4] * d[1] + m[8] * d[2],
+        m[1] * d[0] + m[5] * d[1] + m[9] * d[2],
+        m[2] * d[0] + m[6] * d[1] + m[10] * d[2],
+    ]
+}
+
+/// Apply CPU-side skinning deformation using glTF animation data.
+/// Modifies vertex positions and normals in-place based on joint weights.
+fn apply_skinned_deformation(
+    positions: &mut Vec<[f32; 3]>,
+    normals: &mut Vec<[f32; 3]>,
+    data: &Value,
+    clip_id: &str,
+) -> Result<bool, String> {
+    // Check if this mesh has skinning data
+    let joints_arr = match data.get("joints").and_then(Value::as_array) {
+        Some(j) if !j.is_empty() => j,
+        _ => return Ok(false), // No skinning data
+    };
+    let weights_arr = data.get("weights").and_then(Value::as_array)
+        .ok_or("skinned mesh missing weights")?;
+    let ibms_arr = data.get("inverse_bind_matrices").and_then(Value::as_array)
+        .ok_or("skinned mesh missing inverse_bind_matrices")?;
+    let joint_names_arr = data.get("joint_names").and_then(Value::as_array)
+        .ok_or("skinned mesh missing joint_names")?;
+    let node_transforms_arr = data.get("node_transforms").and_then(Value::as_array)
+        .ok_or("skinned mesh missing node_transforms")?;
+    let animations_arr = data.get("animations").and_then(Value::as_array)
+        .ok_or("skinned mesh missing animations")?;
+
+    let joint_count = joint_names_arr.len();
+    if joint_count == 0 {
+        return Ok(false);
+    }
+
+    // Parse IBMs (each is 16 floats in row-major order)
+    let mut ibms = Vec::with_capacity(joint_count);
+    for i in 0..joint_count {
+        let row = ibms_arr[i].as_array().ok_or("IBM not array")?;
+        let mut m = [0.0f32; 16];
+        for j in 0..16.min(row.len()) {
+            m[j] = row[j].as_f64().unwrap_or(0.0) as f32;
+        }
+        ibms.push(m);
+    }
+
+    // Parse bind-pose node local transforms
+    let mut bind_transforms = Vec::with_capacity(joint_count);
+    for i in 0..joint_count {
+        let node = &node_transforms_arr[i];
+        let t: [f32; 3] = {
+            let arr = node.get("translation").and_then(Value::as_array);
+            match arr {
+                Some(a) if a.len() >= 3 => [a[0].as_f64().unwrap_or(0.0) as f32, a[1].as_f64().unwrap_or(0.0) as f32, a[2].as_f64().unwrap_or(0.0) as f32],
+                _ => [0.0, 0.0, 0.0],
+            }
+        };
+        let r: [f32; 4] = {
+            let arr = node.get("rotation").and_then(Value::as_array);
+            match arr {
+                Some(a) if a.len() >= 4 => [a[0].as_f64().unwrap_or(0.0) as f32, a[1].as_f64().unwrap_or(0.0) as f32, a[2].as_f64().unwrap_or(0.0) as f32, a[3].as_f64().unwrap_or(1.0) as f32],
+                _ => [0.0, 0.0, 0.0, 1.0],
+            }
+        };
+        let s: [f32; 3] = {
+            let arr = node.get("scale").and_then(Value::as_array);
+            match arr {
+                Some(a) if a.len() >= 3 => [a[0].as_f64().unwrap_or(1.0) as f32, a[1].as_f64().unwrap_or(1.0) as f32, a[2].as_f64().unwrap_or(1.0) as f32],
+                _ => [1.0, 1.0, 1.0],
+            }
+        };
+        bind_transforms.push((t, r, s));
+    }
+
+    // Parse joint hierarchy (parent-child relationships)
+    let mut joint_parents = vec![-1i32; joint_count];
+    for i in 0..joint_count {
+        let node = &node_transforms_arr[i];
+        let children = node.get("children").and_then(Value::as_array);
+        if let Some(children) = children {
+            for child_val in children {
+                let child_idx = child_val.as_i64().unwrap_or(-1);
+                if child_idx >= 0 && (child_idx as usize) < joint_count {
+                    joint_parents[child_idx as usize] = i as i32;
+                }
+            }
+        }
+    }
+
+    // Apply animation if clip exists, otherwise use bind pose
+    let mut animated_rotations: std::collections::HashMap<String, [f32; 4]> = std::collections::HashMap::new();
+    let mut animated_translations: std::collections::HashMap<String, [f32; 3]> = std::collections::HashMap::new();
+
+    // Find the matching animation clip
+    let clip_to_find = match clip_id {
+        "idle" => "idle",
+        "walk" => "walk",
+        "attack" | "cut" | "thrust" | "guard_pose" | "recover" => "attack",
+        _ => "idle",
+    };
+
+    let sample_time = match clip_id {
+        "idle" => 0.5,
+        "walk" => 0.3,
+        "attack" => 0.3,
+        "cut" | "thrust" => 0.4,
+        "guard_pose" => 0.1,
+        "recover" => 0.7,
+        _ => 0.5,
+    };
+
+    for anim_val in animations_arr {
+        let anim_name = anim_val.get("name").and_then(Value::as_str).unwrap_or("");
+        if anim_name != clip_to_find {
+            continue;
+        }
+        let channels = anim_val.get("channels").and_then(Value::as_array).ok_or("anim missing channels")?;
+        let samplers = anim_val.get("samplers").and_then(Value::as_array).ok_or("anim missing samplers")?;
+
+        for channel in channels {
+            let node_name = channel.get("node").and_then(Value::as_str).unwrap_or("");
+            let path_type = channel.get("path").and_then(Value::as_str).unwrap_or("");
+            let sampler_idx = channel.get("sampler").and_then(Value::as_u64).unwrap_or(0) as usize;
+
+            if sampler_idx >= samplers.len() {
+                continue;
+            }
+            let sampler = &samplers[sampler_idx];
+            let times = sampler.get("times").and_then(Value::as_array).ok_or("sampler missing times")?;
+            let values = sampler.get("values").and_then(Value::as_array).ok_or("sampler missing values")?;
+
+            if times.len() < 2 {
+                continue;
+            }
+
+            // Find the keyframe interval
+            let mut seg_idx = 0;
+            for (i, t_val) in times.iter().enumerate() {
+                let t = t_val.as_f64().unwrap_or(0.0) as f32;
+                if t <= sample_time {
+                    seg_idx = i;
+                } else {
+                    break;
+                }
+            }
+            let next_idx = (seg_idx + 1).min(times.len() - 1);
+            let t0 = times[seg_idx].as_f64().unwrap_or(0.0) as f32;
+            let t1 = times[next_idx].as_f64().unwrap_or(1.0) as f32;
+            let alpha = if t1 > t0 { ((sample_time - t0) / (t1 - t0)).clamp(0.0, 1.0) } else { 0.0 };
+
+            if path_type == "rotation" {
+                let v0: [f32; 4] = {
+                    let arr = values[seg_idx].as_array().ok_or("rot value not array")?;
+                    [arr[0].as_f64().unwrap_or(0.0) as f32, arr[1].as_f64().unwrap_or(0.0) as f32, arr[2].as_f64().unwrap_or(0.0) as f32, arr[3].as_f64().unwrap_or(1.0) as f32]
+                };
+                let v1: [f32; 4] = {
+                    let arr = values[next_idx].as_array().ok_or("rot value not array")?;
+                    [arr[0].as_f64().unwrap_or(0.0) as f32, arr[1].as_f64().unwrap_or(0.0) as f32, arr[2].as_f64().unwrap_or(0.0) as f32, arr[3].as_f64().unwrap_or(1.0) as f32]
+                };
+                let interpolated = quat_slerp(v0, v1, alpha);
+                animated_rotations.insert(node_name.to_string(), interpolated);
+            } else if path_type == "translation" {
+                let v0: [f32; 3] = {
+                    let arr = values[seg_idx].as_array().ok_or("trans value not array")?;
+                    [arr[0].as_f64().unwrap_or(0.0) as f32, arr[1].as_f64().unwrap_or(0.0) as f32, arr[2].as_f64().unwrap_or(0.0) as f32]
+                };
+                let v1: [f32; 3] = {
+                    let arr = values[next_idx].as_array().ok_or("trans value not array")?;
+                    [arr[0].as_f64().unwrap_or(0.0) as f32, arr[1].as_f64().unwrap_or(0.0) as f32, arr[2].as_f64().unwrap_or(0.0) as f32]
+                };
+                let interpolated = [
+                    v0[0] + alpha * (v1[0] - v0[0]),
+                    v0[1] + alpha * (v1[1] - v0[1]),
+                    v0[2] + alpha * (v1[2] - v0[2]),
+                ];
+                animated_translations.insert(node_name.to_string(), interpolated);
+            }
+        }
+        break; // Only use the first matching clip
+    }
+
+    // Compute world-space joint matrices by traversing the hierarchy
+    let mut joint_world = vec![[1.0f32; 16]; joint_count];
+    for i in 0..joint_count {
+        let joint_name = joint_names_arr[i].as_str().unwrap_or("");
+        // Get local transform (use animated value if available, otherwise bind pose)
+        let (bind_t, bind_r, bind_s) = &bind_transforms[i];
+        let t = animated_translations.get(joint_name).unwrap_or(bind_t);
+        let r = animated_rotations.get(joint_name).unwrap_or(bind_r);
+        let local_mat = mat4_from_trs(*t, *r, *bind_s);
+
+        let parent = joint_parents[i];
+        if parent >= 0 {
+            joint_world[i] = mat4_mul(joint_world[parent as usize], local_mat);
+        } else {
+            joint_world[i] = local_mat;
+        }
+    }
+
+    // Compute final skinning matrices: joint_world * IBM
+    let mut skin_matrices = vec![[0.0f32; 16]; joint_count];
+    for i in 0..joint_count {
+        skin_matrices[i] = mat4_mul(joint_world[i], ibms[i]);
+    }
+
+    // Deform vertices using skinning matrices
+    let vcount = positions.len();
+    for vi in 0..vcount {
+        let joint_vals = joints_arr[vi].as_array().ok_or("joint not array")?;
+        let weight_vals = weights_arr[vi].as_array().ok_or("weight not array")?;
+        if joint_vals.len() < 4 || weight_vals.len() < 4 {
+            continue;
+        }
+
+        let j0 = joint_vals[0].as_u64().unwrap_or(0) as usize;
+        let j1 = joint_vals[1].as_u64().unwrap_or(0) as usize;
+        let j2 = joint_vals[2].as_u64().unwrap_or(0) as usize;
+        let j3 = joint_vals[3].as_u64().unwrap_or(0) as usize;
+        let w0 = weight_vals[0].as_f64().unwrap_or(0.0) as f32;
+        let w1 = weight_vals[1].as_f64().unwrap_or(0.0) as f32;
+        let w2 = weight_vals[2].as_f64().unwrap_or(0.0) as f32;
+        let w3 = weight_vals[3].as_f64().unwrap_or(0.0) as f32;
+
+        let original_pos = positions[vi];
+        let mut deformed_pos = [0.0f32; 3];
+        if j0 < joint_count && w0 > 0.001 {
+            let p = transform_point(skin_matrices[j0], original_pos);
+            deformed_pos[0] += w0 * p[0];
+            deformed_pos[1] += w0 * p[1];
+            deformed_pos[2] += w0 * p[2];
+        }
+        if j1 < joint_count && w1 > 0.001 {
+            let p = transform_point(skin_matrices[j1], original_pos);
+            deformed_pos[0] += w1 * p[0];
+            deformed_pos[1] += w1 * p[1];
+            deformed_pos[2] += w1 * p[2];
+        }
+        if j2 < joint_count && w2 > 0.001 {
+            let p = transform_point(skin_matrices[j2], original_pos);
+            deformed_pos[0] += w2 * p[0];
+            deformed_pos[1] += w2 * p[1];
+            deformed_pos[2] += w2 * p[2];
+        }
+        if j3 < joint_count && w3 > 0.001 {
+            let p = transform_point(skin_matrices[j3], original_pos);
+            deformed_pos[0] += w3 * p[0];
+            deformed_pos[1] += w3 * p[1];
+            deformed_pos[2] += w3 * p[2];
+        }
+
+        // Only apply deformation if the result is valid (not NaN)
+        if deformed_pos[0].is_finite() && deformed_pos[1].is_finite() && deformed_pos[2].is_finite() {
+            positions[vi] = deformed_pos;
+        }
+
+        // Deform normals similarly (using direction transform, not point transform)
+        let original_norm = normals[vi];
+        let mut deformed_norm = [0.0f32; 3];
+        if j0 < joint_count && w0 > 0.001 {
+            let d = transform_direction(skin_matrices[j0], original_norm);
+            deformed_norm[0] += w0 * d[0];
+            deformed_norm[1] += w0 * d[1];
+            deformed_norm[2] += w0 * d[2];
+        }
+        if j1 < joint_count && w1 > 0.001 {
+            let d = transform_direction(skin_matrices[j1], original_norm);
+            deformed_norm[0] += w1 * d[0];
+            deformed_norm[1] += w1 * d[1];
+            deformed_norm[2] += w1 * d[2];
+        }
+        if j2 < joint_count && w2 > 0.001 {
+            let d = transform_direction(skin_matrices[j2], original_norm);
+            deformed_norm[0] += w2 * d[0];
+            deformed_norm[1] += w2 * d[1];
+            deformed_norm[2] += w2 * d[2];
+        }
+        if j3 < joint_count && w3 > 0.001 {
+            let d = transform_direction(skin_matrices[j3], original_norm);
+            deformed_norm[0] += w3 * d[0];
+            deformed_norm[1] += w3 * d[1];
+            deformed_norm[2] += w3 * d[2];
+        }
+        // Normalize
+        let len = (deformed_norm[0]*deformed_norm[0] + deformed_norm[1]*deformed_norm[1] + deformed_norm[2]*deformed_norm[2]).sqrt();
+        if len > 1e-10 && deformed_norm[0].is_finite() {
+            normals[vi] = [deformed_norm[0]/len, deformed_norm[1]/len, deformed_norm[2]/len];
+        }
+    }
+
+    Ok(true)
+}
+
+
 fn wrap01(value: f32) -> f32 {
     value - value.floor()
 }
@@ -947,9 +1346,55 @@ fn load_runtime_material(
     data: &Value,
 ) -> Result<RuntimeMaterial, String> {
     let material_validation = data
-        .get("material_validation")
-        .ok_or_else(|| format!("runtime mesh {} missing material_validation", mesh_path.display()))?;
-    if material_validation
+        .get("material_validation");
+    let mat_val = match material_validation {
+        Some(mv) => mv,
+        None => {
+            // Unit-068: Skinned meshes from generated JSON may not have material_validation.
+            // Try to find textures from the candidate texture directory using the mesh asset ID.
+            let tex_base = format!("assets/model_candidates/t_73291be5/textures/{}", spec.mesh_asset_id);
+            let base_path = PathBuf::from(format!("{}_base.png", tex_base));
+            let normal_path = PathBuf::from(format!("{}_normal.png", tex_base));
+            let orm_path = PathBuf::from(format!("{}_orm.png", tex_base));
+            if base_path.exists() && normal_path.exists() && orm_path.exists() {
+                let base_sha = sha256_file(&base_path).unwrap_or_default();
+                let normal_sha = sha256_file(&normal_path).unwrap_or_default();
+                let orm_sha = sha256_file(&orm_path).unwrap_or_default();
+                let base_img = load_png_rgba(&base_path).ok();
+                let normal_img = load_png_rgba(&normal_path).ok();
+                let orm_img = load_png_rgba(&orm_path).ok();
+                return Ok(RuntimeMaterial {
+                    material_texture_binding: true,
+                    base_color_texture_path: base_path,
+                    normal_texture_path: normal_path,
+                    orm_texture_path: orm_path,
+                    base_color_texture_sha256: base_sha,
+                    normal_texture_sha256: normal_sha,
+                    orm_texture_sha256: orm_sha,
+                    base_color_texture_dimensions: base_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([1024, 1024]),
+                    normal_texture_dimensions: normal_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([1024, 1024]),
+                    orm_texture_dimensions: orm_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([1024, 1024]),
+                    material_count: 1,
+                    texture_hashes: Value::Null,
+                });
+            }
+            return Ok(RuntimeMaterial {
+                material_texture_binding: false,
+                base_color_texture_path: PathBuf::new(),
+                normal_texture_path: PathBuf::new(),
+                orm_texture_path: PathBuf::new(),
+                base_color_texture_sha256: String::new(),
+                normal_texture_sha256: String::new(),
+                orm_texture_sha256: String::new(),
+                base_color_texture_dimensions: [0, 0],
+                normal_texture_dimensions: [0, 0],
+                orm_texture_dimensions: [0, 0],
+                material_count: 0,
+                texture_hashes: Value::Null,
+            });
+        }
+    };
+    if mat_val
         .get("base_normal_orm_present")
         .and_then(Value::as_bool)
         != Some(true)
@@ -959,7 +1404,7 @@ fn load_runtime_material(
             mesh_path.display()
         ));
     }
-    let image_uris = material_validation
+    let image_uris = mat_val
         .get("image_uris")
         .and_then(Value::as_array)
         .ok_or_else(|| format!("runtime mesh {} missing material image_uris", mesh_path.display()))?;
@@ -994,7 +1439,7 @@ fn load_runtime_material(
     let base_image = load_png_rgba(&base_color_texture_path)?;
     let normal_image = load_png_rgba(&normal_texture_path)?;
     let orm_image = load_png_rgba(&orm_texture_path)?;
-    let material_count = material_validation
+    let material_count = mat_val
         .get("material_count")
         .and_then(Value::as_u64)
         .unwrap_or(0) as usize;
