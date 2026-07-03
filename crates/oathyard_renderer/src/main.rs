@@ -131,24 +131,27 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
 }
 
 fn clip_id_for_capture(capture_id: &str) -> &'static str {
+    // Unit-063: Pose mapping for combat readability.
     match capture_id {
         "boot_main_menu" => "idle",
+        "fighter_select" => "idle",
         "loadout_select" => "guard_pose",
-        "fighter_closeup_01" | "fighter_select" => "idle",
+        "arena_select" => "idle",
+        "fighter_closeup_01" => "idle",
         "gameplay_distance_fighter_weapon_01" | "gameplay_distance_fighter_weapon_seed" => "guard_pose",
         "gameplay_distance_fighter_loadout_family_01" | "gameplay_distance_fighter_loadout_seed" => "guard_pose",
-        "pre_contact_frame" | "pre_contact_frame_seed" => "cut",
-        "contact_frame" | "contact_frame_seed" => "thrust",
+        "pre_contact_frame" | "pre_contact_frame_seed" => "guard_pose",  // Unit-063: guard before contact
+        "contact_frame" | "contact_frame_seed" => "cut",  // Unit-063: cut during contact
         "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => "cut",
         // Unit-051: explicit guard/cut/thrust/recover captures
-        "planning_timeline" => "guard_pose",
+        "planning_timeline" => "idle",  // Unit-063: planning pose
         "material_armor_damage_frame" => "recover",
-        "injury_capability_consequence_frame" => "recover",
+        "injury_capability_consequence_frame" => "attack",  // Unit-063: active consequence pose
         // Unit-052: expanded capture poses
         "training_yard_establishing" => "idle",
-        "recovery_replan_frame" => "recover",
-        "first_person_combat_view" => "thrust",
-        "third_person_combat_view" => "cut",
+        "recovery_replan_frame" => "idle",  // Unit-063: neutral replan pose
+        "first_person_combat_view" => "guard_pose",  // Unit-063
+        "third_person_combat_view" => "guard_pose",  // Unit-063
         "replay_verification_ui_or_packet_view" => "idle",
         "performance_debug_overlay" => "guard_pose",
         "settings_accessibility" => "idle",
@@ -166,7 +169,40 @@ struct CameraMode {
 fn material_for_mesh(asset_id: &str) -> MeshMaterial {
     // Unit-062: Seed meshes use clean material path (material_type < -0.5)
     // to bypass procedural noise — Meshy-6 GLBs are geometry-only.
+    // Unit-063: player_ prefix = warm tint, opponent_ prefix = cool tint.
     match asset_id {
+        // Player variants (warm skin gold tint)
+        id if id == "player_fighter_mannequin" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.82, tint_g: 0.62, tint_b: 0.40, tint_a: 1.0,
+        },
+        id if id == "player_gambeson" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.55, tint_g: 0.38, tint_b: 0.22, tint_a: 1.0,
+        },
+        id if id == "player_longsword" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.82, tint_g: 0.78, tint_b: 0.72, tint_a: 1.0,
+        },
+        // Opponent variants (crimson/dark tint for strong contrast vs player)
+        id if id == "opponent_fighter_mannequin" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.72, tint_g: 0.18, tint_b: 0.12, tint_a: 1.0,
+        },
+        id if id == "opponent_gambeson" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.32, tint_g: 0.18, tint_b: 0.15, tint_a: 1.0,
+        },
+        id if id == "opponent_longsword" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.68, tint_g: 0.55, tint_b: 0.50, tint_a: 1.0,
+        },
         id if id == "fighter_mannequin" => MeshMaterial {
             material_type: -1.0,
             _pad: [0.0, 0.0, 0.0],
@@ -1909,26 +1945,26 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
     draw_panel(rgba, width, height, 20, 20, panel_w, 35);
     draw_text(rgba, width, height, label, 35, 28, 255, 220, 120);
 
-    // Top-right: scenario + hash panel
-    let rp_w = 520;
+    // Top-right: scenario + hash panel (narrower to avoid clipping)
+    let rp_w = 400;
     let rp_x = (width as i32) - rp_w - 20;
     draw_panel(rgba, width, height, rp_x, 20, rp_w, 35);
-    let scenario_text = format!("{} HASH {}...", scenario_id.to_uppercase(), &short_hash[..12]);
+    let scenario_text = format!("{}#{}", &scenario_id[..scenario_id.len().min(10)].to_uppercase(), &final_hash[..8]);
     draw_text(rgba, width, height, &scenario_text, rp_x + 10, 28, 180, 200, 220);
 
     // State-specific UI
     match capture_id {
         "boot_main_menu" => {
-            draw_panel(rgba, width, height, 20, 70, 400, 180);
+            draw_panel(rgba, width, height, 20, 70, 400, 210);
             draw_title_bar(rgba, width, height, 20, 70, 400, "OATHYARD");
             draw_text(rgba, width, height, "> LOCAL DUEL", 35, 108, 255, 255, 100);
             draw_text(rgba, width, height, "  SETTINGS", 35, 138, 200, 200, 200);
             draw_text(rgba, width, height, "  QUIT", 35, 168, 200, 200, 200);
             draw_text(rgba, width, height, "TRUTH 120HZ", 35, 208, 150, 200, 150);
-            draw_text(rgba, width, height, "PRESS CONFIRM", 35, 238, 200, 180, 100);
+            draw_text(rgba, width, height, "PRESS CONFIRM", 35, 232, 200, 180, 100);
         },
         "fighter_select" => {
-            draw_panel(rgba, width, height, 20, 70, 400, 120);
+            draw_panel(rgba, width, height, 20, 70, 400, 150);
             draw_title_bar(rgba, width, height, 20, 70, 400, "SELECT FIGHTER");
             draw_text(rgba, width, height, "> FIGHTER MANNEQUIN", 35, 108, 255, 255, 100);
             draw_text(rgba, width, height, "  SALTREACH DUELIST", 35, 138, 200, 200, 200);
@@ -1948,9 +1984,9 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "  TRAINING YARD", 35, 138, 200, 200, 200);
         },
         "planning_timeline" => {
-            draw_panel(rgba, width, height, 20, 70, 500, 280);
-            draw_title_bar(rgba, width, height, 20, 70, 500, "PLAN");
-            draw_text(rgba, width, height, "ACTION: CUT", 35, 108, 255, 220, 120);
+            draw_panel(rgba, width, height, 20, 70, 550, 310);
+            draw_title_bar(rgba, width, height, 20, 70, 550, "PLAN (PLAYER)");
+            draw_text(rgba, width, height, "ACTION: CUT    | TARGET: TORSO", 35, 108, 255, 220, 120);
             draw_text(rgba, width, height, "DIRECTION: FORWARD", 35, 138, 255, 220, 120);
             draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 255, 220, 120);
             draw_text(rgba, width, height, &format!("BASE COST: 32 FRAMES"), 35, 198, 200, 200, 200);
@@ -1961,21 +1997,22 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "> COMMIT PLAN", 35, 348, 100, 255, 100);
         },
         "pre_contact_frame" | "pre_contact_frame_seed" => {
-            draw_panel(rgba, width, height, 20, 70, 500, 100);
-            draw_title_bar(rgba, width, height, 20, 70, 500, "COMMIT / REVEAL");
-            draw_text(rgba, width, height, "PLAYER: CUT FORWARD TORSO", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "ENEMY: GUARD CENTER", 35, 138, 255, 100, 100);
+            draw_panel(rgba, width, height, 20, 70, 550, 140);
+            draw_title_bar(rgba, width, height, 20, 70, 550, "COMMIT / REVEAL");
+            draw_text(rgba, width, height, "PLAYER(GOLD): CUT FORWARD TORSO", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "OPPONENT(CRIMSON): GUARD CENTER", 35, 138, 255, 100, 100);
+            draw_text(rgba, width, height, "> SIMULTANEOUS REVEAL", 35, 168, 200, 200, 100);
         },
         "contact_frame" | "contact_frame_seed" => {
-            draw_panel(rgba, width, height, 20, 70, 500, 120);
-            draw_title_bar(rgba, width, height, 20, 70, 500, "RESOLVE");
-            draw_text(rgba, width, height, "CONTACT: CUT VS GUARD", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "WEAPON: LONGSWORD", 35, 138, 200, 200, 200);
-            draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 200, 200, 200);
+            draw_panel(rgba, width, height, 20, 70, 550, 150);
+            draw_title_bar(rgba, width, height, 20, 70, 550, "RESOLVE (CONTACT)");
+            draw_text(rgba, width, height, "PLAYER CUT -> OPPONENT GUARD", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "WEAPON: LONGSWORD  |  TARGET: TORSO", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "> CONSEQUENCE", 35, 168, 255, 160, 80);
         },
         "injury_capability_consequence_frame" | "material_armor_damage_frame" => {
-            draw_panel(rgba, width, height, 20, 70, 540, 200);
-            draw_title_bar(rgba, width, height, 20, 70, 540, "CONSEQUENCE");
+            draw_panel(rgba, width, height, 20, 70, 580, 230);
+            draw_title_bar(rgba, width, height, 20, 70, 580, "CONSEQUENCE");
             draw_text(rgba, width, height, "MATERIAL: PARTIAL DEFLECT", 35, 108, 255, 220, 120);
             draw_text(rgba, width, height, "ANATOMY: SURFACE IMPACT", 35, 138, 255, 220, 120);
             draw_text(rgba, width, height, &format!("BALANCE: {} PERMILLE", f0_balance), 35, 168, 255, 160, 80);
@@ -2023,20 +2060,23 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
         _ => {
             // Default OBSERVE panel — show end condition if available
             if !end_status.is_empty() {
-                draw_panel(rgba, width, height, 20, 70, 500, 80);
+                draw_panel(rgba, width, height, 20, 70, 550, 110);
                 let status_upper = format!("STATUS: {}", end_status.to_uppercase());
                 draw_text(rgba, width, height, &status_upper, 35, 78, 200, 200, 200);
+                draw_text(rgba, width, height, "PLAYER(GOLD) VS OPPONENT(CRIMSON)", 35, 108, 255, 220, 120);
                 if !end_winner.is_empty() && end_winner != "none" {
                     let winner_text = format!("WINNER: {}", end_winner.to_uppercase());
-                    draw_text(rgba, width, height, &winner_text, 35, 108, 255, 220, 120);
+                    draw_text(rgba, width, height, &winner_text, 35, 138, 255, 255, 80);
                 }
+            } else {
+                draw_text(rgba, width, height, "PLAYER(GOLD) VS OPPONENT(CRIMSON)", 35, 78, 255, 220, 120);
             }
         },
     }
 
-    // Bottom-right: truth-mutation status (always)
-    draw_panel(rgba, width, height, (width as i32) - 320, (height as i32) - 50, 300, 30);
-    draw_text(rgba, width, height, "TRUTH MUTATION: FALSE", (width as i32) - 310, (height as i32) - 42, 150, 255, 150);
+    // Bottom-right: truth-mutation status (moved inward to avoid clipping)
+    draw_panel(rgba, width, height, (width as i32) - 260, (height as i32) - 45, 240, 28);
+    draw_text(rgba, width, height, "TM:F", (width as i32) - 252, (height as i32) - 38, 150, 255, 150);
 }
 
 fn write_png_rgba(path: &Path, width: u32, height: u32, rgba: &[u8]) -> Result<(), String> {

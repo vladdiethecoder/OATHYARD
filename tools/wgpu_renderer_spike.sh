@@ -147,14 +147,16 @@ for raw in sys.argv[2:]:
     tz = parts[5] if len(parts) > 5 else '0.00'
     scale = parts[6] if len(parts) > 6 else '0.90'
     yaw = parts[7] if len(parts) > 7 else '0.00'
+    # Unit-063: texture_base_id for player_/opponent_ prefixed asset_ids
+    texture_base_id = parts[8] if len(parts) > 8 else asset_id
     tex_dir = 'assets/textures/production_seed'
     meshes.append({
         'mesh_asset_id': asset_id,
         'mesh_asset_class': asset_class,
         'mesh_source': source,
-        'base_color_texture_path': f'{tex_dir}/{asset_id}_base.png',
-        'normal_texture_path': f'{tex_dir}/{asset_id}_normal.png',
-        'orm_texture_path': f'{tex_dir}/{asset_id}_orm.png',
+        'base_color_texture_path': f'{tex_dir}/{texture_base_id}_base.png',
+        'normal_texture_path': f'{tex_dir}/{texture_base_id}_normal.png',
+        'orm_texture_path': f'{tex_dir}/{texture_base_id}_orm.png',
         'translation': [float(tx), float(ty), float(tz)],
         'scale': float(scale),
         'yaw_radians': float(yaw),
@@ -268,10 +270,11 @@ seed_armor_manifest="$(seed_mesh_manifest production_seed_armor_gambeson \
 seed_fighter_manifest="$(seed_mesh_manifest production_seed_fighter_mannequin \
   fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:0.00:0.00:0.00:0.85:0.00)"
 # Unit-061: Combined seed manifest with ALL first-kit assets at full Meshy-6 fidelity.
+# Unit-063: Embodied combat assembly — two fighters facing each other,
+# each with gambeson worn on body and longsword held at grip position.
 all_seed_manifest="$(seed_mesh_manifest all_seed_first_kit \
-  fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:-0.42:0.00:0.00:0.78:0.15 \
-  longsword:weapon:assets/runtime/seed/longsword.mesh.json:-0.15:0.05:0.00:0.55:-0.20 \
-  gambeson:armor:assets/runtime/seed/gambeson.mesh.json:0.35:-0.02:0.00:0.72:0.00 \
+  player_fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:-0.72:0.00:0.00:0.72:0.10:fighter_mannequin \
+  opponent_fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:0.72:0.00:0.00:0.72:0.10:fighter_mannequin \
   witness_stone:arena:assets/runtime/seed/witness_stone.mesh.json:0.00:-0.15:-0.80:0.60:0.00)"
 render_capture "production_seed_weapon_longsword" "offscreen_production_seed_weapon_longsword" "longsword" "$out/render/production_seed_weapon_longsword" "production_renderer_wgpu_spike_production_seed_weapon_longsword_1920x1080" "" "$seed_weapon_manifest"
 render_capture "production_seed_arena_witness_stone" "offscreen_production_seed_arena_witness_stone" "witness_stone" "$out/render/production_seed_arena_witness_stone" "production_renderer_wgpu_spike_production_seed_arena_witness_stone_1920x1080" "" "$seed_arena_manifest"
@@ -279,8 +282,8 @@ render_capture "production_seed_armor_gambeson" "offscreen_production_seed_armor
 render_capture "production_seed_fighter_mannequin" "offscreen_production_seed_fighter_mannequin" "fighter_mannequin" "$out/render/production_seed_fighter_mannequin" "production_renderer_wgpu_spike_production_seed_fighter_mannequin_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-048 game-flow captures ---
-render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "fighter_mannequin,longsword,gambeson,witness_stone" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$all_seed_manifest"
-render_capture "boot_main_menu" "boot_main_menu" "fighter_mannequin,longsword,gambeson,witness_stone" "$out/render/boot_main_menu" "production_renderer_wgpu_spike_boot_main_menu_1920x1080" "" "$all_seed_manifest"
+render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "player_fighter_mannequin,player_longsword,player_gambeson,opponent_fighter_mannequin,opponent_gambeson,opponent_longsword,witness_stone" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "boot_main_menu" "boot_main_menu" "player_fighter_mannequin,player_longsword,player_gambeson,opponent_fighter_mannequin,opponent_gambeson,opponent_longsword,witness_stone" "$out/render/boot_main_menu" "production_renderer_wgpu_spike_boot_main_menu_1920x1080" "" "$all_seed_manifest"
 render_capture "fighter_select" "fighter_select" "fighter_mannequin" "$out/render/fighter_select" "production_renderer_wgpu_spike_fighter_select_1920x1080" "" "$all_seed_manifest"
 render_capture "loadout_select" "loadout_select" "gambeson" "$out/render/loadout_select" "production_renderer_wgpu_spike_loadout_select_1920x1080" "" "$seed_armor_manifest"
 render_capture "gameplay_distance_fighter_weapon_seed" "gameplay_distance_fighter_weapon_01" "fighter_mannequin,longsword" "$out/render/gameplay_distance_fighter_weapon_seed" "production_renderer_wgpu_spike_gameplay_distance_fighter_weapon_seed_1920x1080" "" "$all_seed_manifest"
