@@ -1907,6 +1907,79 @@ fn state_label(capture_id: &str) -> &str {
     }
 }
 
+
+// Unit-065: Draw a line from (x0,y0) to (x1,y1) using Bresenham-like stepping.
+fn draw_line(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i32, x1: i32, y1: i32, r: u8, g: u8, b: u8) {
+    let dx = (x1 - x0).abs();
+    let dy = -(y1 - y0).abs();
+    let sx = if x0 < x1 { 1i32 } else { -1i32 };
+    let sy = if y0 < y1 { 1i32 } else { -1i32 };
+    let mut err = dx + dy;
+    let mut x = x0;
+    let mut y = y0;
+    loop {
+        set_pixel(rgba, width, height, x, y, r, g, b);
+        if x == x1 && y == y1 { break; }
+        let e2 = 2 * err;
+        if e2 >= dy { err += dy; x += sx; }
+        if e2 <= dx { err += dx; y += sy; }
+    }
+}
+
+// Unit-065: Draw shape markers for non-color identity cues.
+fn draw_marker_shape(rgba: &mut [u8], width: u32, height: u32, cx: i32, cy: i32, size: i32, r: u8, g: u8, b: u8, is_player: bool) {
+    if is_player {
+        // Triangle for player (pointing up — aggressive, forward-facing)
+        draw_line(rgba, width, height, cx, cy - size, cx - size, cy + size/2, r, g, b);
+        draw_line(rgba, width, height, cx, cy - size, cx + size, cy + size/2, r, g, b);
+        draw_line(rgba, width, height, cx - size, cy + size/2, cx + size, cy + size/2, r, g, b);
+    } else {
+        // Diamond for opponent (stable, defensive)
+        draw_line(rgba, width, height, cx, cy - size, cx + size, cy, r, g, b);
+        draw_line(rgba, width, height, cx + size, cy, cx, cy + size, r, g, b);
+        draw_line(rgba, width, height, cx, cy + size, cx - size, cy, r, g, b);
+        draw_line(rgba, width, height, cx - size, cy, cx, cy - size, r, g, b);
+    }
+}
+
+// Unit-065: Draw action affordance cue based on action label.
+fn draw_action_cue(rgba: &mut [u8], width: u32, height: u32, cx: i32, cy: i32, action: &str, r: u8, g: u8, b: u8) {
+    let s = 40i32;
+    match action {
+        "guard_pose" | "guard" => {
+            // Vertical shield line
+            draw_line(rgba, width, height, cx, cy - s, cx, cy + s, r, g, b);
+            draw_line(rgba, width, height, cx - s/2, cy - s/2, cx + s/2, cy - s/2, r, g, b);
+        },
+        "cut" => {
+            // Arc slash — diagonal line from upper-left to lower-right
+            draw_line(rgba, width, height, cx - s, cy - s, cx + s, cy + s, r, g, b);
+            draw_line(rgba, width, height, cx - s, cy - s, cx - s + s/3, cy - s, r, g, b);
+        },
+        "thrust" => {
+            // Arrow pointing forward (right)
+            draw_line(rgba, width, height, cx - s, cy, cx + s, cy, r, g, b);
+            draw_line(rgba, width, height, cx + s, cy, cx + s - s/3, cy - s/3, r, g, b);
+            draw_line(rgba, width, height, cx + s, cy, cx + s - s/3, cy + s/3, r, g, b);
+        },
+        "recover" => {
+            // Return arc — curved arrow back
+            draw_line(rgba, width, height, cx - s, cy - s/2, cx, cy + s, r, g, b);
+            draw_line(rgba, width, height, cx, cy + s, cx + s, cy - s/2, r, g, b);
+        },
+        _ => {}
+    }
+}
+
+// Unit-065: Draw contact marker — line from weapon grip to target.
+fn draw_contact_marker(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i32, x1: i32, y1: i32) {
+    // Bright red-orange impact line
+    draw_line(rgba, width, height, x0, y0, x1, y1, 255, 100, 30);
+    // Impact flash at target
+    fill_rect(rgba, width, height, x1 - 8, y1 - 8, 16, 16, 255, 200, 50);
+    fill_rect(rgba, width, height, x1 - 4, y1 - 4, 8, 8, 255, 255, 100);
+}
+
 fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &str, packet: &Value) {
     let label = state_label(capture_id);
 
@@ -1987,6 +2060,7 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_panel(rgba, width, height, 20, 70, 550, 310);
             draw_title_bar(rgba, width, height, 20, 70, 550, "PLAN (PLAYER)");
             draw_text(rgba, width, height, "ACTION: CUT    | TARGET: TORSO", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "CUE: \\ // (SLASH/ARC)", 35, 128, 255, 200, 80);  // Unit-065: action affordance cue
             draw_text(rgba, width, height, "DIRECTION: FORWARD", 35, 138, 255, 220, 120);
             draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 255, 220, 120);
             draw_text(rgba, width, height, &format!("BASE COST: 32 FRAMES"), 35, 198, 200, 200, 200);
@@ -2008,13 +2082,20 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_title_bar(rgba, width, height, 20, 70, 550, "RESOLVE (CONTACT)");
             draw_text(rgba, width, height, "PLAYER CUT -> OPPONENT GUARD", 35, 108, 255, 220, 120);
             draw_text(rgba, width, height, "WEAPON: LONGSWORD  |  TARGET: TORSO", 35, 138, 200, 200, 200);
-            draw_text(rgba, width, height, "> CONSEQUENCE", 35, 168, 255, 160, 80);
+                        draw_text(rgba, width, height, "> CONSEQUENCE NEXT", 35, 168, 255, 160, 80);
+            // Unit-065: Contact marker — weapon-to-target impact line (screen-space)
+            draw_contact_marker(rgba, width, height, (width as i32)/2 - 60, (height as i32)/4 + 20, (width as i32)/2 + 40, (height as i32)/4 + 10);
+            draw_text(rgba, width, height, "IMPACT -> TORSO", (width as i32)/2 - 40, (height as i32)/4 + 30, 255, 160, 80);
         },
         "injury_capability_consequence_frame" | "material_armor_damage_frame" => {
             draw_panel(rgba, width, height, 20, 70, 580, 230);
             draw_title_bar(rgba, width, height, 20, 70, 580, "CONSEQUENCE");
             draw_text(rgba, width, height, "MATERIAL: PARTIAL DEFLECT", 35, 108, 255, 220, 120);
             draw_text(rgba, width, height, "ANATOMY: SURFACE IMPACT", 35, 138, 255, 220, 120);
+            // Unit-065: Add affected region indicator
+            draw_text(rgba, width, height, ">> AFFECTED: TORSO REGION", 35, 148, 255, 160, 80);
+            // Unit-065: Consequence marker — bright pulse rectangle
+            fill_rect(rgba, width, height, 25, 158, 200, 4, 255, 180, 40);
             draw_text(rgba, width, height, &format!("BALANCE: {} PERMILLE", f0_balance), 35, 168, 255, 160, 80);
             draw_text(rgba, width, height, &format!("GRIP R: {} PERMILLE", f0_grip), 35, 198, 255, 160, 80);
             draw_text(rgba, width, height, &format!("RECOVERY: {} FRAMES", f0_recovery), 35, 228, 255, 160, 80);
@@ -2069,7 +2150,15 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
                     draw_text(rgba, width, height, &winner_text, 35, 138, 255, 255, 80);
                 }
             } else {
-                draw_text(rgba, width, height, "PLAYER(GOLD) VS OPPONENT(CRIMSON)", 35, 78, 255, 220, 120);
+                draw_text(rgba, width, height, "PLAYER(GOLD/^) VS OPPONENT(CRIMSON/<>)", 35, 78, 255, 220, 120);  // Unit-065: ^=triangle player, <>=diamond opponent
+            // Unit-065: Draw visible non-color identity shapes near fighter positions.
+            // These shapes are independent of color tint and visible regardless of lighting.
+            let mid_h = (height as i32) / 2;
+            let mid_w = (width as i32) / 2;
+            draw_marker_shape(rgba, width, height, mid_w - mid_w/3 + 10, mid_h - 20, 28, 255, 220, 60, true);
+            draw_text(rgba, width, height, "^=PLAYER", mid_w - mid_w/3 - 30, mid_h + 20, 255, 220, 60);
+            draw_marker_shape(rgba, width, height, mid_w + mid_w/3 + 10, mid_h - 20, 28, 255, 80, 40, false);
+            draw_text(rgba, width, height, "<>=OPPONENT", mid_w + mid_w/3 - 30, mid_h + 20, 255, 80, 40);
             }
         },
     }

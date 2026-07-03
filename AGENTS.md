@@ -103,7 +103,7 @@ For focused replay work:
 - Do not regress production runtime visuals to flat/non-3D geometry or claim a browser/HTML artifact as native 3D product presentation.
 - Do not claim Elden Ring/For Honor-class ambition has been met without current-run native high-fidelity captures, pixel inspection, visual benchmark report, and owner visual acceptance.
 - AI/scripted seats may emit only legal planned actions and directional influence; truth must decide contacts, injuries, capability changes, and hashes.
-- MotionBricks-style systems, Warp, Isaac Lab, Newton, MJWarp, PhysX, Chrono, Audio2Face, generative 3D, renderer physics, VFX, audio, and camera systems must stay outside runtime authoritative truth unless a separate deterministic replay/hash ADR promotes them with current evidence.
+- MotionBricks-style systems, Warp, Isaac Lab, Newton, MJWarp, PhysX, Chrono, Audio2Face, generative 3D, renderer physics, VFX, audio, and camera systems must stay outside runtime authoritative truth unless a separate deterministic replay/hash ADR promotes them with current evidence. PresentationBricks (the internal MotionBricks-inspired layer) may use indeterministic motion generation provided truth_mutation remains false and the canonical truth hash is preserved.
 - Do not weaken tests, expected outputs, audits, or canon to make verification pass.
 - Do not claim native public demo readiness, release-candidate readiness, owner visual acceptance, legal clearance, or trademark clearance.
 - Do not commit or package credentials, API keys, tokens, private keys, webhooks, or store secrets.
