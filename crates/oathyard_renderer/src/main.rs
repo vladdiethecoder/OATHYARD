@@ -2986,6 +2986,7 @@ struct WindowedApp {
     timeline_cursor: usize,
     timeline_slot_count: usize,
     combat_contacts: Vec<ResolvedContact>,
+    match_result: Option<MatchResult>,
     event_log: Vec<InteractiveEvent>,
     camera_buffer: wgpu::Buffer,
     packet_json: Value,
@@ -3226,9 +3227,8 @@ fn opponent_policy_timeline(slot_count: usize) -> Vec<String> {
     (0..slot_count).map(|i| actions[i % actions.len()].to_string()).collect()
 }
 
-/// Unit-078: Simple deterministic combat resolution from timeline plans.
-/// Compares player and opponent actions slot-by-slot to determine contacts
-/// and injury outcomes. Presentation-only — does not mutate gameplay truth.
+/// Unit-078/079: Combat resolution + injury tracking + match outcome.
+/// Presents deterministic combat results from timeline comparison.
 #[derive(Clone, Debug)]
 struct ResolvedContact {
     slot: usize,
@@ -3236,15 +3236,40 @@ struct ResolvedContact {
     opponent_action: String,
     contact_type: String,
     injury: String,
+    injury_severity: u32,
     outcome: String,
+}
+
+#[derive(Clone, Debug)]
+struct MatchResult {
+    player_injury_score: u32,
+    opponent_injury_score: u32,
+    winner: String,
+    end_condition: String,
+    summary: String,
+}
+
+fn injury_severity(injury: &str) -> u32 {
+    match injury {
+        "none" => 0,
+        "minor_stamina" => 1,
+        "blade_contact_both" => 3,
+        "player_exposed" | "opponent_exposed" => 4,
+        "thrust_penetrates" | "cut_lands_first" => 5,
+        "mutual_impalement" => 6,
+        _ => 0,
+    }
 }
 
 fn resolve_timeline_combat(
     player_slots: &[String],
     opponent_slots: &[String],
-) -> Vec<ResolvedContact> {
+) -> (Vec<ResolvedContact>, MatchResult) {
     let len = player_slots.len().min(opponent_slots.len());
     let mut contacts = Vec::new();
+    let mut player_injury_score = 0u32;
+    let mut opponent_injury_score = 0u32;
+
     for i in 0..len {
         let pa = &player_slots[i];
         let oa = &opponent_slots[i];
@@ -3262,16 +3287,50 @@ fn resolve_timeline_combat(
             ("pivot", _) | (_, "pivot") => ("pivot", "none", "angle change — no contact"),
             _ => ("unknown", "none", "unresolved"),
         };
+        let sev = injury_severity(inj);
+        // Accumulate: injuries with "player_" prefix affect player, "opponent_" affect opponent
+        if inj.contains("player_") || inj == "player_exposed" {
+            player_injury_score += sev;
+        } else if inj.contains("opponent_") || inj == "opponent_exposed" {
+            opponent_injury_score += sev;
+        } else if sev > 0 && inj != "none" {
+            // Shared injuries (simultaneous, mutual) affect both
+            player_injury_score += sev;
+            opponent_injury_score += sev;
+        }
         contacts.push(ResolvedContact {
             slot: i,
             player_action: pa.clone(),
             opponent_action: oa.clone(),
             contact_type: ct.to_string(),
             injury: inj.to_string(),
+            injury_severity: sev,
             outcome: out.to_string(),
         });
     }
-    contacts
+
+    let (winner, end_condition) = if player_injury_score < opponent_injury_score {
+        ("player", "player has fewer total injuries")
+    } else if opponent_injury_score < player_injury_score {
+        ("opponent", "opponent has fewer total injuries")
+    } else {
+        ("draw", "equal injury score — draw")
+    };
+
+    let result = MatchResult {
+        player_injury_score,
+        opponent_injury_score,
+        winner: winner.to_string(),
+        end_condition: end_condition.to_string(),
+        summary: format!(
+            "Player {} ({}) vs Opponent {} ({}) — {}",
+            player_injury_score, "injury score",
+            opponent_injury_score, "injury score",
+            end_condition
+        ),
+    };
+
+    (contacts, result)
 }
 
 /// Unit-074: Scripted input for deterministic interactive windowed smoke
@@ -3602,6 +3661,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             timeline_cursor: 0,
             timeline_slot_count: 10,
             combat_contacts: Vec::new(),
+            match_result: None,
             event_log: Vec::new(),
             camera_buffer,
             packet_json: self.packet_json.clone(),
@@ -3676,10 +3736,12 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 let next = app.interactive_state.next();
                                 // Unit-078: Resolve combat when transitioning out of TIMELINE
                                 if app.interactive_state == InteractiveState::Timeline {
-                                    app.combat_contacts = resolve_timeline_combat(
+                                    let (contacts, result) = resolve_timeline_combat(
                                         &app.timeline_slots,
                                         &app.opponent_timeline_slots,
                                     );
+                                    app.combat_contacts = contacts;
+                                    app.match_result = Some(result);
                                 }
                                 app.interactive_state = next;
                                 let next_str = next.as_str().to_string();
@@ -3946,10 +4008,12 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         "advance" => {
                             // Unit-078: Resolve combat when advancing out of TIMELINE
                             if app.interactive_state == InteractiveState::Timeline {
-                                app.combat_contacts = resolve_timeline_combat(
+                                let (contacts, result) = resolve_timeline_combat(
                                     &app.timeline_slots,
                                     &app.opponent_timeline_slots,
                                 );
+                                app.combat_contacts = contacts;
+                                app.match_result = Some(result);
                             }
                             let next = app.interactive_state.next();
                             app.interactive_state = next;
@@ -4172,9 +4236,21 @@ fn write_window_manifest(app: &WindowedApp) {
             "opponent_action": c.opponent_action,
             "contact_type": c.contact_type,
             "injury": c.injury,
+            "injury_severity": c.injury_severity,
             "outcome": c.outcome,
         })).collect::<Vec<_>>(),
         "combat_contact_count": app.combat_contacts.len(),
+        "match_result": if let Some(ref r) = app.match_result {
+            serde_json::json!({
+                "player_injury_score": r.player_injury_score,
+                "opponent_injury_score": r.opponent_injury_score,
+                "winner": r.winner,
+                "end_condition": r.end_condition,
+                "summary": r.summary,
+            })
+        } else {
+            Value::Null
+        },
         "controls_map": manifest.get("controls_map").cloned().unwrap_or(Value::Null),
         "event_log_path": "windowed_interactive_event_log.jsonl",
         "scenario_id": app.packet_json.get("scenario_id").and_then(Value::as_str).unwrap_or("unknown"),

@@ -3098,3 +3098,41 @@ fn unit078_combat_resolution_bridge_truth_isolated() {
     assert!(source.contains("public_demo_ready\": false"));
     assert!(source.contains("release_candidate_ready\": false"));
 }
+
+#[test]
+fn unit079_match_result_injury_tracking_truth_isolated() {
+    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
+        .expect("renderer source");
+
+    // Match result structures
+    assert!(source.contains("struct MatchResult"));
+    assert!(source.contains("player_injury_score"));
+    assert!(source.contains("opponent_injury_score"));
+    assert!(source.contains("injury_severity"));
+    assert!(source.contains("fn injury_severity"));
+
+    // Injury accumulation logic
+    assert!(source.contains("inj.contains(\"player_\")"));
+    assert!(source.contains("inj.contains(\"opponent_\")"));
+
+    // Severity levels
+    assert!(source.contains("minor_stamina"));
+    assert!(source.contains("blade_contact_both"));
+    assert!(source.contains("thrust_penetrates"));
+    assert!(source.contains("mutual_impalement"));
+
+    // Match outcome computation
+    assert!(source.contains("player_injury_score < opponent_injury_score"));
+    assert!(source.contains("winner"));
+
+    // Manifest includes match_result
+    assert!(source.contains("\"match_result\": if let Some(ref r) = app.match_result"));
+    assert!(source.contains("\"winner\": r.winner"));
+    assert!(source.contains("\"summary\": r.summary"));
+
+    // Truth isolation
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}
