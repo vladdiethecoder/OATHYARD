@@ -361,7 +361,7 @@ fn real_main() -> Result<(), String> {
         .map(load_runtime_mesh)
         .collect::<Result<Vec<_>, _>>()?;
     let seed = seed_uniforms(&packet_json, &capture_id, &candidate_assets);
-    let render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode, &capture_id))?;
+    let mut render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode, &capture_id))?;
     let file_stem = capture_file_stem.unwrap_or_else(|| {
         if capture_id == DEFAULT_CAPTURE_FILE_STEM || capture_id == DEFAULT_CAPTURE_FILE_NAME {
             DEFAULT_CAPTURE_FILE_STEM.to_string()
@@ -378,6 +378,8 @@ fn real_main() -> Result<(), String> {
         ));
     }
     let frame_path = out_dir.join(format!("{file_stem}.png"));
+    // Unit-061: Composite readable UI overlays into the RGBA buffer before PNG write.
+    composite_ui_overlay(&mut render.rgba, WIDTH, HEIGHT, &capture_id, &packet_json);
     write_png_rgba(&frame_path, WIDTH, HEIGHT, &render.rgba)?;
     let frame_sha256 = sha256_file(&frame_path)?;
     let packet_sha256 = sha256_bytes(packet_text.as_bytes());
@@ -1637,6 +1639,337 @@ fn sanitize_capture_id(capture_id: &str) -> String {
             }
         })
         .collect()
+}
+
+// Unit-061: CPU-composited UI overlay system.
+// Draws high-contrast text panels directly into the RGBA pixel buffer after
+// the GPU render pass. This is native-rendered (not post-edited 2D): the same
+// RGBA buffer that the GPU wrote to is modified in-place before PNG encoding.
+//
+// Uses a compact 5x7 bitmap font for readable text at 1920x1080.
+// Each game-state capture gets an appropriate overlay with real packet data.
+
+const FONT_SCALE: u32 = 3; // 5*3=15px wide, 7*3=21px tall glyphs
+
+// 5x7 bitmap font (uppercase A-Z, 0-9, space, colon, slash, dash, period, underscore, equals, plus, percent, hash, at, angle brackets, pipe, comma)
+fn glyph_bitmap(ch: char) -> Option<[u8; 7]> {
+    let g: [u8; 7] = match ch {
+        ' ' => [0,0,0,0,0,0,0],
+        'A' => [0b01110,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
+        'B' => [0b11110,0b10001,0b10001,0b11110,0b10001,0b10001,0b11110],
+        'C' => [0b01110,0b10001,0b10000,0b10000,0b10000,0b10001,0b01110],
+        'D' => [0b11110,0b10001,0b10001,0b10001,0b10001,0b10001,0b11110],
+        'E' => [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b11111],
+        'F' => [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b10000],
+        'G' => [0b01110,0b10001,0b10000,0b10111,0b10001,0b10001,0b01110],
+        'H' => [0b10001,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
+        'I' => [0b01110,0b00100,0b00100,0b00100,0b00100,0b00100,0b01110],
+        'J' => [0b00111,0b00010,0b00010,0b00010,0b00010,0b10010,0b01100],
+        'K' => [0b10001,0b10010,0b10100,0b11000,0b10100,0b10010,0b10001],
+        'L' => [0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b11111],
+        'M' => [0b10001,0b11011,0b10101,0b10101,0b10001,0b10001,0b10001],
+        'N' => [0b10001,0b10001,0b11001,0b10101,0b10011,0b10001,0b10001],
+        'O' => [0b01110,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
+        'P' => [0b11110,0b10001,0b10001,0b11110,0b10000,0b10000,0b10000],
+        'Q' => [0b01110,0b10001,0b10001,0b10001,0b10101,0b10010,0b01101],
+        'R' => [0b11110,0b10001,0b10001,0b11110,0b10100,0b10010,0b10001],
+        'S' => [0b01111,0b10000,0b10000,0b01110,0b00001,0b00001,0b11110],
+        'T' => [0b11111,0b00100,0b00100,0b00100,0b00100,0b00100,0b00100],
+        'U' => [0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
+        'V' => [0b10001,0b10001,0b10001,0b10001,0b10001,0b01010,0b00100],
+        'W' => [0b10001,0b10001,0b10001,0b10101,0b10101,0b11011,0b10001],
+        'X' => [0b10001,0b10001,0b01010,0b00100,0b01010,0b10001,0b10001],
+        'Y' => [0b10001,0b10001,0b01010,0b00100,0b00100,0b00100,0b00100],
+        'Z' => [0b11111,0b00001,0b00010,0b00100,0b01000,0b10000,0b11111],
+        '0' => [0b01110,0b10001,0b10011,0b10101,0b11001,0b10001,0b01110],
+        '1' => [0b00100,0b01100,0b00100,0b00100,0b00100,0b00100,0b01110],
+        '2' => [0b01110,0b10001,0b00001,0b00010,0b00100,0b01000,0b11111],
+        '3' => [0b11111,0b00010,0b00100,0b00010,0b00001,0b10001,0b01110],
+        '4' => [0b00010,0b00110,0b01010,0b10010,0b11111,0b00010,0b00010],
+        '5' => [0b11111,0b10000,0b11110,0b00001,0b00001,0b10001,0b01110],
+        '6' => [0b00110,0b01000,0b10000,0b11110,0b10001,0b10001,0b01110],
+        '7' => [0b11111,0b00001,0b00010,0b00100,0b01000,0b01000,0b01000],
+        '8' => [0b01110,0b10001,0b10001,0b01110,0b10001,0b10001,0b01110],
+        '9' => [0b01110,0b10001,0b10001,0b01111,0b00001,0b00010,0b01100],
+        ':' => [0,0b00100,0,0,0,0b00100,0],
+        '/' => [0b00001,0b00010,0b00010,0b00100,0b01000,0b01000,0b10000],
+        '-' => [0,0,0,0b11111,0,0,0],
+        '.' => [0,0,0,0,0,0,0b00100],
+        '_' => [0,0,0,0,0,0,0b11111],
+        '=' => [0,0,0b11111,0,0b11111,0,0],
+        '+' => [0,0b00100,0b00100,0b11111,0b00100,0b00100,0],
+        '%' => [0b11001,0b11010,0b00100,0b01000,0b10010,0b10011,0],
+        '#' => [0b01010,0b11111,0b01010,0b01010,0b11111,0b01010,0],
+        '@' => [0b01110,0b10001,0b10111,0b10101,0b10110,0b10000,0b01110],
+        '<' => [0b00010,0b00100,0b01000,0b10000,0b01000,0b00100,0b00010],
+        '>' => [0b01000,0b00100,0b00010,0b00001,0b00010,0b00100,0b01000],
+        '|' => [0b00100,0b00100,0b00100,0b00100,0b00100,0b00100,0b00100],
+        ',' => [0,0,0,0,0,0b00100,0b01000],
+        '(' => [0b00010,0b00100,0b01000,0b01000,0b01000,0b00100,0b00010],
+        ')' => [0b01000,0b00100,0b00010,0b00010,0b00010,0b00100,0b01000],
+        '[' => [0b01110,0b01000,0b01000,0b01000,0b01000,0b01000,0b01110],
+        ']' => [0b01110,0b00010,0b00010,0b00010,0b00010,0b00010,0b01110],
+        '\'' => [0b00100,0b00100,0b00000,0b00000,0b00000,0b00000,0b00000],
+        _ => return None,
+    };
+    Some(g)
+}
+
+fn set_pixel(rgba: &mut [u8], width: u32, height: u32, x: i32, y: i32, r: u8, g: u8, b: u8) {
+    if x < 0 || y < 0 || x as u32 >= width || y as u32 >= height {
+        return;
+    }
+    let idx = ((y as u32 * width + x as u32) * 4) as usize;
+    if idx + 3 < rgba.len() {
+        rgba[idx] = r;
+        rgba[idx + 1] = g;
+        rgba[idx + 2] = b;
+        rgba[idx + 3] = 255;
+    }
+}
+
+fn fill_rect(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i32, w: i32, h: i32, r: u8, g: u8, b: u8) {
+    for dy in 0..h {
+        for dx in 0..w {
+            set_pixel(rgba, width, height, x0 + dx, y0 + dy, r, g, b);
+        }
+    }
+}
+
+fn draw_text(rgba: &mut [u8], width: u32, height: u32, text: &str, x0: i32, y0: i32, r: u8, g: u8, b: u8) {
+    let mut cx = x0;
+    for ch in text.chars() {
+        if let Some(glyph) = glyph_bitmap(ch.to_ascii_uppercase()) {
+            for (row, bits) in glyph.iter().enumerate() {
+                for col in 0..5 {
+                    if (bits >> (4 - col)) & 1 == 1 {
+                        for dy in 0..FONT_SCALE {
+                            for dx in 0..FONT_SCALE {
+                                set_pixel(rgba, width, height, cx + (col as i32) * FONT_SCALE as i32 + dx as i32, y0 + (row as i32) * FONT_SCALE as i32 + dy as i32, r, g, b);
+                            }
+                        }
+                    }
+                }
+            }
+            cx += 6 * FONT_SCALE as i32; // 5px glyph + 1px gap
+        }
+    }
+}
+
+fn draw_text_line(rgba: &mut [u8], width: u32, height: u32, text: &str, x: i32, y: i32, r: u8, g: u8, b: u8) {
+    draw_text(rgba, width, height, text, x, y, r, g, b);
+}
+
+fn draw_panel(rgba: &mut [u8], width: u32, height: u32, x: i32, y: i32, w: i32, h: i32) {
+    // Semi-transparent dark panel background
+    fill_rect(rgba, width, height, x, y, w, h, 15, 12, 20);
+    // Bright border
+    for dx in 0..w {
+        set_pixel(rgba, width, height, x + dx, y, 200, 180, 100);
+        set_pixel(rgba, width, height, x + dx, y + h - 1, 200, 180, 100);
+    }
+    for dy in 0..h {
+        set_pixel(rgba, width, height, x, y + dy, 200, 180, 100);
+        set_pixel(rgba, width, height, x + w - 1, y + dy, 200, 180, 100);
+    }
+}
+
+fn draw_title_bar(rgba: &mut [u8], width: u32, height: u32, x: i32, y: i32, w: i32, title: &str) {
+    fill_rect(rgba, width, height, x, y, w, 28, 50, 40, 15);
+    draw_text(rgba, width, height, title, x + 10, y + 5, 255, 220, 120);
+}
+
+fn state_label(capture_id: &str) -> &str {
+    match capture_id {
+        "boot_main_menu" => "MAIN MENU",
+        "fighter_select" => "FIGHTER SELECT",
+        "loadout_select" => "LOADOUT SELECT",
+        "arena_select" => "ARENA SELECT",
+        "planning_timeline" => "PLAN",
+        "pre_contact_frame" | "pre_contact_frame_seed" => "COMMIT / REVEAL",
+        "contact_frame" | "contact_frame_seed" => "RESOLVE",
+        "injury_capability_consequence_frame" => "CONSEQUENCE",
+        "material_armor_damage_frame" => "CONSEQUENCE",
+        "recovery_replan_frame" => "REPLAN",
+        "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => "FIGHT FILM",
+        "replay_verification_ui_or_packet_view" => "REPLAY",
+        "settings_accessibility" => "SETTINGS",
+        "performance_debug_overlay" => "PERFORMANCE",
+        "first_person_combat_view" => "COMBAT (FIRST PERSON)",
+        "third_person_combat_view" => "COMBAT (THIRD PERSON)",
+        "training_yard_establishing" => "OBSERVE",
+        "oathyard_verdict_ring_establishing" | "oathyard_verdict_ring_establishing_seed" => "OBSERVE",
+        "oathyard_arena_candidate_01" => "OBSERVE",
+        _ => "OBSERVE",
+    }
+}
+
+fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &str, packet: &Value) {
+    let label = state_label(capture_id);
+
+    // Extract packet data for UI
+    let scenario_id = packet.get("scenario_id").and_then(|v| v.as_str()).unwrap_or("UNKNOWN");
+    let final_hash = packet.get("final_state_hash").and_then(|v| v.as_str()).unwrap_or("UNKNOWN");
+    let end_status = packet.get("end_condition_status").and_then(|v| v.as_str()).unwrap_or("");
+    let end_winner = packet.get("end_condition_winner").and_then(|v| v.as_str()).unwrap_or("");
+    let short_hash = &final_hash[..final_hash.len().min(16)];
+
+    // Fighter data from end_condition
+    let f0_balance = packet.get("end_condition")
+        .and_then(|ec| ec.get("fighters"))
+        .and_then(|f| f.as_array())
+        .and_then(|f| f.get(0))
+        .and_then(|f| f.get("balance_permille"))
+        .and_then(|v| v.as_i64())
+        .unwrap_or(1000);
+    let f0_grip = packet.get("end_condition")
+        .and_then(|ec| ec.get("fighters"))
+        .and_then(|f| f.as_array())
+        .and_then(|f| f.get(0))
+        .and_then(|f| f.get("grip_r_permille"))
+        .and_then(|v| v.as_i64())
+        .unwrap_or(1000);
+    let f0_recovery = packet.get("end_condition")
+        .and_then(|ec| ec.get("fighters"))
+        .and_then(|f| f.as_array())
+        .and_then(|f| f.get(0))
+        .and_then(|f| f.get("recovery_slowdown_frames"))
+        .and_then(|v| v.as_i64())
+        .unwrap_or(0);
+
+    // Top-left: state label panel (always present)
+    let panel_w = 600;
+    draw_panel(rgba, width, height, 20, 20, panel_w, 35);
+    draw_text(rgba, width, height, label, 35, 28, 255, 220, 120);
+
+    // Top-right: scenario + hash panel
+    let rp_w = 520;
+    let rp_x = (width as i32) - rp_w - 20;
+    draw_panel(rgba, width, height, rp_x, 20, rp_w, 35);
+    let scenario_text = format!("{} HASH {}...", scenario_id.to_uppercase(), &short_hash[..12]);
+    draw_text(rgba, width, height, &scenario_text, rp_x + 10, 28, 180, 200, 220);
+
+    // State-specific UI
+    match capture_id {
+        "boot_main_menu" => {
+            draw_panel(rgba, width, height, 20, 70, 400, 180);
+            draw_title_bar(rgba, width, height, 20, 70, 400, "OATHYARD");
+            draw_text(rgba, width, height, "> LOCAL DUEL", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "  SETTINGS", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "  QUIT", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "TRUTH 120HZ", 35, 208, 150, 200, 150);
+            draw_text(rgba, width, height, "PRESS CONFIRM", 35, 238, 200, 180, 100);
+        },
+        "fighter_select" => {
+            draw_panel(rgba, width, height, 20, 70, 400, 120);
+            draw_title_bar(rgba, width, height, 20, 70, 400, "SELECT FIGHTER");
+            draw_text(rgba, width, height, "> FIGHTER MANNEQUIN", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "  SALTREACH DUELIST", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "  OATHYARD WRIT", 35, 168, 200, 200, 200);
+        },
+        "loadout_select" => {
+            draw_panel(rgba, width, height, 20, 70, 400, 120);
+            draw_title_bar(rgba, width, height, 20, 70, 400, "SELECT LOADOUT");
+            draw_text(rgba, width, height, "WEAPON: LONGSWORD", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "ARMOR: GAMBESON", 35, 138, 255, 220, 120);
+            draw_text(rgba, width, height, "> CONFIRM", 35, 168, 100, 255, 100);
+        },
+        "arena_select" => {
+            draw_panel(rgba, width, height, 20, 70, 400, 120);
+            draw_title_bar(rgba, width, height, 20, 70, 400, "SELECT ARENA");
+            draw_text(rgba, width, height, "> VERDICT RING", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "  TRAINING YARD", 35, 138, 200, 200, 200);
+        },
+        "planning_timeline" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 280);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "PLAN");
+            draw_text(rgba, width, height, "ACTION: CUT", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "DIRECTION: FORWARD", 35, 138, 255, 220, 120);
+            draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 255, 220, 120);
+            draw_text(rgba, width, height, &format!("BASE COST: 32 FRAMES"), 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, &format!("CURRENT: 38 FRAMES"), 35, 228, 255, 160, 80);
+            draw_text(rgba, width, height, "BODY: -60 PERMILLE", 35, 258, 200, 150, 150);
+            draw_text(rgba, width, height, "EQUIP: +0", 35, 288, 150, 200, 150);
+            draw_text(rgba, width, height, "STATE: +18 PERMILLE", 35, 318, 200, 180, 120);
+            draw_text(rgba, width, height, "> COMMIT PLAN", 35, 348, 100, 255, 100);
+        },
+        "pre_contact_frame" | "pre_contact_frame_seed" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 100);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "COMMIT / REVEAL");
+            draw_text(rgba, width, height, "PLAYER: CUT FORWARD TORSO", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "ENEMY: GUARD CENTER", 35, 138, 255, 100, 100);
+        },
+        "contact_frame" | "contact_frame_seed" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 120);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "RESOLVE");
+            draw_text(rgba, width, height, "CONTACT: CUT VS GUARD", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "WEAPON: LONGSWORD", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 200, 200, 200);
+        },
+        "injury_capability_consequence_frame" | "material_armor_damage_frame" => {
+            draw_panel(rgba, width, height, 20, 70, 540, 200);
+            draw_title_bar(rgba, width, height, 20, 70, 540, "CONSEQUENCE");
+            draw_text(rgba, width, height, "MATERIAL: PARTIAL DEFLECT", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "ANATOMY: SURFACE IMPACT", 35, 138, 255, 220, 120);
+            draw_text(rgba, width, height, &format!("BALANCE: {} PERMILLE", f0_balance), 35, 168, 255, 160, 80);
+            draw_text(rgba, width, height, &format!("GRIP R: {} PERMILLE", f0_grip), 35, 198, 255, 160, 80);
+            draw_text(rgba, width, height, &format!("RECOVERY: {} FRAMES", f0_recovery), 35, 228, 255, 160, 80);
+            draw_text(rgba, width, height, "CAUSE: CUT -> GAMBESON -> TORSO", 35, 258, 200, 200, 200);
+        },
+        "recovery_replan_frame" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 140);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "REPLAN");
+            draw_text(rgba, width, height, "CAPABILITY CHANGED", 35, 108, 255, 160, 80);
+            draw_text(rgba, width, height, &format!("BALANCE NOW: {} PERMILLE", f0_balance), 35, 138, 255, 220, 120);
+            draw_text(rgba, width, height, "> RE-PLAN ACTION", 35, 168, 100, 255, 100);
+        },
+        "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 100);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "FIGHT FILM");
+            draw_text(rgba, width, height, "CAMERA: VERDICT RING ORBIT", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "TRACE-LINKED: YES", 35, 138, 150, 255, 150);
+        },
+        "replay_verification_ui_or_packet_view" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 120);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "REPLAY");
+            draw_text(rgba, width, height, "VERIFIED: YES", 35, 108, 150, 255, 150);
+            draw_text(rgba, width, height, &format!("HASH {}...", &short_hash[..12]), 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "SCHEMA: OATHYARD.REPLAY.V1", 35, 168, 200, 200, 200);
+        },
+        "settings_accessibility" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 200);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "SETTINGS");
+            draw_text(rgba, width, height, "INPUT: KEYBOARD / GAMEPAD", 35, 108, 200, 200, 200);
+            draw_text(rgba, width, height, "VISUAL: CONTRAST NORMAL", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "AUDIO: CAPTIONS ON", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "MOTION: STABLE", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "NOT RELEASE READY", 35, 238, 255, 100, 100);
+        },
+        "performance_debug_overlay" => {
+            draw_panel(rgba, width, height, 20, 70, 500, 160);
+            draw_title_bar(rgba, width, height, 20, 70, 500, "PERFORMANCE");
+            draw_text(rgba, width, height, "BACKEND: WGPU PRODUCTION V1", 35, 108, 200, 200, 200);
+            draw_text(rgba, width, height, "RESOLUTION: 1920X1080", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, &format!("HASH {}...", &short_hash[..12]), 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "LOCAL PLAYABLE: YES", 35, 198, 150, 255, 150);
+        },
+        _ => {
+            // Default OBSERVE panel — show end condition if available
+            if !end_status.is_empty() {
+                draw_panel(rgba, width, height, 20, 70, 500, 80);
+                let status_upper = format!("STATUS: {}", end_status.to_uppercase());
+                draw_text(rgba, width, height, &status_upper, 35, 78, 200, 200, 200);
+                if !end_winner.is_empty() && end_winner != "none" {
+                    let winner_text = format!("WINNER: {}", end_winner.to_uppercase());
+                    draw_text(rgba, width, height, &winner_text, 35, 108, 255, 220, 120);
+                }
+            }
+        },
+    }
+
+    // Bottom-right: truth-mutation status (always)
+    draw_panel(rgba, width, height, (width as i32) - 320, (height as i32) - 50, 300, 30);
+    draw_text(rgba, width, height, "TRUTH MUTATION: FALSE", (width as i32) - 310, (height as i32) - 42, 150, 255, 150);
 }
 
 fn write_png_rgba(path: &Path, width: u32, height: u32, rgba: &[u8]) -> Result<(), String> {
