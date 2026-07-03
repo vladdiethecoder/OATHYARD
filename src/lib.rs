@@ -6930,16 +6930,65 @@ pub fn native_combat_render(
         .unwrap_or_else(|_| {
             std::path::PathBuf::from("assets/presentation_runtime/training_yard.mesh.json")
         });
+    let longsword_path = std::env::current_dir()
+        .map(|p| p.join("assets/presentation_runtime/longsword.mesh.json"))
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("assets/presentation_runtime/longsword.mesh.json")
+        });
+    let gambeson_path = std::env::current_dir()
+        .map(|p| p.join("assets/presentation_runtime/gambeson.mesh.json"))
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("assets/presentation_runtime/gambeson.mesh.json")
+        });
+    let texture_root = std::env::current_dir()
+        .map(|p| p.join("assets/model_candidates/t_73291be5/textures"))
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("assets/model_candidates/t_73291be5/textures")
+        });
     let mesh_manifest_dir = out_dir.join("mesh_manifests");
     fs::create_dir_all(&mesh_manifest_dir).ok();
     let mesh_manifest_path = mesh_manifest_dir.join("native_combat_mesh_manifest.json");
     let skinned_str = skinned_mesh_path.to_string_lossy().replace('\\', "/");
     let training_str = training_yard_path.to_string_lossy().replace('\\', "/");
-    // Build mesh manifest with two rigged fighters (player/opponent) + arena
+    let longsword_str = longsword_path.to_string_lossy().replace('\\', "/");
+    let gambeson_str = gambeson_path.to_string_lossy().replace('\\', "/");
+    let tex = |name: &str, suffix: &str| -> String {
+        texture_root
+            .join(format!("{name}_{suffix}.png"))
+            .to_string_lossy()
+            .replace('\\', "/")
+    };
+    let saltreach_base = tex("saltreach_duelist", "base");
+    let saltreach_normal = tex("saltreach_duelist", "normal");
+    let saltreach_orm = tex("saltreach_duelist", "orm");
+    let longsword_base = tex("longsword", "base");
+    let longsword_normal = tex("longsword", "normal");
+    let longsword_orm = tex("longsword", "orm");
+    let gambeson_base = tex("gambeson", "base");
+    let gambeson_normal = tex("gambeson", "normal");
+    let gambeson_orm = tex("gambeson", "orm");
+    let training_base = tex("training_yard", "base");
+    let training_normal = tex("training_yard", "normal");
+    let training_orm = tex("training_yard", "orm");
+    // Build mesh manifest with two rigged fighters + visible armor/weapon loadouts + arena.
     let mesh_manifest = format!(
-        r#"{{"schema":"oathyard.wgpu_runtime_mesh_manifest.v1","source":"native_combat_render Unit-071 skinned mesh manifest","capture_id":"native_combat_render","candidate_renderer_only":false,"production_seed_render":true,"production_ready":false,"truth_mutation":false,"meshes":[{{"mesh_asset_id":"player_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[-0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"training_yard","mesh_asset_class":"arena","mesh_source":"{training}","translation":[0.0,-0.18,0.0],"scale":0.82,"yaw_radians":0.0,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}}]}}"#,
+        r#"{{"schema":"oathyard.wgpu_runtime_mesh_manifest.v1","source":"native_combat_render Unit-081 high fidelity gameplay mesh manifest","capture_id":"native_combat_render","candidate_renderer_only":false,"material_separation_classes":["fighter_body","armor_clothing","weapon_metal","arena_stone_ground"],"presentation_material_fallback":"source-approved runtime texture paths when source mesh lacks embedded material_validation","production_seed_render":true,"production_ready":false,"truth_mutation":false,"meshes":[{{"mesh_asset_id":"player_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[-0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"base_color_texture_path":"{saltreach_base}","normal_texture_path":"{saltreach_normal}","orm_texture_path":"{saltreach_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"base_color_texture_path":"{saltreach_base}","normal_texture_path":"{saltreach_normal}","orm_texture_path":"{saltreach_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"player_gambeson","mesh_asset_class":"armor","mesh_source":"{gambeson}","translation":[-0.72,0.28,0.02],"scale":0.22,"yaw_radians":0.10,"base_color_texture_path":"{gambeson_base}","normal_texture_path":"{gambeson_normal}","orm_texture_path":"{gambeson_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_gambeson","mesh_asset_class":"armor","mesh_source":"{gambeson}","translation":[0.72,0.28,0.02],"scale":0.22,"yaw_radians":0.10,"base_color_texture_path":"{gambeson_base}","normal_texture_path":"{gambeson_normal}","orm_texture_path":"{gambeson_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"player_longsword","mesh_asset_class":"weapon","mesh_source":"{longsword}","translation":[-1.02,0.42,-0.04],"scale":0.34,"yaw_radians":1.35,"base_color_texture_path":"{longsword_base}","normal_texture_path":"{longsword_normal}","orm_texture_path":"{longsword_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_longsword","mesh_asset_class":"weapon","mesh_source":"{longsword}","translation":[1.02,0.42,-0.04],"scale":0.34,"yaw_radians":-1.35,"base_color_texture_path":"{longsword_base}","normal_texture_path":"{longsword_normal}","orm_texture_path":"{longsword_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"training_yard","mesh_asset_class":"arena","mesh_source":"{training}","translation":[0.0,-0.30,0.35],"scale":0.50,"yaw_radians":0.0,"base_color_texture_path":"{training_base}","normal_texture_path":"{training_normal}","orm_texture_path":"{training_orm}","transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}}]}}"#,
         skinned = skinned_str,
         training = training_str,
+        longsword = longsword_str,
+        gambeson = gambeson_str,
+        saltreach_base = saltreach_base,
+        saltreach_normal = saltreach_normal,
+        saltreach_orm = saltreach_orm,
+        longsword_base = longsword_base,
+        longsword_normal = longsword_normal,
+        longsword_orm = longsword_orm,
+        gambeson_base = gambeson_base,
+        gambeson_normal = gambeson_normal,
+        gambeson_orm = gambeson_orm,
+        training_base = training_base,
+        training_normal = training_normal,
+        training_orm = training_orm,
     );
     fs::write(&mesh_manifest_path, &mesh_manifest)?;
     // Call production renderer for native capture
@@ -6957,7 +7006,7 @@ pub fn native_combat_render(
         .arg("--camera-mode")
         .arg("oathyard_verdict_ring_establishing")
         .arg("--candidate-assets")
-        .arg("saltreach_duelist,training_yard")
+        .arg("saltreach_duelist,longsword,gambeson,training_yard")
         .output();
     let renderer_succeeded = match renderer_result {
         Ok(_) => {

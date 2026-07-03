@@ -32,8 +32,29 @@ fn acquire_asset_generation_test_lock() -> AssetGenerationTestLock {
     }
     for _ in 0..2400 {
         match fs::create_dir(&path) {
-            Ok(()) => return AssetGenerationTestLock { path },
+            Ok(()) => {
+                fs::write(path.join("owner.pid"), std::process::id().to_string())
+                    .expect("write asset-generation test lock owner");
+                return AssetGenerationTestLock { path };
+            }
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                let owner_path = path.join("owner.pid");
+                let owner_alive = fs::read_to_string(&owner_path)
+                    .ok()
+                    .and_then(|text| text.trim().parse::<u32>().ok())
+                    .map(|pid| Path::new("/proc").join(pid.to_string()).exists())
+                    .unwrap_or(false);
+                let ownerless_stale = !owner_path.exists()
+                    && fs::metadata(&path)
+                        .and_then(|metadata| metadata.modified())
+                        .ok()
+                        .and_then(|modified| modified.elapsed().ok())
+                        .map(|age| age > std::time::Duration::from_secs(30))
+                        .unwrap_or(false);
+                if ownerless_stale || (owner_path.exists() && !owner_alive) {
+                    let _ = fs::remove_dir_all(&path);
+                    continue;
+                }
                 std::thread::sleep(std::time::Duration::from_millis(250));
             }
             Err(error) => panic!("create asset-generation test lock: {error}"),
@@ -3084,7 +3105,9 @@ fn unit078_combat_resolution_bridge_truth_isolated() {
 
     // Resolution invoked on timeline advance
     assert!(source.contains("resolve_timeline_combat"));
-    assert!(source.contains("app.combat_contacts = resolve_timeline_combat"));
+    assert!(source.contains("let (contacts, result) = resolve_timeline_combat"));
+    assert!(source.contains("app.combat_contacts = contacts"));
+    assert!(source.contains("app.match_result = Some(result)"));
 
     // Manifest includes combat data
     assert!(source.contains("\"combat_contacts\": app.combat_contacts"));

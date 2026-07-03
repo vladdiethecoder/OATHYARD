@@ -178,12 +178,12 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             tint_r: 0.82, tint_g: 0.62, tint_b: 0.40, tint_a: 1.0,
         },
         id if id == "player_gambeson" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.55, tint_g: 0.38, tint_b: 0.22, tint_a: 1.0,
+            tint_r: 0.72, tint_g: 0.46, tint_b: 0.24, tint_a: 1.0,
         },
         id if id == "player_longsword" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 0.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.82, tint_g: 0.78, tint_b: 0.72, tint_a: 1.0,
         },
@@ -194,12 +194,12 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // Unit-064: brighter crimson
         },
         id if id == "opponent_gambeson" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.32, tint_g: 0.18, tint_b: 0.15, tint_a: 1.0,
+            tint_r: 0.48, tint_g: 0.22, tint_b: 0.18, tint_a: 1.0,
         },
         id if id == "opponent_longsword" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 0.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.68, tint_g: 0.55, tint_b: 0.50, tint_a: 1.0,
         },
@@ -214,23 +214,23 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             tint_r: 0.78, tint_g: 0.75, tint_b: 0.72, tint_a: 1.0,
         },
         id if id == "gambeson" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.48, tint_g: 0.35, tint_b: 0.22, tint_a: 1.0,
+            tint_r: 0.66, tint_g: 0.42, tint_b: 0.24, tint_a: 1.0,
         },
         id if id == "witness_stone" => MeshMaterial {
-            material_type: -1.0,
+            material_type: 3.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.42, tint_g: 0.38, tint_b: 0.35, tint_a: 1.0,
         },
         // Unit-066: Rigged saltreach_duelist — has real PBR materials/textures
-        id if id == "player_saltreach" => MeshMaterial {
-            material_type: -1.0,
+        id if id == "player_saltreach" || id == "player_saltreach_duelist" => MeshMaterial {
+            material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.82, tint_g: 0.62, tint_b: 0.40, tint_a: 1.0,  // player gold
         },
-        id if id == "opponent_saltreach" => MeshMaterial {
-            material_type: -1.0,
+        id if id == "opponent_saltreach" || id == "opponent_saltreach_duelist" => MeshMaterial {
+            material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // opponent crimson
         },
@@ -243,7 +243,7 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
         id if id.contains("gambeson") => MeshMaterial {
             material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.62, tint_g: 0.38, tint_b: 0.22, tint_a: 1.0,
+            tint_r: 0.70, tint_g: 0.44, tint_b: 0.24, tint_a: 1.0,
         },
         id if id.contains("fighter") => MeshMaterial {
             material_type: 4.0,
@@ -254,6 +254,11 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             material_type: 3.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.48, tint_g: 0.42, tint_b: 0.38, tint_a: 1.0,
+        },
+        id if id.contains("training_yard") => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.72, tint_g: 0.68, tint_b: 0.58, tint_a: 1.0,
         },
         _ => MeshMaterial { 
             material_type: 0.0,
@@ -1353,6 +1358,39 @@ fn load_runtime_material(
     mesh_path: &Path,
     data: &Value,
 ) -> Result<RuntimeMaterial, String> {
+    if let (Some(base_path), Some(normal_path), Some(orm_path)) = (
+        spec.base_color_texture_path.clone(),
+        spec.normal_texture_path.clone(),
+        spec.orm_texture_path.clone(),
+    ) {
+        if base_path.exists() && normal_path.exists() && orm_path.exists() {
+            let base_sha = sha256_file(&base_path).unwrap_or_default();
+            let normal_sha = sha256_file(&normal_path).unwrap_or_default();
+            let orm_sha = sha256_file(&orm_path).unwrap_or_default();
+            let base_img = load_png_rgba(&base_path).ok();
+            let normal_img = load_png_rgba(&normal_path).ok();
+            let orm_img = load_png_rgba(&orm_path).ok();
+            return Ok(RuntimeMaterial {
+                material_texture_binding: true,
+                base_color_texture_path: base_path,
+                normal_texture_path: normal_path,
+                orm_texture_path: orm_path,
+                base_color_texture_sha256: base_sha.clone(),
+                normal_texture_sha256: normal_sha.clone(),
+                orm_texture_sha256: orm_sha.clone(),
+                base_color_texture_dimensions: base_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([0, 0]),
+                normal_texture_dimensions: normal_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([0, 0]),
+                orm_texture_dimensions: orm_img.as_ref().map(|i| [i.width, i.height]).unwrap_or([0, 0]),
+                material_count: 1,
+                texture_hashes: json!({
+                    "source": "explicit_runtime_mesh_manifest_paths",
+                    "base_color": base_sha,
+                    "normal": normal_sha,
+                    "orm": orm_sha,
+                }),
+            });
+        }
+    }
     let material_validation = data
         .get("material_validation");
     let mat_val = match material_validation {

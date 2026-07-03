@@ -82,23 +82,54 @@ manifest = Path(sys.argv[1])
 root = Path(sys.argv[2])
 skinned = root / "assets/runtime/saltreach_duelist_skinned.mesh.json"
 training = root / "assets/presentation_runtime/training_yard.mesh.json"
+longsword = root / "assets/presentation_runtime/longsword.mesh.json"
+gambeson = root / "assets/presentation_runtime/gambeson.mesh.json"
+tex = root / "assets/model_candidates/t_73291be5/textures"
+def tex_paths(name):
+    return {
+        "base_color_texture_path": str(tex / f"{name}_base.png"),
+        "normal_texture_path": str(tex / f"{name}_normal.png"),
+        "orm_texture_path": str(tex / f"{name}_orm.png"),
+    }
+longsword_tex = tex_paths("longsword")
+gambeson_tex = tex_paths("gambeson")
+saltreach_tex = tex_paths("saltreach_duelist")
+training_tex = tex_paths("training_yard")
 meshes = [
     {"mesh_asset_id":"player_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":str(skinned),
      "translation":[-0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,
      "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
-     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False},
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **saltreach_tex},
     {"mesh_asset_id":"opponent_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":str(skinned),
      "translation":[0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,
      "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
-     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False},
-    {"mesh_asset_id":"training_yard","mesh_asset_class":"arena","mesh_source":str(training),
-     "translation":[0.0,-0.18,0.0],"scale":0.82,"yaw_radians":0.0,
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **saltreach_tex},
+    {"mesh_asset_id":"player_gambeson","mesh_asset_class":"armor","mesh_source":str(gambeson),
+     "translation":[-0.72,0.28,0.02],"scale":0.22,"yaw_radians":0.10,
      "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
-     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False},
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **gambeson_tex},
+    {"mesh_asset_id":"opponent_gambeson","mesh_asset_class":"armor","mesh_source":str(gambeson),
+     "translation":[0.72,0.28,0.02],"scale":0.22,"yaw_radians":0.10,
+     "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **gambeson_tex},
+    {"mesh_asset_id":"player_longsword","mesh_asset_class":"weapon","mesh_source":str(longsword),
+     "translation":[-1.02,0.42,-0.04],"scale":0.34,"yaw_radians":1.35,
+     "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **longsword_tex},
+    {"mesh_asset_id":"opponent_longsword","mesh_asset_class":"weapon","mesh_source":str(longsword),
+     "translation":[1.02,0.42,-0.04],"scale":0.34,"yaw_radians":-1.35,
+     "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **longsword_tex},
+    {"mesh_asset_id":"training_yard","mesh_asset_class":"arena","mesh_source":str(training),
+     "translation":[0.0,-0.30,0.35],"scale":0.50,"yaw_radians":0.0,
+     "transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer",
+     "candidate_status":"source_approved_production_seed","production_ready":False,"truth_mutation":False, **training_tex},
 ]
 payload = {"schema":"oathyard.wgpu_runtime_mesh_manifest.v1",
  "source":"run_native_windowed_game.sh Unit-074",
  "capture_id":"windowed_smoke","candidate_renderer_only":False,
+ "material_separation_classes":["fighter_body","armor_clothing","weapon_metal","arena_stone_ground"],
+ "presentation_material_fallback":"source-approved runtime texture paths when source mesh lacks embedded material_validation",
  "production_seed_render":True,"production_ready":False,"truth_mutation":False,
  "meshes":meshes}
 manifest.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -138,7 +169,7 @@ RENDERER_ARGS=(
   --packet "$PACKET"
   --out "$WINDOWED_OUT"
   --mesh-manifest-json "$MESH_MANIFEST"
-  --candidate-assets "saltreach_duelist,training_yard"
+  --candidate-assets "saltreach_duelist,longsword,gambeson,training_yard"
   --smoke-frames "$SMOKE_FRAMES"
 )
 
