@@ -3064,3 +3064,37 @@ fn unit077_dual_timeline_reveal_truth_isolated() {
     assert!(source.contains("public_demo_ready\": false"));
     assert!(source.contains("release_candidate_ready\": false"));
 }
+
+#[test]
+fn unit078_combat_resolution_bridge_truth_isolated() {
+    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
+        .expect("renderer source");
+
+    // Combat resolution structures
+    assert!(source.contains("struct ResolvedContact"));
+    assert!(source.contains("fn resolve_timeline_combat"));
+    assert!(source.contains("combat_contacts"));
+
+    // Resolution logic cases
+    assert!(source.contains("guard\", \"guard\") => (\"none\""));
+    assert!(source.contains("cut\", \"cut\") => (\"simultaneous\""));
+    assert!(source.contains("thrust\", \"thrust\") => (\"double_thrust\""));
+    assert!(source.contains("recover\", _) => (\"recovery_open\""));
+    assert!(source.contains("step\", _) | (_, \"step\") => (\"positioning\""));
+
+    // Resolution invoked on timeline advance
+    assert!(source.contains("resolve_timeline_combat"));
+    assert!(source.contains("app.combat_contacts = resolve_timeline_combat"));
+
+    // Manifest includes combat data
+    assert!(source.contains("\"combat_contacts\": app.combat_contacts"));
+    assert!(source.contains("\"combat_contact_count\": app.combat_contacts.len()"));
+    assert!(source.contains("\"contact_type\": c.contact_type"));
+    assert!(source.contains("\"injury\": c.injury"));
+
+    // Truth isolation
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}

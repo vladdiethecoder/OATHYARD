@@ -2985,6 +2985,7 @@ struct WindowedApp {
     opponent_timeline_slots: Vec<String>,
     timeline_cursor: usize,
     timeline_slot_count: usize,
+    combat_contacts: Vec<ResolvedContact>,
     event_log: Vec<InteractiveEvent>,
     camera_buffer: wgpu::Buffer,
     packet_json: Value,
@@ -3223,6 +3224,54 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
 fn opponent_policy_timeline(slot_count: usize) -> Vec<String> {
     let actions = ["guard", "cut", "thrust"];
     (0..slot_count).map(|i| actions[i % actions.len()].to_string()).collect()
+}
+
+/// Unit-078: Simple deterministic combat resolution from timeline plans.
+/// Compares player and opponent actions slot-by-slot to determine contacts
+/// and injury outcomes. Presentation-only — does not mutate gameplay truth.
+#[derive(Clone, Debug)]
+struct ResolvedContact {
+    slot: usize,
+    player_action: String,
+    opponent_action: String,
+    contact_type: String,
+    injury: String,
+    outcome: String,
+}
+
+fn resolve_timeline_combat(
+    player_slots: &[String],
+    opponent_slots: &[String],
+) -> Vec<ResolvedContact> {
+    let len = player_slots.len().min(opponent_slots.len());
+    let mut contacts = Vec::new();
+    for i in 0..len {
+        let pa = &player_slots[i];
+        let oa = &opponent_slots[i];
+        let (ct, inj, out) = match (pa.as_str(), oa.as_str()) {
+            ("guard", "guard") => ("none", "none", "neutral — both guard"),
+            ("guard", "cut") | ("guard", "thrust") => ("blocked", "minor_stamina", "player blocked opponent's strike"),
+            ("cut", "guard") | ("thrust", "guard") => ("strike_blocked", "none", "opponent blocked player's strike"),
+            ("cut", "cut") => ("simultaneous", "blade_contact_both", "simultaneous cut — both exposed"),
+            ("cut", "thrust") => ("thrust_vs_cut", "thrust_penetrates", "opponent thrust slips past player's cut"),
+            ("thrust", "cut") => ("cut_vs_thrust", "cut_lands_first", "player cut lands before opponent thrust extends"),
+            ("thrust", "thrust") => ("double_thrust", "mutual_impalement", "both thrust — mutual contact"),
+            ("recover", _) => ("recovery_open", "player_exposed", "player recovering — open to next strike"),
+            (_, "recover") => ("opponent_recovery", "opponent_exposed", "opponent recovering — open to next strike"),
+            ("step", _) | (_, "step") => ("positioning", "none", "footwork — no contact"),
+            ("pivot", _) | (_, "pivot") => ("pivot", "none", "angle change — no contact"),
+            _ => ("unknown", "none", "unresolved"),
+        };
+        contacts.push(ResolvedContact {
+            slot: i,
+            player_action: pa.clone(),
+            opponent_action: oa.clone(),
+            contact_type: ct.to_string(),
+            injury: inj.to_string(),
+            outcome: out.to_string(),
+        });
+    }
+    contacts
 }
 
 /// Unit-074: Scripted input for deterministic interactive windowed smoke
@@ -3552,6 +3601,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             opponent_timeline_slots: opponent_policy_timeline(10),
             timeline_cursor: 0,
             timeline_slot_count: 10,
+            combat_contacts: Vec::new(),
             event_log: Vec::new(),
             camera_buffer,
             packet_json: self.packet_json.clone(),
@@ -3624,6 +3674,13 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             logical = "advance".to_string();
                             if app.interactive_state != InteractiveState::Quit {
                                 let next = app.interactive_state.next();
+                                // Unit-078: Resolve combat when transitioning out of TIMELINE
+                                if app.interactive_state == InteractiveState::Timeline {
+                                    app.combat_contacts = resolve_timeline_combat(
+                                        &app.timeline_slots,
+                                        &app.opponent_timeline_slots,
+                                    );
+                                }
                                 app.interactive_state = next;
                                 let next_str = next.as_str().to_string();
                                 if !app.states_visited.contains(&next_str) {
@@ -3887,6 +3944,13 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
 
                     match input.action.as_str() {
                         "advance" => {
+                            // Unit-078: Resolve combat when advancing out of TIMELINE
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.combat_contacts = resolve_timeline_combat(
+                                    &app.timeline_slots,
+                                    &app.opponent_timeline_slots,
+                                );
+                            }
                             let next = app.interactive_state.next();
                             app.interactive_state = next;
                             let next_str = next.as_str().to_string();
@@ -4102,6 +4166,15 @@ fn write_window_manifest(app: &WindowedApp) {
         "timeline_slots": app.timeline_slots,
         "opponent_timeline_slots": app.opponent_timeline_slots,
         "timeline_slot_count": app.timeline_slot_count,
+        "combat_contacts": app.combat_contacts.iter().map(|c| serde_json::json!({
+            "slot": c.slot,
+            "player_action": c.player_action,
+            "opponent_action": c.opponent_action,
+            "contact_type": c.contact_type,
+            "injury": c.injury,
+            "outcome": c.outcome,
+        })).collect::<Vec<_>>(),
+        "combat_contact_count": app.combat_contacts.len(),
         "controls_map": manifest.get("controls_map").cloned().unwrap_or(Value::Null),
         "event_log_path": "windowed_interactive_event_log.jsonl",
         "scenario_id": app.packet_json.get("scenario_id").and_then(Value::as_str).unwrap_or("unknown"),
