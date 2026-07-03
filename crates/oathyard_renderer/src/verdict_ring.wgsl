@@ -51,6 +51,7 @@ struct MeshVertexIn {
     @location(0) position: vec3<f32>,
     @location(1) color: vec3<f32>,
     @location(2) material_uv: vec2<f32>,
+    @location(3) normal: vec3<f32>,
 }
 
 struct MeshVertexOut {
@@ -58,6 +59,7 @@ struct MeshVertexOut {
     @location(0) world_pos: vec3<f32>,
     @location(1) color: vec3<f32>,
     @location(2) shade: f32,
+    @location(3) normal: vec3<f32>,
 }
 
 @group(1) @binding(0)
@@ -234,6 +236,14 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
     var roughness = 0.5;
     var metallic = 0.0;
 
+    // Unit-062: Clean seed mesh path — bypass all procedural patterns.
+    // Seed meshes from Meshy-6 are geometry-only (no UVs, no normals, no materials).
+    // Use per-asset tint with subtle world-space variation only.
+    if (material_type < -0.5) {
+        let subtle = (noise2(fract(vec2<f32>(world_pos.x * 0.5 + world_pos.z * 0.5, world_pos.y * 0.5))) - 0.5) * 0.06;
+        return tint * (0.92 + subtle);
+    }
+
     if (material_type < 0.5) {
         // === WEAPON: longsword with 5 sub-regions ===
         // Z axis = blade length, Y axis = blade thickness
@@ -244,9 +254,9 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
         if (blade_z > 0.08) {
             // Blade steel: brushed forging pattern + bright edge bevel
             let blade_uv = fract(vec2<f32>(world_pos.x * 14.0, blade_z * 8.0));
-            let forging = noise2(blade_uv * 10.0) * 0.12 - 0.06;
+            let forging = noise2(blade_uv * 10.0) * 0.03 - 0.015;
             base = vec3<f32>(0.78, 0.76, 0.82) + vec3<f32>(forging * 0.3, forging * 0.3, forging * 0.4);
-            roughness = 0.25 + noise2(blade_uv * 6.0) * 0.08;
+            roughness = 0.25 + noise2(blade_uv * 6.0) * 0.02;
             metallic = 0.92;
 
             // Edge bevel: brighter polished near thin edges (|y| close to max)
@@ -264,14 +274,14 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
             // Grip: dark leather wrap with crosshatch stitch
             let grip_uv = fract(vec2<f32>(world_pos.x * 16.0, blade_z * 24.0));
             let cross = max(abs(sin(grip_uv.x * 20.0)), abs(sin(grip_uv.y * 20.0)));
-            let grain = noise2(grip_uv * 3.0) * 0.3;
+            let grain = noise2(grip_uv * 3.0) * 0.08;
             base = vec3<f32>(0.29, 0.18, 0.10) * (0.65 + grain + cross * 0.35);
             roughness = 0.80 + cross * 0.12;
             metallic = 0.02;
         } else {
             // Pommel: bronze with patina
             let pommel_uv = fract(vec2<f32>(world_pos.x * 10.0, blade_z * 30.0));
-            let patina = noise2(pommel_uv * 4.0) * 0.25;
+            let patina = noise2(pommel_uv * 4.0) * 0.06;
             base = vec3<f32>(0.48, 0.36, 0.19) + vec3<f32>(patina * 0.3, patina * 0.25, patina * 0.1);
             roughness = 0.38 + patina * 0.1;
             metallic = 0.88;
@@ -280,7 +290,7 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
         // === LEATHER: gambeson/armor grip with quilted pattern ===
         let leather_uv = vec2<f32>(world_pos.x * 6.0 + world_pos.z * 6.0, world_pos.y * 6.0);
         let cross = max(abs(sin(leather_uv.x * 18.0)), abs(sin(leather_uv.y * 18.0)));
-        let grain = noise2(leather_uv * 2.0) * 0.35;
+        let grain = noise2(leather_uv * 2.0) * 0.09;
         base = tint * (0.65 + grain + cross * 0.4);
         roughness = 0.72 + cross * 0.18;
         metallic = 0.02;
@@ -316,14 +326,14 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
         let stone_uv = vec2<f32>(world_pos.x * 2.0 + world_pos.z * 2.0, world_pos.y * 4.0 + world_pos.x * 3.0);
 
         // Chisel marks: directional noise
-        let chisel = noise2(stone_uv * 6.0) * 0.20;
+        let chisel = noise2(stone_uv * 6.0) * 0.05;
         // Crack network: dark veins
         let crack_val = noise2(stone_uv * 10.0);
         let crack = smoothstep(0.04, 0.0, abs(crack_val - 0.42)) * 0.6;
         // Grime: darker near base (lower Y)
         let grime = smoothstep(0.0, -0.3, world_pos.y) * 0.30;
         // Scuff marks: brighter scratches (noise-driven)
-        let scuff = noise2(stone_uv * 16.0) * noise2(stone_uv * 8.0) * 0.15;
+        let scuff = noise2(stone_uv * 16.0) * noise2(stone_uv * 8.0) * 0.04;
 
         base = tint * (0.55 + chisel - crack + scuff - grime);
         roughness = 0.88 - scuff * 0.15 + crack * 0.08;
@@ -334,20 +344,20 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
         let skin_uv = vec2<f32>(world_pos.x * 3.0, world_pos.y * 5.0);
 
         // Head/hair region (Y > 1.4)
-        let head_region = smoothstep(1.3, 1.5, world_pos.y);
+        let head_region = smoothstep(2.5, 3.0, world_pos.y);  // Unit-062: disabled for seed meshes
         // Boot region (Y < 0.1)
-        let boot_region = smoothstep(0.15, 0.0, world_pos.y);
+        let boot_region = smoothstep(-0.5, -1.0, world_pos.y);  // Unit-062: disabled for seed meshes
         // Underclothes visible at neck (Y ~0.9-1.1, arms/wrists)
 
-        let freckle = noise2(skin_uv * 6.0) * 0.15 + noise2(skin_uv * 14.0) * 0.08;
-        let skin_base = vec3<f32>(0.72, 0.50, 0.38) * (0.88 + freckle);
+        let freckle = noise2(skin_uv * 6.0) * 0.04 + noise2(skin_uv * 14.0) * 0.02;
+        let skin_base = tint * (0.88 + freckle);
 
         // Hair: darker brown with strand variation
-        let hair_strand = noise2(vec2<f32>(world_pos.x * 20.0, world_pos.y * 8.0)) * 0.20;
+        let hair_strand = noise2(vec2<f32>(world_pos.x * 20.0, world_pos.y * 8.0)) * 0.05;
         let hair_base = vec3<f32>(0.23, 0.17, 0.10) * (0.85 + hair_strand);
 
         // Boots: dark leather
-        let boot_grain = noise2(vec2<f32>(world_pos.x * 8.0, world_pos.z * 8.0)) * 0.15;
+        let boot_grain = noise2(vec2<f32>(world_pos.x * 8.0, world_pos.z * 8.0)) * 0.04;
         let boot_base = vec3<f32>(0.23, 0.16, 0.07) * (0.80 + boot_grain);
 
         base = mix(skin_base, hair_base, head_region);
@@ -529,20 +539,19 @@ fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     out.world_pos = world_pos;
     out.color = input.color;
     out.shade = clamp(0.54 + view_z * 0.25 + abs(world_pos.y) * 0.12, 0.22, 1.35);
+    out.normal = input.normal;
     return out;
 }
 
-// Unit-049: Triplanar procedural PBR fragment shader
+// Unit-049: Triplanar procedural PBR fragment shader — Unit-062: use per-vertex normals.
 @fragment
 fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let mat_type = mesh_material.material_type;
     let tint = mesh_material.tint.rgb;
 
-    // Compute world-space flat normal via screen-space derivatives
-    let dp = dpdx(input.world_pos);
-    let dp2 = dpdy(input.world_pos);
-    let flat_n = normalize(cross(dp, dp2));
-    let n = normalize(mix(flat_n, vec3<f32>(0.0, 1.0, 0.0), 0.15));
+    // Unit-062: Use pre-computed per-vertex normals from face geometry.
+    // Was: cross(dpdx, dpdy) which produced unstable/faceted shading.
+    let n = normalize(input.normal);
 
     // Procedural PBR base
     let base = procedural_pbr(input.world_pos, n, mat_type, tint);
@@ -553,11 +562,11 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let diffuse = max(dot(n, key), 0.0);
     let fill_light = max(dot(n, fill), 0.0) * 0.25;
 
-    // Unit-060: Reduced ground occlusion severity for better visibility (was 0.50).
-    let ground_occlusion = mix(1.0, 0.68, smoothstep(0.15, -0.35, input.world_pos.y));
-    let ao = clamp(0.42 + 0.58 * n.y, 0.18, 1.0) * ground_occlusion;
-    // Unit-060: Increased ambient for visibility (was 0.22).
-    let color = base * (0.38 + diffuse * 1.65 + fill_light) * ao * input.shade;
+    // Unit-062: Softer shading for seed meshes — reduce contrast between lit
+    // and shadowed faces on high-vertex-count geometry-only meshes.
+    let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
+    let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion;
+    let color = base * (0.48 + diffuse * 1.30 + fill_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);

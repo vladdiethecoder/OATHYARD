@@ -164,42 +164,49 @@ struct CameraMode {
 }
 
 fn material_for_mesh(asset_id: &str) -> MeshMaterial {
+    // Unit-062: Seed meshes use clean material path (material_type < -0.5)
+    // to bypass procedural noise — Meshy-6 GLBs are geometry-only.
     match asset_id {
+        id if id == "fighter_mannequin" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.72, tint_g: 0.55, tint_b: 0.38, tint_a: 1.0,
+        },
+        id if id == "longsword" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.78, tint_g: 0.75, tint_b: 0.72, tint_a: 1.0,
+        },
+        id if id == "gambeson" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.48, tint_g: 0.35, tint_b: 0.22, tint_a: 1.0,
+        },
+        id if id == "witness_stone" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.42, tint_g: 0.38, tint_b: 0.35, tint_a: 1.0,
+        },
+        // Generic material_type branches for non-seed meshes
         id if id.contains("longsword") => MeshMaterial {
             material_type: 0.0,
             _pad: [0.0, 0.0, 0.0],
-            // Unit-060: Brighter blade for weapon silhouette separation.
-            tint_r: 0.85,
-            tint_g: 0.83,
-            tint_b: 0.90,
-            tint_a: 1.0,
+            tint_r: 0.85, tint_g: 0.83, tint_b: 0.90, tint_a: 1.0,
         },
         id if id.contains("gambeson") => MeshMaterial {
             material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            // Unit-060: Warmer gambeson color for armor identity.
-            tint_r: 0.62,
-            tint_g: 0.38,
-            tint_b: 0.22,
-            tint_a: 1.0,
+            tint_r: 0.62, tint_g: 0.38, tint_b: 0.22, tint_a: 1.0,
         },
         id if id.contains("fighter") => MeshMaterial {
             material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
-            // Unit-060: Warmer skin tone for fighter readability.
-            tint_r: 0.80,
-            tint_g: 0.48,
-            tint_b: 0.32,
-            tint_a: 1.0,
+            tint_r: 0.80, tint_g: 0.48, tint_b: 0.32, tint_a: 1.0,
         },
         id if id.contains("witness_stone") => MeshMaterial {
             material_type: 3.0,
             _pad: [0.0, 0.0, 0.0],
-            // Unit-060: Warmer stone for arena identity.
-            tint_r: 0.48,
-            tint_g: 0.42,
-            tint_b: 0.38,
-            tint_a: 1.0,
+            tint_r: 0.48, tint_g: 0.42, tint_b: 0.38, tint_a: 1.0,
         },
         _ => MeshMaterial { 
             material_type: 0.0,
@@ -500,12 +507,13 @@ struct MeshVertex {
     position: [f32; 3],
     color: [f32; 3],
     material_uv: [f32; 2],
+    normal: [f32; 3],
 }
 
 impl MeshVertex {
     fn layout() -> wgpu::VertexBufferLayout<'static> {
-        const ATTRIBUTES: [wgpu::VertexAttribute; 3] =
-            wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x2];
+        const ATTRIBUTES: [wgpu::VertexAttribute; 4] =
+            wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x2, 3 => Float32x3];
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<MeshVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
@@ -766,7 +774,7 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
     let base_color = mesh_class_color(&spec.mesh_asset_class);
     let yaw_cos = spec.yaw_radians.cos();
     let yaw_sin = spec.yaw_radians.sin();
-    let vertices = positions
+    let mut vertices = positions
         .iter()
         .map(|position| {
             let local = [
@@ -786,15 +794,19 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
             ];
             MeshVertex {
                 position: [transformed[0], transformed[1] * 1.55, transformed[2]],
+                // Unit-062: Stable object-space box-projection material coordinates.
+                // Replace noisy triplanar with per-asset scaled object-space coords.
                 material_uv: [
-                    wrap01(local[0] * 0.61 + local[2] * 0.37 + 0.17),
-                    wrap01(local[1] * 0.77 + local[2] * 0.13 + 0.29),
+                    wrap01(local[0] * 0.58 + 0.21),
+                    wrap01(local[1] * 0.58 + 0.21),
                 ],
                 color: [
-                    base_color[0] + 0.14 * local[2].abs().min(1.0),
-                    base_color[1] + 0.12 * local[1].abs().min(1.0),
-                    base_color[2] + 0.10 * local[0].abs().min(1.0),
+                    base_color[0] + 0.05 * local[2].abs().min(1.0),
+                    base_color[1] + 0.05 * local[1].abs().min(1.0),
+                    base_color[2] + 0.05 * local[0].abs().min(1.0),
                 ],
+                // Normals generated after full vertex array is built.
+                normal: [0.0, 0.0, 0.0],
             }
         })
         .collect::<Vec<_>>();
@@ -810,6 +822,58 @@ fn load_runtime_mesh(spec: &RuntimeMeshSpec) -> Result<RuntimeMesh, String> {
             ));
         }
         indices.push(raw as u32);
+    }
+    // Unit-062: Compute per-vertex flat normals from face geometry.
+    // GLBs from Meshy-6 have no normals; the WGSL fragment shader currently
+    // computes normals via cross(dpdx, dpdy) which produces unstable shading.
+    // Generate deterministic flat normals here so lighting is stable.
+    let vcount = vertices.len();
+    let mut accumulated: Vec<[f32; 3]> = vec![[0.0; 3]; vcount];
+    let mut counts: Vec<u32> = vec![0; vcount];
+    for face in indices.chunks(3) {
+        if face.len() < 3 {
+            continue;
+        }
+        let i0 = face[0] as usize;
+        let i1 = face[1] as usize;
+        let i2 = face[2] as usize;
+        if i0 >= vcount || i1 >= vcount || i2 >= vcount {
+            continue;
+        }
+        let a = &vertices[i0].position;
+        let b = &vertices[i1].position;
+        let c = &vertices[i2].position;
+        let ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+        let ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+        let mut n = [
+            ab[1] * ac[2] - ab[2] * ac[1],
+            ab[2] * ac[0] - ab[0] * ac[2],
+            ab[0] * ac[1] - ab[1] * ac[0],
+        ];
+        let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+        if len > 1e-10 {
+            n[0] /= len;
+            n[1] /= len;
+            n[2] /= len;
+        }
+        for &idx in &[i0, i1, i2] {
+            accumulated[idx][0] += n[0];
+            accumulated[idx][1] += n[1];
+            accumulated[idx][2] += n[2];
+            counts[idx] += 1;
+        }
+    }
+    for i in 0..vcount {
+        if counts[i] > 0 {
+            let inv = 1.0 / counts[i] as f32;
+            vertices[i].normal = [
+                accumulated[i][0] * inv,
+                accumulated[i][1] * inv,
+                accumulated[i][2] * inv,
+            ];
+        } else {
+            vertices[i].normal = [0.0, 1.0, 0.0];
+        }
     }
     Ok(RuntimeMesh {
         mesh_asset_id: spec.mesh_asset_id.clone(),
@@ -1004,13 +1068,16 @@ fn infer_mesh_asset_class(asset_id: &str) -> &'static str {
     }
 }
 
+// Unit-062: Asset-specific tint palette for material readability.
+// Strengthened from the previous weak/neutral values to provide
+// distinct visual identity for each asset class.
 fn mesh_class_color(mesh_asset_class: &str) -> [f32; 3] {
     match mesh_asset_class {
-        "fighter" => [0.42, 0.34, 0.26],
-        "weapon" => [0.58, 0.54, 0.48],
-        "armor" => [0.34, 0.40, 0.46],
-        "arena" => [0.48, 0.36, 0.22],
-        _ => [0.50, 0.42, 0.34],
+        "fighter" => [0.56, 0.42, 0.30],  // warm skin/mannequin tone
+        "weapon" => [0.66, 0.62, 0.55],   // brightened steel
+        "armor" => [0.38, 0.32, 0.22],    // dark leather/textile
+        "arena" => [0.42, 0.38, 0.34],    // warm stone
+        _ => [0.52, 0.44, 0.36],
     }
 }
 
