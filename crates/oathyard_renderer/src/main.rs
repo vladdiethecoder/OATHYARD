@@ -223,6 +223,17 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.42, tint_g: 0.38, tint_b: 0.35, tint_a: 1.0,
         },
+        // Unit-066: Rigged saltreach_duelist — has real PBR materials/textures
+        id if id == "player_saltreach" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.82, tint_g: 0.62, tint_b: 0.40, tint_a: 1.0,  // player gold
+        },
+        id if id == "opponent_saltreach" => MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // opponent crimson
+        },
         // Generic material_type branches for non-seed meshes
         id if id.contains("longsword") => MeshMaterial {
             material_type: 0.0,

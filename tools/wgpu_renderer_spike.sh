@@ -276,16 +276,17 @@ seed_fighter_manifest="$(seed_mesh_manifest production_seed_fighter_mannequin \
 # Longsword attached to grip_r socket; gambeson attached to torso_front socket.
 # Transforms computed from content/skeletons/unit064_presentation_sockets.json
 # and content/assets/unit064_attachment_calibration.json
-all_seed_manifest="$(seed_mesh_manifest all_seed_first_kit \
-  player_fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:-0.72:0.00:0.00:0.72:0.10:fighter_mannequin \
-  player_gambeson:armor:assets/runtime/seed/gambeson.mesh.json:-0.72:0.07:0.11:0.72:0.10:gambeson \
-  player_longsword:weapon:assets/runtime/seed/longsword.mesh.json:-0.52:0.02:0.12:0.55:1.57:longsword \
-  opponent_fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:0.72:0.00:0.00:0.72:0.10:fighter_mannequin \
-  opponent_gambeson:armor:assets/runtime/seed/gambeson.mesh.json:0.72:0.07:0.11:0.72:0.10:gambeson \
-  opponent_longsword:weapon:assets/runtime/seed/longsword.mesh.json:0.52:0.02:0.12:0.55:-1.57:longsword \
-  witness_stone:arena:assets/runtime/seed/witness_stone.mesh.json:0.00:-0.15:-0.80:0.60:0.00)"
+# Unit-066: Use rigged saltreach_duelist (has JOINTS_0/WEIGHTS_0/skin/IBMs/anims)
+# instead of geometry-only Meshy-6 seed meshes.
+# Unit-066: Use rigged saltreach_duelist (has JOINTS_0/WEIGHTS_0/skin/IBMs/anims)
+# Use mesh_manifest (candidate path) for correct texture paths.
+# Unit-066: Use rigged saltreach_duelist (has JOINTS_0/WEIGHTS_0/skin/IBMs/anims)
+# Both fighters use same asset_id for texture mapping; tinting by position.
+all_seed_manifest="$(mesh_manifest all_seed_first_kit \
+  saltreach_duelist:fighter:assets/presentation_runtime/saltreach_duelist.mesh.json:-0.72:0.00:0.00:0.72:0.10 \
+  saltreach_duelist:fighter:assets/presentation_runtime/saltreach_duelist.mesh.json:0.72:0.00:0.00:0.72:0.10 \
+  training_yard:arena:assets/presentation_runtime/training_yard.mesh.json:0.00:-0.18:0.00:0.82:0.00)"
 
-# --- Unit-048 game-flow captures ---
 render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "player_fighter_mannequin,player_longsword,player_gambeson,opponent_fighter_mannequin,opponent_gambeson,opponent_longsword,witness_stone" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$all_seed_manifest"
 render_capture "boot_main_menu" "boot_main_menu" "player_fighter_mannequin,player_longsword,player_gambeson,opponent_fighter_mannequin,opponent_gambeson,opponent_longsword,witness_stone" "$out/render/boot_main_menu" "production_renderer_wgpu_spike_boot_main_menu_1920x1080" "" "$all_seed_manifest"
 render_capture "fighter_select" "fighter_select" "fighter_mannequin" "$out/render/fighter_select" "production_renderer_wgpu_spike_fighter_select_1920x1080" "" "$all_seed_manifest"
