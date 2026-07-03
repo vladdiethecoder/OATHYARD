@@ -6880,6 +6880,7 @@ pub fn native_combat_render(
     scenario_path: impl AsRef<Path>,
     out_dir: impl AsRef<Path>,
 ) -> Result<DuelResult, OathError> {
+    use std::process::Command;
     let scenario_text = fs::read_to_string(scenario_path.as_ref())?;
     let pre_scenario = Scenario::parse(&scenario_text)?;
     enforce_scenario_freeze_gate(&pre_scenario)?;
@@ -6898,18 +6899,82 @@ pub fn native_combat_render(
         out_dir.join("native_capture_input_replay.json"),
         &result.replay_json,
     )?;
-    fs::write(
-        out_dir.join("native_combat_render_manifest.json"),
-        render_native_3d_blocked_manifest_json(&result, "native-combat-render"),
-    )?;
-    fs::write(
-        out_dir.join("native_combat_visual_audit.md"),
-        render_native_3d_blocked_report_md(&result, "Native Combat Render"),
-    )?;
-    fs::write(
-        out_dir.join("native_combat_render_report.md"),
-        render_native_3d_blocked_report_md(&result, "Native Combat Render"),
-    )?;
+    // Unit-069: Call the production renderer to generate real native 3D captures.
+    // This replaces the blocked schema with actual rendered evidence.
+    let renderer_bin = std::env::current_dir()
+        .map(|p| p.join("crates/oathyard_renderer/target/debug/oathyard-native-renderer"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("oathyard-native-renderer"));
+    let packet_path = out_dir.join("post_hash_presentation_packet.json");
+    let render_dir = out_dir.join("render");
+    fs::create_dir_all(&render_dir).ok();
+    // Write presentation packet
+    let packet = format!(
+        r#"{{"schema":"oathyard.post_hash_presentation_packet.v1","scenario_id":"{}","content_hash":"{}","final_state_hash":"{}","end_condition_status":"{}","end_condition_winner":"{}","generated_after_replay_verify":true,"presentation_only":true,"truth_mutation":false,"renderer_consumption_layer":"runtime_presentation"}}"#,
+        result.scenario_id,
+        result.content_hash,
+        result.final_state_hash,
+        result.end_condition.status,
+        result.end_condition.winner_token()
+    );
+    fs::write(&packet_path, &packet)?;
+    // Call production renderer for native capture
+    let renderer_result = Command::new(&renderer_bin)
+        .arg("--packet")
+        .arg(&packet_path)
+        .arg("--out")
+        .arg(&render_dir)
+        .arg("--capture-id")
+        .arg("native_combat_capture_unit069")
+        .arg("--capture-file-stem")
+        .arg("native_combat_3d_1920x1080")
+        .arg("--camera-mode")
+        .arg("oathyard_verdict_ring_establishing")
+        .arg("--candidate-assets")
+        .arg("saltreach_duelist,training_yard")
+        .output();
+    let renderer_succeeded = match renderer_result {
+        Ok(output) => {
+            let capture_path = render_dir.join("native_combat_3d_1920x1080.png");
+            capture_path.exists()
+                && capture_path
+                    .metadata()
+                    .map(|m| m.len() > 1000)
+                    .unwrap_or(false)
+        }
+        Err(_) => false,
+    };
+    // Write manifest — promoted if renderer succeeded, blocked otherwise
+    if renderer_succeeded {
+        // Write promoted manifest with real capture evidence
+        let manifest = format!(
+            r#"{{"schema":"oathyard.native_combat_render.v1","product":"OATHYARD","command":"native-combat-render","source":"truth-after-hash-duel-result","scenario_id":"{}","final_state_hash":"{}","replay_verified":true,"truth_mutation":false,"presentation_only":true,"native_3d_visual_evidence_present":true,"visual_evidence_status":"native_3d_renderer_capture_present","forbidden_visual_fallbacks_emitted":false,"production_renderer_complete":false,"owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false}}"#,
+            result.scenario_id, result.final_state_hash
+        );
+        fs::write(
+            out_dir.join("native_combat_render_manifest.json"),
+            &manifest,
+        )?;
+        let report = format!(
+            "# OATHYARD Native Combat Render\n\nStatus: NATIVE_3D_RENDERER_CAPTURE_PRESENT\n- Scenario: `{}`\n- Final state hash: `{}`\n- Replay verified: `true`\n- Truth mutation: `false`\n- Native 3D visual evidence present: `true`\n- Production renderer complete: `false`\n- Owner visual acceptance: `false`",
+            result.scenario_id, result.final_state_hash
+        );
+        fs::write(out_dir.join("native_combat_render_report.md"), &report)?;
+        fs::write(out_dir.join("native_combat_visual_audit.md"), &report)?;
+    } else {
+        // Fallback: still blocked
+        fs::write(
+            out_dir.join("native_combat_render_manifest.json"),
+            render_native_3d_blocked_manifest_json(&result, "native-combat-render"),
+        )?;
+        fs::write(
+            out_dir.join("native_combat_visual_audit.md"),
+            render_native_3d_blocked_report_md(&result, "Native Combat Render"),
+        )?;
+        fs::write(
+            out_dir.join("native_combat_render_report.md"),
+            render_native_3d_blocked_report_md(&result, "Native Combat Render"),
+        )?;
+    }
     Ok(result)
 }
 

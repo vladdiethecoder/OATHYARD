@@ -1,0 +1,43 @@
+{
+  "schema": "oathyard.animated_exchange_timeline.v1",
+  "unit": "Unit-069",
+  "phases": [
+    {
+      "phase_id": "observe_idle",
+      "clip": "idle",
+      "clip_time": 0.5,
+      "camera": "establishing"
+    },
+    {
+      "phase_id": "plan_ready",
+      "clip": "idle",
+      "clip_time": 0.3,
+      "camera": "planning"
+    },
+    {
+      "phase_id": "commit_reveal",
+      "clip": "attack",
+      "clip_time": 0.05,
+      "camera": "pre_contact"
+    },
+    {
+      "phase_id": "contact",
+      "clip": "attack",
+      "clip_time": 0.5,
+      "camera": "contact"
+    },
+    {
+      "phase_id": "consequence",
+      "clip": "attack",
+      "clip_time": 0.9,
+      "camera": "consequence"
+    },
+    {
+      "phase_id": "fight_film",
+      "clip": "attack",
+      "clip_time": 0.5,
+      "camera": "fight_film"
+    }
+  ],
+  "truth_mutation": false
+}
