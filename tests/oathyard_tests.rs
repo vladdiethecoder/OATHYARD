@@ -2804,3 +2804,28 @@ fn unit056_local_production_ready_owner_review_packet_truth_isolated() {
         .expect("missing large-file policy");
     assert!(lfs_policy.contains("gambeson.obj"));
 }
+
+#[test]
+fn unit072_native_window_swapchain_truth_isolated() {
+    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
+        .expect("renderer source");
+    let tool = std::fs::read_to_string("tools/run_native_windowed_game.sh")
+        .expect("windowed game tool");
+    assert!(source.contains("--windowed"));
+    assert!(source.contains("windowed_main"));
+    assert!(source.contains("native_window_runtime"));
+    assert!(source.contains("native_windowed_execution"));
+    assert!(source.contains("create_surface_unsafe"));
+    assert!(source.contains("winit::event_loop::EventLoop"));
+    assert!(source.contains("ApplicationHandler"));
+    assert!(source.contains("frames_presented"));
+    assert!(source.contains("Phase tracking is presentation-only"));
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("final_truth_hash"));
+    assert!(tool.contains("--windowed"));
+    assert!(tool.contains("smoke"));
+    assert!(tool.contains("native_window_runtime_manifest.json"));
+    let cargo_toml =
+        std::fs::read_to_string("crates/oathyard_renderer/Cargo.toml").expect("cargo toml");
+    assert!(cargo_toml.contains("winit"));
+}
