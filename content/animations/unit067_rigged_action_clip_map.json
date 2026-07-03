@@ -1,0 +1,121 @@
+{
+  "schema": "oathyard.rigged_action_clip_map.v1",
+  "unit": "Unit-067",
+  "description": "Maps game states to rigged animation clips and presentation pose overlays for saltreach_duelist. Source clips are idle, walk, attack. Guard/cut/thrust/recover use deterministic presentation pose overlays applied via the renderer's PoseUniform system.",
+  "asset_id": "saltreach_duelist",
+  "source_clips": ["idle", "walk", "attack"],
+  "truth_mutation": false,
+  "presentation_only": true,
+  "state_mappings": {
+    "OBSERVE": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "idle",
+      "description": "Neutral breathing idle"
+    },
+    "FIGHTER_SELECT": {
+      "clip": "idle",
+      "clip_time": 0.3,
+      "pose_overlay": "idle",
+      "description": "Idle showcase"
+    },
+    "LOADOUT_SELECT": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "guard_pose",
+      "description": "Guard pose to show weapon"
+    },
+    "ARENA_SELECT": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "idle",
+      "description": "Idle"
+    },
+    "PLAN": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "idle",
+      "description": "Ready stance while planning"
+    },
+    "COMMIT_REVEAL": {
+      "clip": "attack",
+      "clip_time": 0.0,
+      "pose_overlay": "guard_pose",
+      "description": "Anticipation guard before action"
+    },
+    "RESOLVE": {
+      "clip": "attack",
+      "clip_time": 0.3,
+      "pose_overlay": "cut",
+      "description": "Mid-swing attack for resolve"
+    },
+    "CONTACT": {
+      "clip": "attack",
+      "clip_time": 0.5,
+      "pose_overlay": "cut",
+      "description": "Contact frame of attack"
+    },
+    "CONSEQUENCE": {
+      "clip": "attack",
+      "clip_time": 0.8,
+      "pose_overlay": "recover",
+      "description": "Follow-through recover"
+    },
+    "REPLAN": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "recover",
+      "description": "Recovery idle before re-planning"
+    },
+    "MATCH_RESULT": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "idle",
+      "description": "Neutral result pose"
+    },
+    "REPLAY": {
+      "clip": "idle",
+      "clip_time": 0.5,
+      "pose_overlay": "idle",
+      "description": "Replay browser idle"
+    },
+    "FIGHT_FILM": {
+      "clip": "attack",
+      "clip_time": 0.5,
+      "pose_overlay": "cut",
+      "description": "Fight-film highlight using attack clip"
+    }
+  },
+  "pose_overlays": {
+    "idle": {
+      "renderer_clip_id": "idle",
+      "description": "Subtle breathing, slight spine/head offset"
+    },
+    "guard_pose": {
+      "renderer_clip_id": "guard_pose",
+      "description": "Weapon raised, arms centered, defensive brace"
+    },
+    "cut": {
+      "renderer_clip_id": "cut",
+      "description": "Diagonal swing: right arm extended, torso twist, leg lunge"
+    },
+    "thrust": {
+      "renderer_clip_id": "thrust",
+      "description": "Forward point: arms forward, weight shift, leg extend"
+    },
+    "recover": {
+      "renderer_clip_id": "recover",
+      "description": "Settle from action: arm lowering, spine straightening"
+    },
+    "attack": {
+      "renderer_clip_id": "attack",
+      "description": "Legacy attack mapping (same as cut)"
+    }
+  },
+  "weapon_socket": {
+    "joint": "wrist_r",
+    "socket": "grip_r",
+    "follows_animation": true,
+    "description": "Longsword follows wrist_r/grip_r through pose overlays"
+  }
+}
