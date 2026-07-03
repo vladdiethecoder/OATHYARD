@@ -3041,3 +3041,26 @@ fn unit076_timeline_ui_truth_isolated() {
     assert!(source.contains("public_demo_ready\": false"));
     assert!(source.contains("release_candidate_ready\": false"));
 }
+
+#[test]
+fn unit077_dual_timeline_reveal_truth_isolated() {
+    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
+        .expect("renderer source");
+
+    // Opponent timeline fields
+    assert!(source.contains("opponent_timeline_slots"));
+    assert!(source.contains("fn opponent_policy_timeline"));
+
+    // Opponent policy generates alternating guard/cut/thrust
+    assert!(source.contains("\"guard\", \"cut\", \"thrust\""));
+
+    // Both timelines in manifest
+    assert!(source.contains("\"opponent_timeline_slots\": app.opponent_timeline_slots"));
+    assert!(source.contains("\"timeline_slots\": app.timeline_slots"));
+
+    // Truth isolation
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}

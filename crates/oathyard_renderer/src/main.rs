@@ -2982,6 +2982,7 @@ struct WindowedApp {
     states_visited: Vec<String>,
     transitions: Vec<String>,
     timeline_slots: Vec<String>,
+    opponent_timeline_slots: Vec<String>,
     timeline_cursor: usize,
     timeline_slot_count: usize,
     event_log: Vec<InteractiveEvent>,
@@ -3216,6 +3217,12 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
             _ => state.camera_mode(),
         }
     }
+}
+
+/// Unit-077: Simple opponent AI timeline policy (alternating guard / cut / thrust).
+fn opponent_policy_timeline(slot_count: usize) -> Vec<String> {
+    let actions = ["guard", "cut", "thrust"];
+    (0..slot_count).map(|i| actions[i % actions.len()].to_string()).collect()
 }
 
 /// Unit-074: Scripted input for deterministic interactive windowed smoke
@@ -3542,6 +3549,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             states_visited: vec![InteractiveState::Boot.as_str().to_string()],
             transitions: Vec::new(),
             timeline_slots: vec!["guard".to_string(); 10],
+            opponent_timeline_slots: opponent_policy_timeline(10),
             timeline_cursor: 0,
             timeline_slot_count: 10,
             event_log: Vec::new(),
@@ -4092,6 +4100,7 @@ fn write_window_manifest(app: &WindowedApp) {
         "states_visited": app.states_visited,
         "transitions": app.transitions,
         "timeline_slots": app.timeline_slots,
+        "opponent_timeline_slots": app.opponent_timeline_slots,
         "timeline_slot_count": app.timeline_slot_count,
         "controls_map": manifest.get("controls_map").cloned().unwrap_or(Value::Null),
         "event_log_path": "windowed_interactive_event_log.jsonl",
