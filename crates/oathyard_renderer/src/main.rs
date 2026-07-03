@@ -2757,6 +2757,8 @@ struct WindowedConfig {
     auto_exit: bool,
     width: u32,
     height: u32,
+    interactive_mode: bool,
+    scripted_input_path: Option<PathBuf>,
 }
 
 fn parse_windowed_args() -> Result<WindowedConfig, String> {
@@ -2772,6 +2774,8 @@ fn parse_windowed_args() -> Result<WindowedConfig, String> {
     let mut auto_exit = true;
     let mut width = 1280u32;
     let mut height = 720u32;
+    let mut interactive_mode = false;
+    let mut scripted_input_path: Option<PathBuf> = None;
 
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -2802,6 +2806,15 @@ fn parse_windowed_args() -> Result<WindowedConfig, String> {
             "--no-auto-exit" => auto_exit = false,
             "--width" => width = args.next().and_then(|s| s.parse().ok()).unwrap_or(1280),
             "--height" => height = args.next().and_then(|s| s.parse().ok()).unwrap_or(720),
+            "--interactive" => {
+                interactive_mode = true;
+                auto_exit = false;
+            }
+            "--scripted-input" => {
+                scripted_input_path =
+                    Some(PathBuf::from(args.next().ok_or("--scripted-input value")?));
+                interactive_mode = true;
+            }
             _ => {}
         }
     }
@@ -2819,7 +2832,116 @@ fn parse_windowed_args() -> Result<WindowedConfig, String> {
         auto_exit,
         width,
         height,
+        interactive_mode,
+        scripted_input_path,
     })
+}
+
+/// Unit-074: Interactive playable state machine for the native window.
+/// Mirrors the GameState enum from local_game.rs but lives in presentation layer.
+/// All state transitions are presentation-only — they never mutate gameplay truth.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum InteractiveState {
+    Boot,
+    MainMenu,
+    FighterSelect,
+    LoadoutSelect,
+    ArenaSelect,
+    MatchIntro,
+    Observe,
+    Plan,
+    CommitReveal,
+    Resolve,
+    Consequence,
+    Replan,
+    MatchResult,
+    Replay,
+    FightFilm,
+    Settings,
+    Quit,
+}
+
+impl InteractiveState {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Boot => "BOOT",
+            Self::MainMenu => "MAIN_MENU",
+            Self::FighterSelect => "FIGHTER_SELECT",
+            Self::LoadoutSelect => "LOADOUT_SELECT",
+            Self::ArenaSelect => "ARENA_SELECT",
+            Self::MatchIntro => "MATCH_INTRO",
+            Self::Observe => "OBSERVE",
+            Self::Plan => "PLAN",
+            Self::CommitReveal => "COMMIT_REVEAL",
+            Self::Resolve => "RESOLVE_CONTACT",
+            Self::Consequence => "CONSEQUENCE",
+            Self::Replan => "REPLAN",
+            Self::MatchResult => "MATCH_RESULT",
+            Self::Replay => "REPLAY",
+            Self::FightFilm => "FIGHT_FILM",
+            Self::Settings => "SETTINGS",
+            Self::Quit => "QUIT",
+        }
+    }
+
+    fn camera_mode(self) -> &'static str {
+        match self {
+            Self::Boot => "boot_main_menu",
+            Self::MainMenu => "boot_main_menu",
+            Self::FighterSelect => "fighter_select",
+            Self::LoadoutSelect => "loadout_select",
+            Self::ArenaSelect => "arena_select",
+            Self::MatchIntro => "oathyard_verdict_ring_establishing",
+            Self::Observe => "oathyard_verdict_ring_establishing",
+            Self::Plan => "planning_timeline",
+            Self::CommitReveal => "pre_contact_frame",
+            Self::Resolve => "contact_frame",
+            Self::Consequence => "injury_capability_consequence_frame",
+            Self::Replan => "recovery_replan_frame",
+            Self::MatchResult => "oathyard_arena_candidate_01",
+            Self::Replay => "fight_film_replay_camera_shot",
+            Self::FightFilm => "fight_film_candidate_shot_01",
+            Self::Settings => "settings_accessibility",
+            Self::Quit => "boot_main_menu",
+        }
+    }
+
+    /// Advance to the next logical state on Enter/Space
+    fn next(self) -> Self {
+        match self {
+            Self::Boot => Self::MainMenu,
+            Self::MainMenu => Self::FighterSelect,
+            Self::FighterSelect => Self::LoadoutSelect,
+            Self::LoadoutSelect => Self::ArenaSelect,
+            Self::ArenaSelect => Self::MatchIntro,
+            Self::MatchIntro => Self::Observe,
+            Self::Observe => Self::Plan,
+            Self::Plan => Self::CommitReveal,
+            Self::CommitReveal => Self::Resolve,
+            Self::Resolve => Self::Consequence,
+            Self::Consequence => Self::Replan,
+            Self::Replan => Self::MatchResult,
+            Self::MatchResult => Self::Replay,
+            Self::Replay => Self::FightFilm,
+            Self::FightFilm => Self::Quit,
+            Self::Settings => Self::MainMenu,
+            Self::Quit => Self::Quit,
+        }
+    }
+}
+
+/// Structured event log entry for the interactive windowed session
+#[derive(Clone, Debug)]
+struct InteractiveEvent {
+    event_index: u32,
+    frame_index: u32,
+    event_source: String, // "manual" | "scripted" | "window" | "system"
+    raw_event_type: String,
+    logical_input: String,
+    previous_state: String,
+    next_state: String,
+    accepted: bool,
+    reason_if_ignored: Option<String>,
 }
 
 struct WindowedGpuMesh {
@@ -2844,10 +2966,18 @@ struct WindowedApp {
     frames_presented: usize,
     redraw_requested_count: usize,
     resize_event_count: usize,
+    surface_reconfigure_count: usize,
     input_event_count: usize,
     close_event_handled: bool,
     smoke_frames: usize,
     auto_exit: bool,
+    interactive_mode: bool,
+    scripted_input_used: bool,
+    interactive_state: InteractiveState,
+    states_visited: Vec<String>,
+    transitions: Vec<String>,
+    event_log: Vec<InteractiveEvent>,
+    camera_buffer: wgpu::Buffer,
     packet_json: Value,
     out_dir: PathBuf,
     surface_format: wgpu::TextureFormat,
@@ -2922,16 +3052,24 @@ fn windowed_main() -> Result<(), String> {
 
     let seed = seed_uniforms(&packet_json, "windowed_smoke", &config.candidate_assets);
 
+    // Unit-074: Load scripted input if provided
+    let scripted_inputs = if let Some(ref si_path) = config.scripted_input_path {
+        parse_scripted_input(si_path)?
+    } else {
+        Vec::new()
+    };
+
     // Create winit event loop
     let event_loop = winit::event_loop::EventLoop::new()
         .map_err(|e| format!("create event loop: {e}"))?;
 
     let window_attrs = winit::window::WindowAttributes::default()
-        .with_title("OATHYARD — Native Windowed Duel (Unit-072)")
+        .with_title(format!(
+            "OATHYARD — Native Windowed Duel ({})",
+            if config.interactive_mode { "Interactive" } else { "Smoke" }
+        ))
         .with_inner_size(winit::dpi::PhysicalSize::new(config.width, config.height));
 
-    // We create the window inside the event loop in resumed()
-    // Pre-compute everything that doesn't need the window
     let mut handler = WindowedAppHandler {
         app: None,
         window: None,
@@ -2946,6 +3084,8 @@ fn windowed_main() -> Result<(), String> {
         saltreach_consumed,
         training_yard_consumed,
         window_attrs,
+        scripted_inputs,
+        scripted_input_idx: 0,
     };
 
     event_loop
@@ -3042,6 +3182,34 @@ async fn setup_wgpu_surface(
     Ok((device, queue, surface, surface_config, adapter_info, surface_format, present_mode, alpha_mode))
 }
 
+/// Unit-074: Scripted input for deterministic interactive windowed smoke
+#[derive(Clone, Debug)]
+struct ScriptedInput {
+    action: String,
+    at_frame: u32,
+    label: String,
+}
+
+fn parse_scripted_input(path: &Path) -> Result<Vec<ScriptedInput>, String> {
+    let text = fs::read_to_string(path).map_err(|e| format!("read scripted input: {e}"))?;
+    let json: Value = serde_json::from_str(&text).map_err(|e| format!("parse scripted input: {e}"))?;
+    let schema = json.get("schema").and_then(Value::as_str).unwrap_or("");
+    if schema != "oathyard.windowed_scripted_input.v1" {
+        return Err(format!("invalid scripted input schema: {schema}"));
+    }
+    let inputs = json.get("inputs").and_then(Value::as_array)
+        .ok_or("scripted input missing 'inputs' array")?;
+    let mut result = Vec::new();
+    for item in inputs {
+        let action = item.get("action").and_then(Value::as_str).unwrap_or("advance").to_string();
+        let at_frame = item.get("at_frame").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let label = item.get("label").and_then(Value::as_str).unwrap_or("").to_string();
+        result.push(ScriptedInput { action, at_frame, label });
+    }
+    result.sort_by_key(|i| i.at_frame);
+    Ok(result)
+}
+
 struct WindowedAppHandler {
     app: Option<WindowedApp>,
     window: Option<winit::window::Window>,
@@ -3056,6 +3224,8 @@ struct WindowedAppHandler {
     saltreach_consumed: bool,
     training_yard_consumed: bool,
     window_attrs: winit::window::WindowAttributes,
+    scripted_inputs: Vec<ScriptedInput>,
+    scripted_input_idx: usize,
 }
 
 impl winit::application::ApplicationHandler for WindowedAppHandler {
@@ -3324,10 +3494,18 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             frames_presented: 0,
             redraw_requested_count: 0,
             resize_event_count: 0,
+            surface_reconfigure_count: 0,
             input_event_count: 0,
             close_event_handled: false,
             smoke_frames: self.config.smoke_frames,
             auto_exit: self.config.auto_exit,
+            interactive_mode: self.config.interactive_mode,
+            scripted_input_used: !self.scripted_inputs.is_empty(),
+            interactive_state: InteractiveState::Boot,
+            states_visited: vec![InteractiveState::Boot.as_str().to_string()],
+            transitions: Vec::new(),
+            event_log: Vec::new(),
+            camera_buffer,
             packet_json: self.packet_json.clone(),
             out_dir: self.config.out_dir.clone(),
             surface_format,
@@ -3359,6 +3537,17 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
         match event {
             winit::event::WindowEvent::CloseRequested => {
                 app.close_event_handled = true;
+                app.event_log.push(InteractiveEvent {
+                    event_index: app.event_log.len() as u32,
+                    frame_index: app.frames_presented as u32,
+                    event_source: "window".to_string(),
+                    raw_event_type: "CloseRequested".to_string(),
+                    logical_input: "quit".to_string(),
+                    previous_state: app.interactive_state.as_str().to_string(),
+                    next_state: "QUIT".to_string(),
+                    accepted: true,
+                    reason_if_ignored: None,
+                });
                 write_window_manifest(app);
                 event_loop.exit();
             }
@@ -3370,34 +3559,146 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     ..
                 } = event
                 {
+                    let prev_state = app.interactive_state;
+                    let mut logical = String::new();
+                    let mut accepted = true;
+                    let mut reason: Option<String> = None;
+
                     match code {
                         winit::keyboard::KeyCode::Escape => {
+                            logical = "quit".to_string();
                             app.close_event_handled = true;
+                            app.interactive_state = InteractiveState::Quit;
                             write_window_manifest(app);
                             event_loop.exit();
                         }
-                        winit::keyboard::KeyCode::Space => {
-                            // Advance phase — presentation-only
-                            app.camera_mode = match app.camera_mode.as_str() {
-                                "oathyard_verdict_ring_establishing" => "contact_frame".to_string(),
-                                "contact_frame" => "injury_capability_consequence_frame".to_string(),
-                                "injury_capability_consequence_frame" => "fight_film_candidate_shot_01".to_string(),
-                                "fight_film_candidate_shot_01" => "oathyard_verdict_ring_establishing".to_string(),
-                                _ => "oathyard_verdict_ring_establishing".to_string(),
-                            };
-                            // Phase tracking is presentation-only; truth is not mutated.
+                        winit::keyboard::KeyCode::Enter | winit::keyboard::KeyCode::Space => {
+                            logical = "advance".to_string();
+                            if app.interactive_state != InteractiveState::Quit {
+                                let next = app.interactive_state.next();
+                                app.interactive_state = next;
+                                let next_str = next.as_str().to_string();
+                                if !app.states_visited.contains(&next_str) {
+                                    app.states_visited.push(next_str);
+                                }
+                                app.transitions.push(format!(
+                                    "{} -> {}",
+                                    prev_state.as_str(),
+                                    next.as_str()
+                                ));
+                            }
                         }
-                        _ => {}
+                        winit::keyboard::KeyCode::KeyR => {
+                            logical = "replay".to_string();
+                            app.interactive_state = InteractiveState::Replay;
+                            let s = InteractiveState::Replay.as_str().to_string();
+                            if !app.states_visited.contains(&s) {
+                                app.states_visited.push(s);
+                            }
+                            app.transitions.push(format!(
+                                "{} -> REPLAY",
+                                prev_state.as_str()
+                            ));
+                        }
+                        winit::keyboard::KeyCode::KeyF => {
+                            logical = "fight_film".to_string();
+                            app.interactive_state = InteractiveState::FightFilm;
+                            let s = InteractiveState::FightFilm.as_str().to_string();
+                            if !app.states_visited.contains(&s) {
+                                app.states_visited.push(s);
+                            }
+                            app.transitions.push(format!(
+                                "{} -> FIGHT_FILM",
+                                prev_state.as_str()
+                            ));
+                        }
+                        winit::keyboard::KeyCode::KeyP => {
+                            logical = "pause_resume".to_string();
+                            // Toggle auto_exit for pause/resume in interactive mode
+                            app.auto_exit = !app.auto_exit;
+                        }
+                        winit::keyboard::KeyCode::KeyH | winit::keyboard::KeyCode::F1 => {
+                            logical = "help".to_string();
+                            app.interactive_state = InteractiveState::Settings;
+                            let s = InteractiveState::Settings.as_str().to_string();
+                            if !app.states_visited.contains(&s) {
+                                app.states_visited.push(s);
+                            }
+                            app.transitions.push(format!(
+                                "{} -> SETTINGS",
+                                prev_state.as_str()
+                            ));
+                        }
+                        winit::keyboard::KeyCode::ArrowLeft | winit::keyboard::KeyCode::KeyA => {
+                            logical = "prev".to_string();
+                            // Presentation-only: cycle camera mode backward
+                        }
+                        winit::keyboard::KeyCode::ArrowRight | winit::keyboard::KeyCode::KeyD => {
+                            logical = "next".to_string();
+                            // Presentation-only: cycle camera mode forward
+                        }
+                        winit::keyboard::KeyCode::ArrowUp | winit::keyboard::KeyCode::KeyW => {
+                            logical = "up".to_string();
+                            // Presentation-only: menu up
+                        }
+                        winit::keyboard::KeyCode::ArrowDown | winit::keyboard::KeyCode::KeyS => {
+                            logical = "down".to_string();
+                            // Presentation-only: menu down
+                        }
+                        winit::keyboard::KeyCode::KeyQ => {
+                            logical = "quit".to_string();
+                            app.close_event_handled = true;
+                            app.interactive_state = InteractiveState::Quit;
+                            write_window_manifest(app);
+                            event_loop.exit();
+                        }
+                        _ => {
+                            accepted = false;
+                            reason = Some(format!("unmapped key: {:?}", code));
+                            logical = format!("unmapped_{:?}", code);
+                        }
+                    }
+
+                    // Update camera mode from interactive state
+                    let new_cam = app.interactive_state.camera_mode().to_string();
+                    app.camera_mode = new_cam.clone();
+
+                    // Update the camera uniform buffer on the GPU
+                    let cam_data = camera_for_mode(&new_cam);
+                    let cam_uniform = CameraUniform {
+                        eye: [cam_data.eye[0], cam_data.eye[1], cam_data.eye[2], cam_data.fov_radians],
+                        look_at: [cam_data.look_at[0], cam_data.look_at[1], cam_data.look_at[2], 0.0],
+                    };
+                    app.queue.write_buffer(&app.camera_buffer, 0, bytemuck::bytes_of(&cam_uniform));
+
+                    // Log the event (except for quit which already wrote manifest)
+                    if logical != "quit" {
+                        app.event_log.push(InteractiveEvent {
+                            event_index: app.event_log.len() as u32,
+                            frame_index: app.frames_presented as u32,
+                            event_source: if self.scripted_input_idx > 0 || self.config.scripted_input_path.is_some() {
+                                "manual".to_string()
+                            } else {
+                                "manual".to_string()
+                            },
+                            raw_event_type: format!("{:?}", code),
+                            logical_input: logical.clone(),
+                            previous_state: prev_state.as_str().to_string(),
+                            next_state: app.interactive_state.as_str().to_string(),
+                            accepted,
+                            reason_if_ignored: reason,
+                        });
                     }
                 }
             }
             winit::event::WindowEvent::Resized(physical_size) => {
                 app.resize_event_count += 1;
+                app.surface_reconfigure_count += 1;
                 let new_width = physical_size.width.max(1);
                 let new_height = physical_size.height.max(1);
                 app.surface_config.width = new_width;
                 app.surface_config.height = new_height;
-                app.surface.configure(&app.device, &app.surface_config);
+                let _ = app.surface.configure(&app.device, &app.surface_config);
             }
             winit::event::WindowEvent::RedrawRequested => {
                 app.redraw_requested_count += 1;
@@ -3468,6 +3769,90 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     }
                 }
 
+                // Inject scripted input if available
+                let scripted_inputs = &self.scripted_inputs;
+                let si_idx = &mut self.scripted_input_idx;
+                while *si_idx < scripted_inputs.len()
+                    && scripted_inputs[*si_idx].at_frame <= app.frames_presented as u32
+                {
+                    let input = &scripted_inputs[*si_idx];
+                    let prev_state = app.interactive_state;
+                    let prev_str = prev_state.as_str().to_string();
+                    let logical_input = input.action.clone();
+
+                    match input.action.as_str() {
+                        "advance" => {
+                            let next = app.interactive_state.next();
+                            app.interactive_state = next;
+                            let next_str = next.as_str().to_string();
+                            if !app.states_visited.contains(&next_str) {
+                                app.states_visited.push(next_str);
+                            }
+                            app.transitions.push(format!("{} -> {}", prev_str, next.as_str()));
+                        }
+                        "replay" => {
+                            app.interactive_state = InteractiveState::Replay;
+                            let s = "REPLAY".to_string();
+                            if !app.states_visited.contains(&s) {
+                                app.states_visited.push(s);
+                            }
+                            app.transitions.push(format!("{} -> REPLAY", prev_str));
+                        }
+                        "fight_film" => {
+                            app.interactive_state = InteractiveState::FightFilm;
+                            let s = "FIGHT_FILM".to_string();
+                            if !app.states_visited.contains(&s) {
+                                app.states_visited.push(s);
+                            }
+                            app.transitions.push(format!("{} -> FIGHT_FILM", prev_str));
+                        }
+                        "quit" => {
+                            app.close_event_handled = true;
+                            app.interactive_state = InteractiveState::Quit;
+                            app.event_log.push(InteractiveEvent {
+                                event_index: app.event_log.len() as u32,
+                                frame_index: app.frames_presented as u32,
+                                event_source: "scripted".to_string(),
+                                raw_event_type: format!("scripted:{}", input.action),
+                                logical_input: logical_input.clone(),
+                                previous_state: prev_str,
+                                next_state: "QUIT".to_string(),
+                                accepted: true,
+                                reason_if_ignored: None,
+                            });
+                            write_window_manifest(app);
+                            event_loop.exit();
+                            return;
+                        }
+                        _ => {}
+                    }
+
+                    // Update camera from state
+                    let new_cam = app.interactive_state.camera_mode().to_string();
+                    app.camera_mode = new_cam.clone();
+                    let cam_data = camera_for_mode(&new_cam);
+                    let cam_uniform = CameraUniform {
+                        eye: [cam_data.eye[0], cam_data.eye[1], cam_data.eye[2], cam_data.fov_radians],
+                        look_at: [cam_data.look_at[0], cam_data.look_at[1], cam_data.look_at[2], 0.0],
+                    };
+                    app.queue.write_buffer(&app.camera_buffer, 0, bytemuck::bytes_of(&cam_uniform));
+
+                    app.input_event_count += 1;
+                    app.event_log.push(InteractiveEvent {
+                        event_index: app.event_log.len() as u32,
+                        frame_index: app.frames_presented as u32,
+                        event_source: "scripted".to_string(),
+                        raw_event_type: format!("scripted:{}", input.action),
+                        logical_input: logical_input.clone(),
+                        previous_state: prev_str,
+                        next_state: app.interactive_state.as_str().to_string(),
+                        accepted: true,
+                        reason_if_ignored: None,
+                    });
+
+                    *si_idx += 1;
+                }
+
                 // Auto-exit after smoke frames
                 if app.auto_exit && app.frames_presented >= app.smoke_frames {
                     write_window_manifest(app);
@@ -3489,12 +3874,12 @@ fn write_window_manifest(app: &WindowedApp) {
     let manifest = serde_json::json!({
         "schema": "oathyard.native_window_runtime.v1",
         "product": "OATHYARD",
-        "unit": "Unit-072",
+        "unit": "Unit-074",
         "native_windowed_execution": app.frames_presented > 0,
         "windowing_backend": "winit 0.30",
         "renderer_backend": BACKEND_ID,
         "wgpu_backend": format!("{:?}", app.adapter_info.backend),
-        "adapter_name": app.adapter_info.name,
+        "adapter_name": app.adapter_info.name.clone(),
         "adapter_device_type": format!("{:?}", app.adapter_info.device_type),
         "adapter_vendor": app.adapter_info.vendor,
         "surface_format": format!("{:?}", app.surface_format),
@@ -3508,10 +3893,30 @@ fn write_window_manifest(app: &WindowedApp) {
         "frames_presented": app.frames_presented,
         "redraw_requested_count": app.redraw_requested_count,
         "resize_event_count": app.resize_event_count,
+        "surface_reconfigure_count": app.surface_reconfigure_count,
         "input_event_count": app.input_event_count,
         "close_event_handled": app.close_event_handled,
-        "smoke_mode": true,
+        "smoke_mode": !app.interactive_mode,
         "auto_exit": app.auto_exit,
+        "interactive_mode": app.interactive_mode,
+        "interactive_mode_supported": true,
+        "scripted_input_supported": true,
+        "scripted_input_used": app.scripted_input_used,
+        "current_interactive_state": app.interactive_state.as_str(),
+        "states_visited": app.states_visited,
+        "transitions": app.transitions,
+        "controls_map": {
+            "Enter/Space": "advance to next phase",
+            "Escape/Q": "quit cleanly",
+            "R": "replay view",
+            "F": "fight film view",
+            "P": "pause/resume",
+            "H/F1": "settings/help overlay",
+            "Up/Down/W/S": "menu selection",
+            "Left/Right/A/D": "prev/next",
+            "CloseRequested": "window close button",
+        },
+        "event_log_path": "windowed_interactive_event_log.jsonl",
         "scenario_id": app.packet_json.get("scenario_id").and_then(Value::as_str).unwrap_or("unknown"),
         "final_truth_hash": app.packet_json.get("final_state_hash").and_then(Value::as_str).unwrap_or("unknown"),
         "replay_verified": app.packet_json.get("generated_after_replay_verify").and_then(Value::as_bool).unwrap_or(false),
@@ -3533,11 +3938,70 @@ fn write_window_manifest(app: &WindowedApp) {
     let manifest_path = app.out_dir.join("native_window_runtime_manifest.json");
     let _ = fs::write(&manifest_path, serde_json::to_string_pretty(&manifest).unwrap_or_default());
 
-    // Write event log TSV
-    let event_log = format!(
+    // Write interactive manifest (Unit-074)
+    let interactive_manifest = serde_json::json!({
+        "schema": "oathyard.native_window_interactive.v1",
+        "native_windowed_execution": app.frames_presented > 0,
+        "interactive_mode_supported": true,
+        "scripted_input_supported": true,
+        "scripted_input_used": app.scripted_input_used,
+        "manual_input_verified": app.input_event_count > 0 && !app.scripted_input_used,
+        "frames_presented": app.frames_presented,
+        "redraw_requested_count": app.redraw_requested_count,
+        "input_event_count": app.input_event_count,
+        "close_event_handled": app.close_event_handled,
+        "resize_event_count": app.resize_event_count,
+        "surface_reconfigure_count": app.surface_reconfigure_count,
+        "states_visited": app.states_visited,
+        "transitions": app.transitions,
+        "controls_map": manifest.get("controls_map").cloned().unwrap_or(Value::Null),
+        "event_log_path": "windowed_interactive_event_log.jsonl",
+        "scenario_id": app.packet_json.get("scenario_id").and_then(Value::as_str).unwrap_or("unknown"),
+        "final_truth_hash": app.packet_json.get("final_state_hash").and_then(Value::as_str).unwrap_or("unknown"),
+        "replay_verified": app.packet_json.get("generated_after_replay_verify").and_then(Value::as_bool).unwrap_or(false),
+        "post_hash_presentation_packet_hash": app.packet_json.get("presentation_packet_sha256").and_then(Value::as_str).unwrap_or(""),
+        "mesh_geometry_consumed": app.mesh_asset_count > 0,
+        "mesh_asset_count": app.mesh_asset_count,
+        "saltreach_duelist_consumed": app.saltreach_consumed,
+        "training_yard_consumed": app.training_yard_consumed,
+        "truth_mutation": false,
+        "owner_visual_acceptance": false,
+        "public_demo_ready": false,
+        "release_candidate_ready": false,
+    });
+    let _ = fs::write(
+        app.out_dir.join("native_window_interactive_manifest.json"),
+        serde_json::to_string_pretty(&interactive_manifest).unwrap_or_default(),
+    );
+
+    // Write structured event log as JSONL
+    let mut event_log_jsonl = String::new();
+    for event in &app.event_log {
+        let entry = serde_json::json!({
+            "event_index": event.event_index,
+            "frame_index": event.frame_index,
+            "event_source": event.event_source,
+            "raw_event_type": event.raw_event_type,
+            "logical_input": event.logical_input,
+            "previous_state": event.previous_state,
+            "next_state": event.next_state,
+            "accepted": event.accepted,
+            "reason_if_ignored": event.reason_if_ignored,
+            "truth_mutation": false,
+        });
+        event_log_jsonl.push_str(&entry.to_string());
+        event_log_jsonl.push('\n');
+    }
+    let _ = fs::write(
+        app.out_dir.join("windowed_interactive_event_log.jsonl"),
+        event_log_jsonl,
+    );
+
+    // Legacy TSV for backward compat
+    let event_log_tsv = format!(
         "event\tcount\nframes_presented\t{}\nredraw_requested\t{}\nresize_events\t{}\ninput_events\t{}\nclose_handled\t{}\n",
         app.frames_presented, app.redraw_requested_count, app.resize_event_count,
         app.input_event_count, app.close_event_handled
     );
-    let _ = fs::write(app.out_dir.join("windowed_event_log.tsv"), event_log);
+    let _ = fs::write(app.out_dir.join("windowed_event_log.tsv"), event_log_tsv);
 }

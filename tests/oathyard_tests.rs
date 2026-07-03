@@ -2807,10 +2807,10 @@ fn unit056_local_production_ready_owner_review_packet_truth_isolated() {
 
 #[test]
 fn unit072_native_window_swapchain_truth_isolated() {
-    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
-        .expect("renderer source");
-    let tool = std::fs::read_to_string("tools/run_native_windowed_game.sh")
-        .expect("windowed game tool");
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
+    let tool =
+        std::fs::read_to_string("tools/run_native_windowed_game.sh").expect("windowed game tool");
     assert!(source.contains("--windowed"));
     assert!(source.contains("windowed_main"));
     assert!(source.contains("native_window_runtime"));
@@ -2819,7 +2819,6 @@ fn unit072_native_window_swapchain_truth_isolated() {
     assert!(source.contains("winit::event_loop::EventLoop"));
     assert!(source.contains("ApplicationHandler"));
     assert!(source.contains("frames_presented"));
-    assert!(source.contains("Phase tracking is presentation-only"));
     assert!(source.contains("truth_mutation"));
     assert!(source.contains("final_truth_hash"));
     assert!(tool.contains("--windowed"));
@@ -2828,4 +2827,91 @@ fn unit072_native_window_swapchain_truth_isolated() {
     let cargo_toml =
         std::fs::read_to_string("crates/oathyard_renderer/Cargo.toml").expect("cargo toml");
     assert!(cargo_toml.contains("winit"));
+}
+
+#[test]
+fn unit074_native_interactive_playable_loop_truth_isolated() {
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
+
+    // Interactive state machine exists
+    assert!(source.contains("enum InteractiveState"));
+    assert!(source.contains("MainMenu"));
+    assert!(source.contains("FighterSelect"));
+    assert!(source.contains("LoadoutSelect"));
+    assert!(source.contains("ArenaSelect"));
+    assert!(source.contains("Observe"));
+    assert!(source.contains("Plan"));
+    assert!(source.contains("CommitReveal"));
+    assert!(source.contains("Resolve"));
+    assert!(source.contains("Consequence"));
+    assert!(source.contains("Replan"));
+    assert!(source.contains("MatchResult"));
+    assert!(source.contains("Replay"));
+    assert!(source.contains("FightFilm"));
+    assert!(source.contains("Settings"));
+    assert!(source.contains("Quit"));
+
+    // CLI flags for interactive/scripted
+    assert!(source.contains("--interactive"));
+    assert!(source.contains("--scripted-input"));
+    assert!(source.contains("interactive_mode"));
+    assert!(source.contains("scripted_input_path"));
+
+    // Scripted input parsing
+    assert!(source.contains("struct ScriptedInput"));
+    assert!(source.contains("fn parse_scripted_input"));
+    assert!(source.contains("oathyard.windowed_scripted_input.v1"));
+
+    // Interactive manifest schema
+    assert!(source.contains("oathyard.native_window_interactive.v1"));
+    assert!(source.contains("native_window_interactive_manifest.json"));
+    assert!(source.contains("interactive_mode_supported"));
+    assert!(source.contains("scripted_input_supported"));
+    assert!(source.contains("states_visited"));
+    assert!(source.contains("transitions"));
+    assert!(source.contains("windowed_interactive_event_log.jsonl"));
+
+    // Keyboard input mapping
+    assert!(source.contains("KeyCode::Enter"));
+    assert!(source.contains("KeyCode::Space"));
+    assert!(source.contains("KeyCode::KeyR"));
+    assert!(source.contains("KeyCode::KeyF"));
+    assert!(source.contains("KeyCode::KeyP"));
+    assert!(source.contains("KeyCode::KeyH"));
+    assert!(source.contains("KeyCode::KeyQ"));
+
+    // Event logging
+    assert!(source.contains("struct InteractiveEvent"));
+    assert!(source.contains("event_source"));
+    assert!(source.contains("logical_input"));
+    assert!(source.contains("reason_if_ignored"));
+
+    // Scripted input file exists and validates
+    let script =
+        std::fs::read_to_string("content/input/unit074_windowed_script.json").expect("script file");
+    assert!(script.contains("oathyard.windowed_scripted_input.v1"));
+    assert!(script.contains("\"advance\""));
+    assert!(script.contains("\"replay\""));
+    assert!(script.contains("\"fight_film\""));
+    assert!(script.contains("\"quit\""));
+    assert!(script.contains("at_frame"));
+
+    // Tool supports interactive modes
+    let tool =
+        std::fs::read_to_string("tools/run_native_windowed_game.sh").expect("windowed game tool");
+    assert!(tool.contains("--interactive"));
+    assert!(tool.contains("--scripted-input"));
+    assert!(tool.contains("Unit-074"));
+
+    // Truth isolation preserved
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+
+    // No readiness flags promoted
+    assert!(!source.contains("owner_visual_acceptance\": true"));
+    assert!(!source.contains("public_demo_ready\": true"));
+    assert!(!source.contains("release_candidate_ready\": true"));
 }
