@@ -2822,12 +2822,24 @@ fn parse_windowed_args() -> Result<WindowedConfig, String> {
     })
 }
 
+struct WindowedGpuMesh {
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
+    index_count: u32,
+    material_bind_group: wgpu::BindGroup,
+    mesh_material: MeshMaterial,
+    _textures: (wgpu::Texture, wgpu::Texture, wgpu::Texture),
+}
+
 struct WindowedApp {
     device: wgpu::Device,
     queue: wgpu::Queue,
     surface: wgpu::Surface<'static>,
     surface_config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
+    bind_group: wgpu::BindGroup,
+    mesh_material_buffer: wgpu::Buffer,
+    gpu_meshes: Vec<WindowedGpuMesh>,
     camera_mode: String,
     frames_presented: usize,
     redraw_requested_count: usize,
@@ -3064,63 +3076,240 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             pollster::block_on(setup_wgpu_surface(&window, window_size.width, window_size.height))
                 .expect("wgpu surface setup");
 
-        // Build shader + pipeline — simplified windowed path:
-        // Uses a basic clear-color shader to prove surface/swapchain works.
-        // The full mesh pipeline is proven by the offscreen deterministic capture path.
-        let shader_source = "
-@vertex
-fn vs_main(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4f {
-    var pos = array<vec2f, 3>(
-        vec2f(-1.0, -1.0), vec2f(3.0, -1.0), vec2f(-1.0, 3.0)
-    );
-    return vec4f(pos[vi], 0.0, 1.0);
-}
-
-@fragment
-fn fs_main() -> @location(0) vec4f {
-    return vec4f(0.35, 0.32, 0.28, 1.0);
-}
-";
+        // Build full production mesh pipeline — same shader and bindings as offscreen.
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("oathyard windowed shader"),
-            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+            source: wgpu::ShaderSource::Wgsl(SHADER.into()),
         });
 
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("oathyard windowed pipeline layout"),
-            bind_group_layouts: &[],
+        // Uniform buffers: packet (seed), camera, mesh_material, pose
+        let camera_mode_data = camera_for_mode(&self.config.camera_mode);
+        let camera_uniform = CameraUniform {
+            eye: [
+                camera_mode_data.eye[0],
+                camera_mode_data.eye[1],
+                camera_mode_data.eye[2],
+                camera_mode_data.fov_radians,
+            ],
+            look_at: [
+                camera_mode_data.look_at[0],
+                camera_mode_data.look_at[1],
+                camera_mode_data.look_at[2],
+                0.0,
+            ],
+        };
+        let camera_bytes = bytemuck::bytes_of(&camera_uniform);
+        let camera_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard windowed camera uniform"),
+            size: camera_bytes.len() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&camera_buffer, 0, camera_bytes);
+
+        let uniform_bytes: Vec<u8> = self.seed.iter().flat_map(|v| v.to_le_bytes()).collect();
+        let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard windowed seed uniform"),
+            size: uniform_bytes.len() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&uniform_buffer, 0, &uniform_bytes);
+
+        let mesh_material = MeshMaterial {
+            material_type: -1.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.62, tint_g: 0.58, tint_b: 0.54, tint_a: 1.0,
+        };
+        let mesh_material_bytes = bytemuck::bytes_of(&mesh_material);
+        let mesh_material_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard windowed mesh material uniform"),
+            size: mesh_material_bytes.len() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&mesh_material_buffer, 0, mesh_material_bytes);
+
+        let pose = PoseUniform {
+            pose_active: 0.0, pose_time: 0.0, _pad: [0.0, 0.0],
+            bone_offset_x: [0.0; 4], bone_offset_x2: [0.0; 4],
+            bone_offset_y: [0.0; 4], bone_offset_y2: [0.0; 4],
+            bone_offset_z: [0.0; 4], bone_offset_z2: [0.0; 4],
+            bone_yaw: [0.0; 4], bone_yaw2: [0.0; 4],
+        };
+        let pose_bytes = bytemuck::bytes_of(&pose);
+        let pose_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard windowed pose uniform"),
+            size: pose_bytes.len() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&pose_buffer, 0, pose_bytes);
+
+        // Group 0 bind group layout: 4 uniform buffers
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("oathyard windowed bind group layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0, visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false, min_binding_size: None,
+                    }, count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1, visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false, min_binding_size: None,
+                    }, count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2, visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false, min_binding_size: None,
+                    }, count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3, visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false, min_binding_size: None,
+                    }, count: None,
+                },
+            ],
+        });
+
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("oathyard windowed bind group"),
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: uniform_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: camera_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 2, resource: mesh_material_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 3, resource: pose_buffer.as_entire_binding() },
+            ],
+        });
+
+        // Group 1: material textures + sampler
+        let material_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("oathyard windowed material texture bind group layout"),
+            entries: &[
+                texture_layout_entry(0),
+                texture_layout_entry(1),
+                texture_layout_entry(2),
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3, visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+
+        let material_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("oathyard windowed material sampler"),
+            address_mode_u: wgpu::AddressMode::Repeat,
+            address_mode_v: wgpu::AddressMode::Repeat,
+            address_mode_w: wgpu::AddressMode::Repeat,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+            ..Default::default()
+        });
+
+        // Mesh pipeline using the production verdict_ring.wgsl mesh entry points
+        let mesh_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("oathyard windowed mesh pipeline layout"),
+            bind_group_layouts: &[Some(&bind_group_layout), Some(&material_bind_group_layout)],
             immediate_size: 0,
         });
 
         let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("oathyard windowed render pipeline"),
-            layout: Some(&pipeline_layout),
+            label: Some("oathyard windowed mesh pipeline"),
+            layout: Some(&mesh_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader,
-                entry_point: Some("vs_main"),
+                entry_point: Some("mesh_vs_main"),
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[],
+                buffers: &[MeshVertex::layout()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
-                entry_point: Some("fs_main"),
+                entry_point: Some("mesh_fs_main"),
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: surface_format,
-                    blend: Some(wgpu::BlendState::REPLACE),
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
-            primitive: wgpu::PrimitiveState::default(),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: None,
+                ..Default::default()
+            },
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
             multiview_mask: None,
             cache: None,
         });
 
-        // Upload mesh geometry is NOT done in the windowed path.
-        // Mesh consumption metadata is still recorded from the pre-loaded meshes.
-        // The full mesh pipeline is proven by the offscreen deterministic capture path.
+        // Upload mesh geometry + create per-mesh material bind groups
+        use wgpu::util::DeviceExt;
+        let gpu_meshes: Vec<WindowedGpuMesh> = self.runtime_meshes.iter().map(|mesh| {
+            let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("oathyard windowed mesh vertices"),
+                contents: bytemuck::cast_slice(&mesh.vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+            let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("oathyard windowed mesh indices"),
+                contents: bytemuck::cast_slice(&mesh.indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+            // Material textures: use dummy 1x1 for meshes without material_validation
+            let (bt, nt, ot) = if mesh.material.material_texture_binding {
+                let bi = load_png_rgba(&mesh.material.base_color_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
+                let ni = load_png_rgba(&mesh.material.normal_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![128,128,255,255] });
+                let oi = load_png_rgba(&mesh.material.orm_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
+                (
+                    create_material_texture(&device, &queue, "windowed base", wgpu::TextureFormat::Rgba8UnormSrgb, &bi),
+                    create_material_texture(&device, &queue, "windowed normal", wgpu::TextureFormat::Rgba8Unorm, &ni),
+                    create_material_texture(&device, &queue, "windowed orm", wgpu::TextureFormat::Rgba8Unorm, &oi),
+                )
+            } else {
+                (
+                    create_material_texture(&device, &queue, "windowed dummy", wgpu::TextureFormat::Rgba8UnormSrgb,
+                        &RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] }),
+                    create_material_texture(&device, &queue, "windowed dummy norm", wgpu::TextureFormat::Rgba8Unorm,
+                        &RuntimeTextureImage { width: 1, height: 1, rgba: vec![128,128,255,255] }),
+                    create_material_texture(&device, &queue, "windowed dummy orm", wgpu::TextureFormat::Rgba8Unorm,
+                        &RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] }),
+                )
+            };
+            let bv = bt.create_view(&wgpu::TextureViewDescriptor::default());
+            let nv = nt.create_view(&wgpu::TextureViewDescriptor::default());
+            let ov = ot.create_view(&wgpu::TextureViewDescriptor::default());
+            let mat_bg = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("oathyard windowed material bind group"),
+                layout: &material_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&bv) },
+                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&nv) },
+                    wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::TextureView(&ov) },
+                    wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::Sampler(&material_sampler) },
+                ],
+            });
+            WindowedGpuMesh {
+                vertex_buffer, index_buffer,
+                index_count: mesh.indices.len() as u32,
+                material_bind_group: mat_bg,
+                mesh_material: material_for_mesh(&mesh.mesh_asset_id),
+                _textures: (bt, nt, ot),
+            }
+        }).collect();
 
         self.app = Some(WindowedApp {
             device,
@@ -3128,6 +3317,9 @@ fn fs_main() -> @location(0) vec4f {
             surface,
             surface_config,
             pipeline,
+            bind_group,
+            mesh_material_buffer,
+            gpu_meshes,
             camera_mode: self.config.camera_mode.clone(),
             frames_presented: 0,
             redraw_requested_count: 0,
@@ -3249,7 +3441,22 @@ fn fs_main() -> @location(0) vec4f {
                             });
 
                             render_pass.set_pipeline(&app.pipeline);
-                            render_pass.draw(0..3, 0..1);
+                            render_pass.set_bind_group(0, &app.bind_group, &[]);
+                            for mesh in &app.gpu_meshes {
+                                app.queue.write_buffer(
+                                    &app.mesh_material_buffer,
+                                    0,
+                                    bytemuck::bytes_of(&mesh.mesh_material),
+                                );
+                                render_pass.set_bind_group(0, &app.bind_group, &[]);
+                                render_pass.set_bind_group(1, &mesh.material_bind_group, &[]);
+                                render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+                                render_pass.set_index_buffer(
+                                    mesh.index_buffer.slice(..),
+                                    wgpu::IndexFormat::Uint32,
+                                );
+                                render_pass.draw_indexed(0..mesh.index_count, 0, 0..1);
+                            }
                         }
 
                         app.queue.submit(std::iter::once(encoder.finish()));
