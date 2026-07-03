@@ -267,28 +267,34 @@ seed_armor_manifest="$(seed_mesh_manifest production_seed_armor_gambeson \
   gambeson:armor:assets/runtime/seed/gambeson.mesh.json:0.00:0.00:0.00:1.00:0.00)"
 seed_fighter_manifest="$(seed_mesh_manifest production_seed_fighter_mannequin \
   fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:0.00:0.00:0.00:0.85:0.00)"
+# Unit-061: Combined seed manifest with ALL first-kit assets at full Meshy-6 fidelity.
+all_seed_manifest="$(seed_mesh_manifest all_seed_first_kit \
+  fighter_mannequin:fighter:assets/runtime/seed/fighter_mannequin.mesh.json:-0.42:0.00:0.00:0.78:0.15 \
+  longsword:weapon:assets/runtime/seed/longsword.mesh.json:-0.15:0.05:0.00:0.55:-0.20 \
+  gambeson:armor:assets/runtime/seed/gambeson.mesh.json:0.35:-0.02:0.00:0.72:0.00 \
+  witness_stone:arena:assets/runtime/seed/witness_stone.mesh.json:0.00:-0.15:-0.80:0.60:0.00)"
 render_capture "production_seed_weapon_longsword" "offscreen_production_seed_weapon_longsword" "longsword" "$out/render/production_seed_weapon_longsword" "production_renderer_wgpu_spike_production_seed_weapon_longsword_1920x1080" "" "$seed_weapon_manifest"
 render_capture "production_seed_arena_witness_stone" "offscreen_production_seed_arena_witness_stone" "witness_stone" "$out/render/production_seed_arena_witness_stone" "production_renderer_wgpu_spike_production_seed_arena_witness_stone_1920x1080" "" "$seed_arena_manifest"
 render_capture "production_seed_armor_gambeson" "offscreen_production_seed_armor_gambeson" "gambeson" "$out/render/production_seed_armor_gambeson" "production_renderer_wgpu_spike_production_seed_armor_gambeson_1920x1080" "" "$seed_armor_manifest"
-render_capture "production_seed_fighter_mannequin" "offscreen_production_seed_fighter_mannequin" "fighter_mannequin" "$out/render/production_seed_fighter_mannequin" "production_renderer_wgpu_spike_production_seed_fighter_mannequin_1920x1080" "" "$seed_fighter_manifest"
+render_capture "production_seed_fighter_mannequin" "offscreen_production_seed_fighter_mannequin" "fighter_mannequin" "$out/render/production_seed_fighter_mannequin" "production_renderer_wgpu_spike_production_seed_fighter_mannequin_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-048 game-flow captures ---
-render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "oathyard_verdict_ring,saltreach_duelist,longsword" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$seed_arena_manifest"
-render_capture "boot_main_menu" "boot_main_menu" "oathyard_verdict_ring" "$out/render/boot_main_menu" "production_renderer_wgpu_spike_boot_main_menu_1920x1080" "" "$seed_arena_manifest"
-render_capture "fighter_select" "fighter_select" "fighter_mannequin" "$out/render/fighter_select" "production_renderer_wgpu_spike_fighter_select_1920x1080" "" "$seed_fighter_manifest"
+render_capture "oathyard_verdict_ring_establishing_seed" "oathyard_verdict_ring_establishing" "fighter_mannequin,longsword,gambeson,witness_stone" "$out/render/oathyard_verdict_ring_establishing_seed" "production_renderer_wgpu_spike_oathyard_verdict_ring_establishing_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "boot_main_menu" "boot_main_menu" "fighter_mannequin,longsword,gambeson,witness_stone" "$out/render/boot_main_menu" "production_renderer_wgpu_spike_boot_main_menu_1920x1080" "" "$all_seed_manifest"
+render_capture "fighter_select" "fighter_select" "fighter_mannequin" "$out/render/fighter_select" "production_renderer_wgpu_spike_fighter_select_1920x1080" "" "$all_seed_manifest"
 render_capture "loadout_select" "loadout_select" "gambeson" "$out/render/loadout_select" "production_renderer_wgpu_spike_loadout_select_1920x1080" "" "$seed_armor_manifest"
-render_capture "gameplay_distance_fighter_weapon_seed" "gameplay_distance_fighter_weapon_01" "fighter_mannequin,longsword" "$out/render/gameplay_distance_fighter_weapon_seed" "production_renderer_wgpu_spike_gameplay_distance_fighter_weapon_seed_1920x1080" "" "$seed_fighter_manifest"
-render_capture "gameplay_distance_fighter_loadout_seed" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_seed" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_seed_1920x1080" "" "$seed_fighter_manifest"
-render_capture "pre_contact_frame_seed" "pre_contact_frame" "fighter_mannequin,longsword" "$out/render/pre_contact_frame_seed" "production_renderer_wgpu_spike_pre_contact_frame_seed_1920x1080" "" "$seed_fighter_manifest"
-render_capture "contact_frame_seed" "contact_frame" "fighter_mannequin,gambeson,longsword" "$out/render/contact_frame_seed" "production_renderer_wgpu_spike_contact_frame_seed_1920x1080" "" "$seed_fighter_manifest"
-render_capture "fight_film_replay_camera_shot" "fight_film_replay_camera_shot" "fighter_mannequin,longsword" "$out/render/fight_film_replay_camera_shot" "production_renderer_wgpu_spike_fight_film_replay_camera_shot_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_weapon_seed" "gameplay_distance_fighter_weapon_01" "fighter_mannequin,longsword" "$out/render/gameplay_distance_fighter_weapon_seed" "production_renderer_wgpu_spike_gameplay_distance_fighter_weapon_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "gameplay_distance_fighter_loadout_seed" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_seed" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "pre_contact_frame_seed" "pre_contact_frame" "fighter_mannequin,longsword" "$out/render/pre_contact_frame_seed" "production_renderer_wgpu_spike_pre_contact_frame_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "contact_frame_seed" "contact_frame" "fighter_mannequin,gambeson,longsword" "$out/render/contact_frame_seed" "production_renderer_wgpu_spike_contact_frame_seed_1920x1080" "" "$all_seed_manifest"
+render_capture "fight_film_replay_camera_shot" "fight_film_replay_camera_shot" "fighter_mannequin,longsword" "$out/render/fight_film_replay_camera_shot" "production_renderer_wgpu_spike_fight_film_replay_camera_shot_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-051: production-ready-candidate captures for first-kit ---
 # These use the enhanced material/lighting/pose paths and are classified separately.
 # Required roles: planning_timeline, material_armor_damage_frame, injury_capability_consequence_frame
-render_capture "planning_timeline" "planning_timeline" "fighter_mannequin,gambeson,longsword" "$out/render/planning_timeline" "production_renderer_wgpu_spike_planning_timeline_1920x1080" "" "$seed_fighter_manifest"
-render_capture "material_armor_damage_frame" "material_armor_damage_frame" "fighter_mannequin,gambeson,longsword" "$out/render/material_armor_damage_frame" "production_renderer_wgpu_spike_material_armor_damage_frame_1920x1080" "" "$seed_armor_manifest"
-render_capture "injury_capability_consequence_frame" "injury_capability_consequence_frame" "fighter_mannequin,longsword" "$out/render/injury_capability_consequence_frame" "production_renderer_wgpu_spike_injury_capability_consequence_frame_1920x1080" "" "$seed_fighter_manifest"
+render_capture "planning_timeline" "planning_timeline" "fighter_mannequin,gambeson,longsword" "$out/render/planning_timeline" "production_renderer_wgpu_spike_planning_timeline_1920x1080" "" "$all_seed_manifest"
+render_capture "material_armor_damage_frame" "material_armor_damage_frame" "fighter_mannequin,gambeson,longsword" "$out/render/material_armor_damage_frame" "production_renderer_wgpu_spike_material_armor_damage_frame_1920x1080" "" "$all_seed_manifest"
+render_capture "injury_capability_consequence_frame" "injury_capability_consequence_frame" "fighter_mannequin,longsword" "$out/render/injury_capability_consequence_frame" "production_renderer_wgpu_spike_injury_capability_consequence_frame_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: training_yard establishing (promoted production_ready_candidate) ---
 # training_yard is repo-authored arena geometry promoted to production_ready_candidate
@@ -297,19 +303,19 @@ training_yard_manifest="$(mesh_manifest training_yard_establishing \
 render_capture "training_yard_establishing" "training_yard_establishing" "training_yard" "$out/render/training_yard_establishing" "production_renderer_wgpu_spike_training_yard_establishing_1920x1080" "" "$training_yard_manifest"
 
 # --- Unit-052: recovery_replan_frame (truth-derived consequence capture) ---
-render_capture "recovery_replan_frame" "recovery_replan_frame" "fighter_mannequin,gambeson,longsword" "$out/render/recovery_replan_frame" "production_renderer_wgpu_spike_recovery_replan_frame_1920x1080" "" "$seed_fighter_manifest"
+render_capture "recovery_replan_frame" "recovery_replan_frame" "fighter_mannequin,gambeson,longsword" "$out/render/recovery_replan_frame" "production_renderer_wgpu_spike_recovery_replan_frame_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: first_person_combat_view ---
-render_capture "first_person_combat_view" "first_person_combat_view" "fighter_mannequin,longsword" "$out/render/first_person_combat_view" "production_renderer_wgpu_spike_first_person_combat_view_1920x1080" "" "$seed_fighter_manifest"
+render_capture "first_person_combat_view" "first_person_combat_view" "fighter_mannequin,longsword" "$out/render/first_person_combat_view" "production_renderer_wgpu_spike_first_person_combat_view_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: third_person_combat_view ---
-render_capture "third_person_combat_view" "third_person_combat_view" "fighter_mannequin,longsword" "$out/render/third_person_combat_view" "production_renderer_wgpu_spike_third_person_combat_view_1920x1080" "" "$seed_fighter_manifest"
+render_capture "third_person_combat_view" "third_person_combat_view" "fighter_mannequin,longsword" "$out/render/third_person_combat_view" "production_renderer_wgpu_spike_third_person_combat_view_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: replay_verification_ui_or_packet_view ---
-render_capture "replay_verification_ui_or_packet_view" "replay_verification_ui_or_packet_view" "fighter_mannequin,longsword" "$out/render/replay_verification_ui_or_packet_view" "production_renderer_wgpu_spike_replay_verification_ui_or_packet_view_1920x1080" "" "$seed_fighter_manifest"
+render_capture "replay_verification_ui_or_packet_view" "replay_verification_ui_or_packet_view" "fighter_mannequin,longsword" "$out/render/replay_verification_ui_or_packet_view" "production_renderer_wgpu_spike_replay_verification_ui_or_packet_view_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: performance_debug_overlay ---
-render_capture "performance_debug_overlay" "performance_debug_overlay" "fighter_mannequin,longsword" "$out/render/performance_debug_overlay" "production_renderer_wgpu_spike_performance_debug_overlay_1920x1080" "" "$seed_fighter_manifest"
+render_capture "performance_debug_overlay" "performance_debug_overlay" "fighter_mannequin,longsword" "$out/render/performance_debug_overlay" "production_renderer_wgpu_spike_performance_debug_overlay_1920x1080" "" "$all_seed_manifest"
 
 # --- Unit-052: settings_accessibility ---
 render_capture "settings_accessibility" "settings_accessibility" "oathyard_verdict_ring" "$out/render/settings_accessibility" "production_renderer_wgpu_spike_settings_accessibility_1920x1080" "" "$seed_arena_manifest"
@@ -320,13 +326,13 @@ render_capture "arena_select" "arena_select" "oathyard_verdict_ring,training_yar
 # --- Unit-052: first-kit variant captures (same kit, different camera/pose/role) ---
 # These are NOT fake breadth — they are explicitly documented as the same first-kit
 # rendered in different game-flow roles, which the spec permits.
-render_capture "fighter_closeup_02" "fighter_closeup_01" "fighter_mannequin" "$out/render/fighter_closeup_02" "production_renderer_wgpu_spike_fighter_closeup_02_1920x1080" "" "$seed_fighter_manifest"
-render_capture "fighter_closeup_03" "fighter_select" "fighter_mannequin" "$out/render/fighter_closeup_03" "production_renderer_wgpu_spike_fighter_closeup_03_1920x1080" "" "$seed_fighter_manifest"
+render_capture "fighter_closeup_02" "fighter_closeup_01" "fighter_mannequin" "$out/render/fighter_closeup_02" "production_renderer_wgpu_spike_fighter_closeup_02_1920x1080" "" "$all_seed_manifest"
+render_capture "fighter_closeup_03" "fighter_select" "fighter_mannequin" "$out/render/fighter_closeup_03" "production_renderer_wgpu_spike_fighter_closeup_03_1920x1080" "" "$all_seed_manifest"
 render_capture "armor_loadout_family_closeup_02" "loadout_select" "gambeson" "$out/render/armor_loadout_family_closeup_02" "production_renderer_wgpu_spike_armor_loadout_family_closeup_02_1920x1080" "" "$seed_armor_manifest"
 render_capture "armor_loadout_family_closeup_03" "armor_loadout_family_closeup_01" "gambeson" "$out/render/armor_loadout_family_closeup_03" "production_renderer_wgpu_spike_armor_loadout_family_closeup_03_1920x1080" "" "$seed_armor_manifest"
 render_capture "weapon_family_closeup_02" "weapon_family_closeup_01" "longsword" "$out/render/weapon_family_closeup_02" "production_renderer_wgpu_spike_weapon_family_closeup_02_1920x1080" "" "$seed_weapon_manifest"
 render_capture "weapon_family_closeup_03" "production_seed_weapon_longsword" "longsword" "$out/render/weapon_family_closeup_03" "production_renderer_wgpu_spike_weapon_family_closeup_03_1920x1080" "" "$seed_weapon_manifest"
-render_capture "gameplay_distance_fighter_loadout_family_02" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_02" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_02_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_02" "gameplay_distance_fighter_loadout_family_01" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_02" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_02_1920x1080" "" "$all_seed_manifest"
 render_capture "gameplay_distance_weapon_family_02" "gameplay_distance_weapon_family_01" "longsword" "$out/render/gameplay_distance_weapon_family_02" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_02_1920x1080" "" "$seed_weapon_manifest"
 
 # --- Unit-053: close remaining 21 capture matrix slots ---
@@ -334,9 +340,9 @@ render_capture "gameplay_distance_weapon_family_02" "gameplay_distance_weapon_fa
 # Same first-kit (fighter_mannequin/gambeson/longsword) in different game-flow roles.
 
 # Fighter closeups 04-06 (distinct camera angles on fighter_mannequin)
-render_capture "fighter_closeup_04" "fighter_closeup_04" "fighter_mannequin" "$out/render/fighter_closeup_04" "production_renderer_wgpu_spike_fighter_closeup_04_1920x1080" "" "$seed_fighter_manifest"
-render_capture "fighter_closeup_05" "fighter_closeup_05" "fighter_mannequin" "$out/render/fighter_closeup_05" "production_renderer_wgpu_spike_fighter_closeup_05_1920x1080" "" "$seed_fighter_manifest"
-render_capture "fighter_closeup_06" "fighter_closeup_06" "fighter_mannequin" "$out/render/fighter_closeup_06" "production_renderer_wgpu_spike_fighter_closeup_06_1920x1080" "" "$seed_fighter_manifest"
+render_capture "fighter_closeup_04" "fighter_closeup_04" "fighter_mannequin" "$out/render/fighter_closeup_04" "production_renderer_wgpu_spike_fighter_closeup_04_1920x1080" "" "$all_seed_manifest"
+render_capture "fighter_closeup_05" "fighter_closeup_05" "fighter_mannequin" "$out/render/fighter_closeup_05" "production_renderer_wgpu_spike_fighter_closeup_05_1920x1080" "" "$all_seed_manifest"
+render_capture "fighter_closeup_06" "fighter_closeup_06" "fighter_mannequin" "$out/render/fighter_closeup_06" "production_renderer_wgpu_spike_fighter_closeup_06_1920x1080" "" "$all_seed_manifest"
 
 # Armor/loadout closeups 04-06 (distinct camera angles on gambeson)
 render_capture "armor_loadout_family_closeup_04" "armor_loadout_family_closeup_04" "gambeson" "$out/render/armor_loadout_family_closeup_04" "production_renderer_wgpu_spike_armor_loadout_family_closeup_04_1920x1080" "" "$seed_armor_manifest"
@@ -351,10 +357,10 @@ render_capture "weapon_family_closeup_07" "weapon_family_closeup_07" "longsword"
 render_capture "weapon_family_closeup_08" "weapon_family_closeup_08" "longsword" "$out/render/weapon_family_closeup_08" "production_renderer_wgpu_spike_weapon_family_closeup_08_1920x1080" "" "$seed_weapon_manifest"
 
 # Gameplay distance fighter/loadout 03-06 (distinct camera angles)
-render_capture "gameplay_distance_fighter_loadout_family_03" "gameplay_distance_fighter_loadout_family_03" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_03" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_03_1920x1080" "" "$seed_fighter_manifest"
-render_capture "gameplay_distance_fighter_loadout_family_04" "gameplay_distance_fighter_loadout_family_04" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_04" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_04_1920x1080" "" "$seed_fighter_manifest"
-render_capture "gameplay_distance_fighter_loadout_family_05" "gameplay_distance_fighter_loadout_family_05" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_05" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_05_1920x1080" "" "$seed_fighter_manifest"
-render_capture "gameplay_distance_fighter_loadout_family_06" "gameplay_distance_fighter_loadout_family_06" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_06" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_06_1920x1080" "" "$seed_fighter_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_03" "gameplay_distance_fighter_loadout_family_03" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_03" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_03_1920x1080" "" "$all_seed_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_04" "gameplay_distance_fighter_loadout_family_04" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_04" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_04_1920x1080" "" "$all_seed_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_05" "gameplay_distance_fighter_loadout_family_05" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_05" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_05_1920x1080" "" "$all_seed_manifest"
+render_capture "gameplay_distance_fighter_loadout_family_06" "gameplay_distance_fighter_loadout_family_06" "fighter_mannequin,gambeson,longsword" "$out/render/gameplay_distance_fighter_loadout_family_06" "production_renderer_wgpu_spike_gameplay_distance_fighter_loadout_family_06_1920x1080" "" "$all_seed_manifest"
 
 # Gameplay distance weapon 03-08 (distinct camera angles)
 render_capture "gameplay_distance_weapon_family_03" "gameplay_distance_weapon_family_03" "longsword" "$out/render/gameplay_distance_weapon_family_03" "production_renderer_wgpu_spike_gameplay_distance_weapon_family_03_1920x1080" "" "$seed_weapon_manifest"
