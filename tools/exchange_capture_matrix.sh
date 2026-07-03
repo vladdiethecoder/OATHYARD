@@ -44,9 +44,80 @@ PHASES=(
 CAPTURE_COUNT=0
 MANIFEST_ENTRIES=""
 
+# Unit-071: Generate mesh manifest for rigged asset consumption.
+# Each capture phase must consume the actual skinned saltreach_duelist mesh
+# rather than falling back to procedural/SDF geometry.
+SKINNED_MESH="assets/runtime/saltreach_duelist_skinned.mesh.json"
+TRAINING_YARD_MESH="assets/presentation_runtime/training_yard.mesh.json"
+MESH_MANIFEST_DIR="$out/mesh_manifests"
+mkdir -p "$MESH_MANIFEST_DIR"
+
+generate_mesh_manifest() {
+  local phase_id="$1"
+  local manifest="$MESH_MANIFEST_DIR/${phase_id}.json"
+  python3 - "$manifest" "$SKINNED_MESH" "$TRAINING_YARD_MESH" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = Path(sys.argv[1])
+skinned = sys.argv[2]
+training = sys.argv[3]
+meshes = [
+    {
+        "mesh_asset_id": "player_saltreach_duelist",
+        "mesh_asset_class": "fighter",
+        "mesh_source": skinned,
+        "translation": [-0.72, 0.0, 0.0],
+        "scale": 0.72,
+        "yaw_radians": 0.10,
+        "transform_baked_or_runtime": "runtime_transform_baked_into_candidate_vertex_buffer",
+        "candidate_status": "source_approved_production_seed",
+        "production_ready": False,
+        "truth_mutation": False,
+    },
+    {
+        "mesh_asset_id": "opponent_saltreach_duelist",
+        "mesh_asset_class": "fighter",
+        "mesh_source": skinned,
+        "translation": [0.72, 0.0, 0.0],
+        "scale": 0.72,
+        "yaw_radians": 0.10,
+        "transform_baked_or_runtime": "runtime_transform_baked_into_candidate_vertex_buffer",
+        "candidate_status": "source_approved_production_seed",
+        "production_ready": False,
+        "truth_mutation": False,
+    },
+    {
+        "mesh_asset_id": "training_yard",
+        "mesh_asset_class": "arena",
+        "mesh_source": training,
+        "translation": [0.0, -0.18, 0.0],
+        "scale": 0.82,
+        "yaw_radians": 0.0,
+        "transform_baked_or_runtime": "runtime_transform_baked_into_candidate_vertex_buffer",
+        "candidate_status": "source_approved_production_seed",
+        "production_ready": False,
+        "truth_mutation": False,
+    },
+]
+payload = {
+    "schema": "oathyard.wgpu_runtime_mesh_manifest.v1",
+    "source": "exchange_capture_matrix.sh Unit-071 skinned mesh manifest",
+    "capture_id": manifest.stem,
+    "candidate_renderer_only": False,
+    "production_seed_render": True,
+    "production_ready": False,
+    "truth_mutation": False,
+    "meshes": meshes,
+}
+manifest.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+print(manifest.as_posix())
+PY
+}
+
 for entry in "${PHASES[@]}"; do
   IFS='|' read -r phase_id camera_mode clip_id description <<< "$entry"
   capture_stem="production_renderer_exchange_${phase_id}_1920x1080"
+  mesh_manifest_path="$(generate_mesh_manifest "$phase_id")"
 
   "$RENDERER" \
     --packet "$PACKET" \
@@ -55,9 +126,19 @@ for entry in "${PHASES[@]}"; do
     --capture-file-stem "$capture_stem" \
     --camera-mode "$camera_mode" \
     --candidate-assets "saltreach_duelist,training_yard" \
+    --mesh-manifest-json "$mesh_manifest_path" \
     >/dev/null 2>&1
 
   capture_png="$out/$phase_id/${capture_stem}.png"
+  # Unit-071: Extract mesh consumption metadata from the production renderer manifest
+  prod_manifest="$out/$phase_id/production_renderer_manifest.json"
+  mesh_consumed="false"
+  mesh_count=0
+  mesh_assets_str="[]"
+  if [[ -f "$prod_manifest" ]]; then
+    mesh_consumed=$(python3 -c "import json; d=json.load(open('$prod_manifest')); print(str(d.get('mesh_geometry_consumed', False)).lower())" 2>/dev/null || echo "false")
+    mesh_count=$(python3 -c "import json; d=json.load(open('$prod_manifest')); print(d.get('mesh_asset_count', 0))" 2>/dev/null || echo "0")
+  fi
   if [[ -f "$capture_png" ]]; then
     capture_size=$(stat -c%s "$capture_png" 2>/dev/null || stat -f%z "$capture_png" 2>/dev/null)
     if [[ "$capture_size" -gt 50000 ]]; then
@@ -66,7 +147,7 @@ for entry in "${PHASES[@]}"; do
         MANIFEST_ENTRIES="${MANIFEST_ENTRIES},
 "
       fi
-      MANIFEST_ENTRIES="${MANIFEST_ENTRIES}    {\"phase_id\": \"$phase_id\", \"camera_mode\": \"$camera_mode\", \"clip_id\": \"$clip_id\", \"description\": \"$description\", \"capture_path\": \"$phase_id/${capture_stem}.png\", \"capture_size_bytes\": $capture_size}"
+      MANIFEST_ENTRIES="${MANIFEST_ENTRIES}    {\"phase_id\": \"$phase_id\", \"camera_mode\": \"$camera_mode\", \"clip_id\": \"$clip_id\", \"description\": \"$description\", \"capture_path\": \"$phase_id/${capture_stem}.png\", \"capture_size_bytes\": $capture_size, \"mesh_geometry_consumed\": $mesh_consumed, \"mesh_asset_count\": $mesh_count}"
       echo "  PASS $phase_id ($capture_size bytes, camera=$camera_mode, clip=$clip_id)"
     else
       echo "  WARN $phase_id capture too small ($capture_size bytes)" >&2

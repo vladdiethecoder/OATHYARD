@@ -52,6 +52,27 @@ if manifest:
         if capture_pngs:
             size = capture_pngs[0].stat().st_size
             check('native_status_capture_nontrivial_size', size > 50000, f'{size} bytes')
+
+        # Unit-071: Require mesh_geometry_consumed=true for promoted combat evidence.
+        # The production renderer manifest must prove actual rigged mesh consumption.
+        prod_manifest_path = render_dir / 'production_renderer_manifest.json'
+        if prod_manifest_path.is_file():
+            try:
+                prod = json.loads(prod_manifest_path.read_text(encoding='utf-8'))
+                mesh_consumed = prod.get('mesh_geometry_consumed', False)
+                mesh_count = prod.get('mesh_asset_count', 0)
+                mesh_summary = prod.get('mesh_summary') or {}
+                vertex_count = mesh_summary.get('vertex_count', 0) if isinstance(mesh_summary, dict) else 0
+                check('native_status_mesh_geometry_consumed', mesh_consumed is True, f'mesh_geometry_consumed={mesh_consumed}')
+                check('native_status_mesh_asset_count_positive', mesh_count > 0, f'mesh_asset_count={mesh_count}')
+                check('native_status_mesh_vertex_count_substantial', vertex_count >= 1000, f'vertex_count={vertex_count}')
+                mesh_ids = [m.get('mesh_asset_id', '?') for m in prod.get('mesh_assets', [])]
+                saltreach_consumed = any('saltreach' in mid for mid in mesh_ids)
+                check('native_status_saltreach_duelist_consumed', saltreach_consumed, f'mesh_ids={mesh_ids}')
+            except Exception as exc:
+                check('native_status_prod_manifest_parse', False, str(exc))
+        else:
+            check('native_status_prod_manifest_present', False, str(prod_manifest_path))
     else:
         check('native_status_visual_evidence_blocked', evidence_present is False, evidence_present)
 

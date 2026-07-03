@@ -1734,6 +1734,44 @@ fn native_render_path_is_blocked_without_3d_renderer_capture() {
 }
 
 #[test]
+fn unit071_native_rigged_asset_consumption_truth_isolated() {
+    // Unit-071: Verify native_combat_render and exchange_capture_matrix
+    // are wired to consume the rigged saltreach_duelist mesh via mesh manifests.
+    let source = fs::read_to_string("src/lib.rs").expect("source");
+    let exchange_tool =
+        fs::read_to_string("tools/exchange_capture_matrix.sh").expect("exchange tool");
+    let rta_tool =
+        fs::read_to_string("tools/renderer_target_audit.sh").expect("renderer target audit");
+
+    // native_combat_render must generate a mesh manifest referencing the skinned mesh
+    assert!(source.contains("saltreach_duelist_skinned.mesh.json"));
+    assert!(source.contains("--mesh-manifest-json"));
+    assert!(source.contains("oathyard.wgpu_runtime_mesh_manifest.v1"));
+    assert!(source.contains("mesh_manifest_path"));
+
+    // exchange_capture_matrix must also pass mesh manifests to the renderer
+    assert!(exchange_tool.contains("mesh-manifest-json"));
+    assert!(exchange_tool.contains("saltreach_duelist_skinned.mesh.json"));
+    assert!(exchange_tool.contains("mesh_geometry_consumed"));
+
+    // renderer_target_audit must verify mesh consumption
+    assert!(rta_tool.contains("mesh_geometry_consumed"));
+    assert!(rta_tool.contains("saltreach_duelist_consumed"));
+    assert!(rta_tool.contains("mesh_asset_count_positive"));
+    assert!(rta_tool.contains("mesh_vertex_count_substantial"));
+
+    // Skinned mesh JSON must exist and have rigging data
+    let skinned_path = Path::new("assets/runtime/saltreach_duelist_skinned.mesh.json");
+    assert!(skinned_path.exists(), "skinned mesh JSON must exist");
+    let skinned = fs::read_to_string(skinned_path).expect("read skinned mesh");
+    assert!(skinned.contains("source_skin"));
+    assert!(skinned.contains("has_joints"));
+    assert!(skinned.contains("has_weights"));
+    assert!(skinned.contains("has_ibms"));
+    assert!(skinned.contains("has_animations"));
+}
+
+#[test]
 fn high_fidelity_capture_gate_emits_fail_closed_required_capture_matrix() {
     let out = Path::new("target/tmp/oathyard_high_fidelity_capture_matrix_test");
     if out.exists() {

@@ -6917,12 +6917,39 @@ pub fn native_combat_render(
         result.end_condition.winner_token()
     );
     fs::write(&packet_path, &packet)?;
+    // Unit-071: Generate a mesh manifest so the production renderer actually
+    // consumes the rigged saltreach_duelist skinned mesh and training_yard
+    // arena geometry, rather than falling back to procedural/SDF primitives.
+    let skinned_mesh_path = std::env::current_dir()
+        .map(|p| p.join("assets/runtime/saltreach_duelist_skinned.mesh.json"))
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("assets/runtime/saltreach_duelist_skinned.mesh.json")
+        });
+    let training_yard_path = std::env::current_dir()
+        .map(|p| p.join("assets/presentation_runtime/training_yard.mesh.json"))
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("assets/presentation_runtime/training_yard.mesh.json")
+        });
+    let mesh_manifest_dir = out_dir.join("mesh_manifests");
+    fs::create_dir_all(&mesh_manifest_dir).ok();
+    let mesh_manifest_path = mesh_manifest_dir.join("native_combat_mesh_manifest.json");
+    let skinned_str = skinned_mesh_path.to_string_lossy().replace('\\', "/");
+    let training_str = training_yard_path.to_string_lossy().replace('\\', "/");
+    // Build mesh manifest with two rigged fighters (player/opponent) + arena
+    let mesh_manifest = format!(
+        r#"{{"schema":"oathyard.wgpu_runtime_mesh_manifest.v1","source":"native_combat_render Unit-071 skinned mesh manifest","capture_id":"native_combat_render","candidate_renderer_only":false,"production_seed_render":true,"production_ready":false,"truth_mutation":false,"meshes":[{{"mesh_asset_id":"player_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[-0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_saltreach_duelist","mesh_asset_class":"fighter","mesh_source":"{skinned}","translation":[0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"training_yard","mesh_asset_class":"arena","mesh_source":"{training}","translation":[0.0,-0.18,0.0],"scale":0.82,"yaw_radians":0.0,"transform_baked_or_runtime":"runtime_transform_baked_into_candidate_vertex_buffer","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}}]}}"#,
+        skinned = skinned_str,
+        training = training_str,
+    );
+    fs::write(&mesh_manifest_path, &mesh_manifest)?;
     // Call production renderer for native capture
     let renderer_result = Command::new(&renderer_bin)
         .arg("--packet")
         .arg(&packet_path)
         .arg("--out")
         .arg(&render_dir)
+        .arg("--mesh-manifest-json")
+        .arg(&mesh_manifest_path)
         .arg("--capture-id")
         .arg("native_combat_capture_unit070")
         .arg("--capture-file-stem")

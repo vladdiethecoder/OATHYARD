@@ -1981,30 +1981,61 @@ async fn render_wgpu_frame(
                     contents: bytemuck::cast_slice(&mesh.indices),
                     usage: wgpu::BufferUsages::INDEX,
                 });
-                let base_image = load_png_rgba(&mesh.material.base_color_texture_path)?;
-                let normal_image = load_png_rgba(&mesh.material.normal_texture_path)?;
-                let orm_image = load_png_rgba(&mesh.material.orm_texture_path)?;
-                let base_color_texture = create_material_texture(
-                    &device,
-                    &queue,
-                    "oathyard production base color texture",
-                    wgpu::TextureFormat::Rgba8UnormSrgb,
-                    &base_image,
-                );
-                let normal_texture = create_material_texture(
-                    &device,
-                    &queue,
-                    "oathyard production normal texture",
-                    wgpu::TextureFormat::Rgba8Unorm,
-                    &normal_image,
-                );
-                let orm_texture = create_material_texture(
-                    &device,
-                    &queue,
-                    "oathyard production ORM texture",
-                    wgpu::TextureFormat::Rgba8Unorm,
-                    &orm_image,
-                );
+                // Unit-071: Only load textures when material_texture_binding is true.
+                // Skinned meshes without material_validation produce empty texture paths.
+                let (base_color_texture, normal_texture, orm_texture, material_texture_bound) =
+                    if mesh.material.material_texture_binding {
+                        let base_image = load_png_rgba(&mesh.material.base_color_texture_path)?;
+                        let normal_image = load_png_rgba(&mesh.material.normal_texture_path)?;
+                        let orm_image = load_png_rgba(&mesh.material.orm_texture_path)?;
+                        let bt = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production base color texture",
+                            wgpu::TextureFormat::Rgba8UnormSrgb,
+                            &base_image,
+                        );
+                        let nt = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production normal texture",
+                            wgpu::TextureFormat::Rgba8Unorm,
+                            &normal_image,
+                        );
+                        let ot = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production ORM texture",
+                            wgpu::TextureFormat::Rgba8Unorm,
+                            &orm_image,
+                        );
+                        (bt, nt, ot, true)
+                    } else {
+                        // Fallback: create 1x1 dummy textures for meshes without material textures.
+                        let dummy = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production dummy texture",
+                            wgpu::TextureFormat::Rgba8UnormSrgb,
+                            &RuntimeTextureImage { width: 1, height: 1, rgba: vec![255, 255, 255, 255] },
+                        );
+                        let dummy_norm = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production dummy normal texture",
+                            wgpu::TextureFormat::Rgba8Unorm,
+                            &RuntimeTextureImage { width: 1, height: 1, rgba: vec![128, 128, 255, 255] },
+                        );
+                        let dummy_orm = create_material_texture(
+                            &device,
+                            &queue,
+                            "oathyard production dummy ORM texture",
+                            wgpu::TextureFormat::Rgba8Unorm,
+                            &RuntimeTextureImage { width: 1, height: 1, rgba: vec![255, 255, 255, 255] },
+                        );
+                        (dummy, dummy_norm, dummy_orm, false)
+                    };
+                let _ = material_texture_bound;
                 let base_view = base_color_texture.create_view(&wgpu::TextureViewDescriptor::default());
                 let normal_view = normal_texture.create_view(&wgpu::TextureViewDescriptor::default());
                 let orm_view = orm_texture.create_view(&wgpu::TextureViewDescriptor::default());
