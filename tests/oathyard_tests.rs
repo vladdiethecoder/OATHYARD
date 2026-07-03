@@ -1717,15 +1717,18 @@ fn native_render_path_is_blocked_without_3d_renderer_capture() {
     let hifi_tool =
         fs::read_to_string("tools/capture_high_fidelity_screens.sh").expect("hifi tool");
 
+    // Source must contain both the promoted path and the blocked fallback
     assert!(source.contains("render_native_3d_blocked_manifest_json"));
     assert!(source.contains("oathyard.native_3d_visual_blocked.v1"));
+    assert!(source.contains("oathyard.native_combat_render.v1"));
     assert!(source.contains("truth-after-hash-duel-result"));
     assert!(source.contains("forbidden_visual_fallbacks_emitted"));
     assert!(source.contains("native_3d_visual_evidence_present"));
-    assert!(native_tool.contains("BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE"));
-    assert!(native_tool.contains("\"source\": \"truth-after-hash-duel-result\""));
-    assert!(native_tool.contains("forbidden_visual_fallbacks_emitted"));
+    // Native tool must require promoted schema and verify real capture
     assert!(native_tool.contains("native_3d_visual_evidence_present"));
+    assert!(native_tool.contains("production_renderer_"));
+    assert!(native_tool.contains("forbidden_visual_fallbacks_emitted"));
+    assert!(native_tool.contains("native_3d_renderer_capture_present"));
     assert!(hifi_tool.contains("native_3d_visual_evidence_required"));
     assert!(hifi_tool.contains("BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE"));
 }

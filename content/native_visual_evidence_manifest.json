@@ -1,0 +1,66 @@
+{
+  "schema": "oathyard.native_visual_evidence_manifest.v1",
+  "product": "OATHYARD",
+  "unit": "Unit-070",
+  "status": "native_3d_renderer_capture_present",
+  "renderer_backend": "oathyard-native-wgpu-production-v1",
+  "renderer_crate": "crates/oathyard_renderer/",
+  "renderer_binary": "crates/oathyard_renderer/target/debug/oathyard-native-renderer",
+  "production_renderer_complete": false,
+  "owner_visual_acceptance": false,
+  "public_demo_ready": false,
+  "release_candidate_ready": false,
+  "truth_mutation": false,
+  "canonical_truth_hash": "f17c8f76b9dfae86",
+  "capture_resolution": [1920, 1080],
+  "evidence_sources": {
+    "native_combat_render": {
+      "schema": "oathyard.native_combat_render.v1",
+      "tool": "./tools/native_combat_render.sh",
+      "produces": "real native 3D capture PNG + manifest after truth hashing",
+      "capture_stem_prefix": "production_renderer_native_combat_3d_1920x1080",
+      "camera_mode": "oathyard_verdict_ring_establishing",
+      "assets": ["saltreach_duelist", "training_yard"]
+    },
+    "exchange_capture_matrix": {
+      "schema": "oathyard.exchange_capture_matrix.v1",
+      "tool": "./tools/exchange_capture_matrix.sh",
+      "produces": "12-phase native 3D exchange timeline captures",
+      "phases": [
+        "observe_idle",
+        "plan_ready",
+        "commit_reveal",
+        "anticipation",
+        "pre_contact",
+        "contact",
+        "follow_through",
+        "consequence",
+        "recover",
+        "replan",
+        "replay",
+        "fight_film"
+      ]
+    },
+    "renderer_target_audit": {
+      "schema": "oathyard.native_presentation_target.v3",
+      "tool": "./tools/renderer_target_audit.sh",
+      "status": "PASSED",
+      "current_status": "native_3d_renderer_capture_present"
+    }
+  },
+  "rigged_asset": {
+    "id": "saltreach_duelist",
+    "source": "assets/model_candidates/t_73291be5/gltf/saltreach_duelist.gltf",
+    "joints": 16,
+    "vertices": 13598,
+    "triangles": 1432,
+    "animations": ["idle", "walk", "attack"],
+    "materials": 10
+  },
+  "gates": {
+    "verify_sh": "requires promoted schema (native_3d_visual_evidence_present:true + capture PNG >= 50KB)",
+    "native_combat_render_sh": "requires promoted schema + capture file presence",
+    "renderer_target_audit_sh": "passes with promoted status + capture file verification",
+    "all_readiness_flags": "false (owner_visual_acceptance, public_demo_ready, release_candidate_ready, production_renderer_complete)"
+  }
+}

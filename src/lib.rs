@@ -6924,17 +6924,18 @@ pub fn native_combat_render(
         .arg("--out")
         .arg(&render_dir)
         .arg("--capture-id")
-        .arg("native_combat_capture_unit069")
+        .arg("native_combat_capture_unit070")
         .arg("--capture-file-stem")
-        .arg("native_combat_3d_1920x1080")
+        .arg("production_renderer_native_combat_3d_1920x1080")
         .arg("--camera-mode")
         .arg("oathyard_verdict_ring_establishing")
         .arg("--candidate-assets")
         .arg("saltreach_duelist,training_yard")
         .output();
     let renderer_succeeded = match renderer_result {
-        Ok(output) => {
-            let capture_path = render_dir.join("native_combat_3d_1920x1080.png");
+        Ok(_) => {
+            let capture_path =
+                render_dir.join("production_renderer_native_combat_3d_1920x1080.png");
             capture_path.exists()
                 && capture_path
                     .metadata()

@@ -126,18 +126,15 @@ log_run "$final_dir/native_combat_render.log" ./tools/native_combat_render.sh ex
 log_run "$final_dir/pbr_materials.log" ./tools/pbr_materials.sh examples/duels/basic_oathyard.duel artifacts/pbr_materials/verify
 log_run "$final_dir/renderer_target_audit.log" ./tools/renderer_target_audit.sh artifacts/renderer_target/verify
 
-# Unit-069: Accept either blocked or promoted native 3D combat render schema
-NCR_BLOCKED=$(grep -c '"schema": "oathyard.native_3d_visual_blocked.v1"' artifacts/native_combat/verify/native_combat_render_manifest.json || true)
-NCR_PROMOTED=$(grep -c '"schema": "oathyard.native_combat_render.v1"' artifacts/native_combat/verify/native_combat_render_manifest.json || true)
-if [[ "$NCR_BLOCKED" -eq 0 && "$NCR_PROMOTED" -eq 0 ]]; then
-  echo "ERROR: neither blocked nor promoted native combat render schema found" >&2
+# Unit-070: Require promoted native combat render schema for current-run evidence.
+# The promoted schema indicates real native 3D renderer capture was produced.
+if ! grep -q '"native_3d_visual_evidence_present":true' artifacts/native_combat/verify/native_combat_render_manifest.json; then
+  echo "ERROR: native combat render did not produce promoted evidence (native_3d_visual_evidence_present:true)" >&2
   exit 1
 fi
-grep -q '"source": "truth-after-hash-duel-result"' artifacts/native_combat/verify/native_combat_render_manifest.json
-grep -q '"forbidden_visual_fallbacks_emitted": false' artifacts/native_combat/verify/native_combat_render_manifest.json
-if [[ "$NCR_BLOCKED" -gt 0 ]]; then
-  grep -q '"native_3d_visual_evidence_present": false' artifacts/native_combat/verify/native_combat_render_manifest.json
-fi
+grep -q '"source":"truth-after-hash-duel-result"' artifacts/native_combat/verify/native_combat_render_manifest.json
+grep -q '"forbidden_visual_fallbacks_emitted":false' artifacts/native_combat/verify/native_combat_render_manifest.json
+grep -q '"visual_evidence_status":"native_3d_renderer_capture_present"' artifacts/native_combat/verify/native_combat_render_manifest.json
 grep -q '"all_required_channels_covered": true' artifacts/pbr_materials/verify/pbr_material_manifest.json
 grep -q '"flat_recolor_rejected": true' artifacts/pbr_materials/verify/pbr_material_manifest.json
 grep -q 'Status: PASSED' artifacts/renderer_target/verify/native_presentation_target_report.md
@@ -149,4 +146,4 @@ test -s "artifacts/cross_platform/verify/cross_platform_matrix.json"
 grep -q '"schema": "oathyard.cross_platform_matrix.v1"' artifacts/cross_platform/verify/cross_platform_matrix.json
 grep -q '"hashes_match": true' artifacts/cross_platform/verify/cross_platform_matrix.json
 
-echo "verify passed: truth/replay gates with 3D-only visual evidence policy enforced"
+echo "verify passed: truth/replay gates with promoted native 3D visual evidence"

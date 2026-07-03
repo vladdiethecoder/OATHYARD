@@ -14,7 +14,7 @@ Normal verification keeps nonvisual evidence:
 - export-bundle manifest/report/hash files
 - build, test, audit, package, environment, and readiness reports
 
-Standalone two-dimensional diagrams, image rollups, frame dumps, debug panels, browser canvas output, and fallback captures are not accepted as visual evidence. Visual readiness is blocked until a native 3D renderer/engine capture path writes manifest-backed captures with renderer, asset, camera, replay/hash, and `truth_mutation=false` metadata.
+Standalone two-dimensional diagrams, image rollups, frame dumps, debug panels, browser canvas output, and fallback captures are not accepted as visual evidence. Visual evidence is produced by a native 3D renderer capture path (`oathyard-native-wgpu-production-v1`) that writes manifest-backed PNG captures with renderer, asset, camera, replay/hash, and `truth_mutation=false` metadata. Current native 3D captures are real production renders but are not yet owner-accepted or production-final.
 
 ## Quick start
 
@@ -85,7 +85,7 @@ The export command verifies the replay, regenerates canonical trace/replay/repor
 ./tools/native_combat_render.sh examples/duels/basic_oathyard.duel artifacts/native_combat/latest
 ```
 
-Until a real native 3D renderer capture path exists, this command verifies replay/truth input and writes a blocked manifest/report (`oathyard.native_3d_visual_blocked.v1`) instead of generating fallback visual proof. The command must not mutate truth or substitute non-3D evidence for visual readiness.
+The native combat render path calls the production wgpu renderer after truth hashing, producing a real native 3D capture at 1920x1080 with manifest-backed metadata (`oathyard.native_combat_render.v1`). The renderer uses skinned glTF geometry (saltreach_duelist, 16 joints, 13598 vertices) with animation clip sampling (idle/walk/attack), lighting, fog, and UI overlay. The command must not mutate truth or substitute non-3D evidence for visual readiness.
 
 ## Visual evidence policy
 
@@ -96,7 +96,7 @@ Until a real native 3D renderer capture path exists, this command verifies repla
 ./tools/visual_benchmark.sh artifacts/visual_review/latest
 ```
 
-Visual evidence requires native 3D renderer/engine captures with current-run metadata. If the renderer path is absent, the correct status is blocked, while nonvisual truth/replay/build/package evidence can still pass. See `docs/visual/THREE_D_ONLY_VISUAL_EVIDENCE.md` and `docs/decisions/0002-remove-2d-visual-artifacts.md`.
+Visual evidence requires native 3D renderer/engine captures with current-run metadata. The production renderer (`oathyard-native-wgpu-production-v1`) now produces real native 3D captures with manifest-backed metadata. If the renderer path is absent on a given platform, the correct status is blocked, while nonvisual truth/replay/build/package evidence can still pass. See `docs/visual/THREE_D_ONLY_VISUAL_EVIDENCE.md` and `docs/decisions/0002-remove-2d-visual-artifacts.md`.
 
 ## Other focused gates
 
