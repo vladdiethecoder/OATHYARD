@@ -2963,6 +2963,7 @@ struct WindowedApp {
     mesh_material_buffer: wgpu::Buffer,
     gpu_meshes: Vec<WindowedGpuMesh>,
     camera_mode: String,
+    first_person_default: bool,
     frames_presented: usize,
     redraw_requested_count: usize,
     resize_event_count: usize,
@@ -3180,6 +3181,32 @@ async fn setup_wgpu_surface(
     surface.configure(&device, &surface_config);
 
     Ok((device, queue, surface, surface_config, adapter_info, surface_format, present_mode, alpha_mode))
+}
+
+/// Unit-075: Resolve camera mode from interactive state + view toggle.
+/// Combat states use first-person by default; menus use state-specific cameras.
+fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str {
+    if first_person {
+        match state {
+            InteractiveState::Observe
+            | InteractiveState::Plan
+            | InteractiveState::CommitReveal
+            | InteractiveState::Resolve
+            | InteractiveState::Consequence
+            | InteractiveState::Replan => "first_person_combat_view",
+            _ => state.camera_mode(),
+        }
+    } else {
+        match state {
+            InteractiveState::Observe
+            | InteractiveState::Plan
+            | InteractiveState::CommitReveal
+            | InteractiveState::Resolve
+            | InteractiveState::Consequence
+            | InteractiveState::Replan => "third_person_combat_view",
+            _ => state.camera_mode(),
+        }
+    }
 }
 
 /// Unit-074: Scripted input for deterministic interactive windowed smoke
@@ -3491,6 +3518,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             mesh_material_buffer,
             gpu_meshes,
             camera_mode: self.config.camera_mode.clone(),
+            first_person_default: true,
             frames_presented: 0,
             redraw_requested_count: 0,
             resize_event_count: 0,
@@ -3652,6 +3680,15 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             write_window_manifest(app);
                             event_loop.exit();
                         }
+                        winit::keyboard::KeyCode::KeyV => {
+                            logical = "toggle_camera".to_string();
+                            app.first_person_default = !app.first_person_default;
+                            app.transitions.push(format!(
+                                "{} CAMERA_TOGGLE {}",
+                                prev_state.as_str(),
+                                if app.first_person_default { "first_person" } else { "third_person" }
+                            ));
+                        }
                         _ => {
                             accepted = false;
                             reason = Some(format!("unmapped key: {:?}", code));
@@ -3660,7 +3697,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     }
 
                     // Update camera mode from interactive state
-                    let new_cam = app.interactive_state.camera_mode().to_string();
+                    let new_cam = camera_for_state(app.interactive_state, app.first_person_default).to_string();
                     app.camera_mode = new_cam.clone();
 
                     // Update the camera uniform buffer on the GPU
@@ -3824,11 +3861,19 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             event_loop.exit();
                             return;
                         }
+                        "toggle_camera" => {
+                            app.first_person_default = !app.first_person_default;
+                            app.transitions.push(format!(
+                                "{} CAMERA_TOGGLE {}",
+                                prev_str,
+                                if app.first_person_default { "first_person" } else { "third_person" }
+                            ));
+                        }
                         _ => {}
                     }
 
                     // Update camera from state
-                    let new_cam = app.interactive_state.camera_mode().to_string();
+                    let new_cam = camera_for_state(app.interactive_state, app.first_person_default).to_string();
                     app.camera_mode = new_cam.clone();
                     let cam_data = camera_for_mode(&new_cam);
                     let cam_uniform = CameraUniform {
@@ -3914,6 +3959,7 @@ fn write_window_manifest(app: &WindowedApp) {
             "H/F1": "settings/help overlay",
             "Up/Down/W/S": "menu selection",
             "Left/Right/A/D": "prev/next",
+            "V": "toggle first-person/third-person camera",
             "CloseRequested": "window close button",
         },
         "event_log_path": "windowed_interactive_event_log.jsonl",

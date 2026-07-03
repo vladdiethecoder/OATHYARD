@@ -1,0 +1,27 @@
+{
+  "schema": "oathyard.windowed_scripted_input.v1",
+  "description": "Unit-075: Deterministic scripted input for interactive windowed smoke. Navigates from BOOT through full playable flow to QUIT with camera toggle tests during combat states.",
+  "scenario_id": "basic_oathyard",
+  "inputs": [
+    {"at_frame": 5,  "action": "advance",       "label": "BOOT -> MAIN_MENU"},
+    {"at_frame": 10, "action": "advance",       "label": "MAIN_MENU -> FIGHTER_SELECT"},
+    {"at_frame": 15, "action": "advance",       "label": "FIGHTER_SELECT -> LOADOUT_SELECT"},
+    {"at_frame": 20, "action": "advance",       "label": "LOADOUT_SELECT -> ARENA_SELECT"},
+    {"at_frame": 25, "action": "advance",       "label": "ARENA_SELECT -> MATCH_INTRO"},
+    {"at_frame": 30, "action": "advance",       "label": "MATCH_INTRO -> OBSERVE (first-person)"},
+    {"at_frame": 35, "action": "toggle_camera", "label": "OBSERVE: first-person -> third-person"},
+    {"at_frame": 40, "action": "toggle_camera", "label": "OBSERVE: third-person -> first-person"},
+    {"at_frame": 45, "action": "advance",       "label": "OBSERVE -> PLAN"},
+    {"at_frame": 50, "action": "advance",       "label": "PLAN -> COMMIT_REVEAL"},
+    {"at_frame": 55, "action": "advance",       "label": "COMMIT_REVEAL -> RESOLVE_CONTACT"},
+    {"at_frame": 60, "action": "toggle_camera", "label": "RESOLVE: first-person -> third-person"},
+    {"at_frame": 65, "action": "advance",       "label": "RESOLVE_CONTACT -> CONSEQUENCE"},
+    {"at_frame": 70, "action": "advance",       "label": "CONSEQUENCE -> REPLAN"},
+    {"at_frame": 75, "action": "advance",       "label": "REPLAN -> MATCH_RESULT"},
+    {"at_frame": 80, "action": "replay",        "label": "MATCH_RESULT -> REPLAY"},
+    {"at_frame": 85, "action": "fight_film",    "label": "REPLAY -> FIGHT_FILM"},
+    {"at_frame": 90, "action": "toggle_camera", "label": "FIGHT_FILM: first-person -> third-person"},
+    {"at_frame": 95, "action": "advance",       "label": "FIGHT_FILM -> QUIT"},
+    {"at_frame": 105, "action": "quit",         "label": "clean exit"}
+  ]
+}

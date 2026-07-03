@@ -2915,3 +2915,59 @@ fn unit074_native_interactive_playable_loop_truth_isolated() {
     assert!(!source.contains("public_demo_ready\": true"));
     assert!(!source.contains("release_candidate_ready\": true"));
 }
+
+#[test]
+fn unit075_first_person_default_camera_truth_isolated() {
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
+
+    // First-person default camera fields and logic
+    assert!(source.contains("first_person_default"));
+    assert!(source.contains("fn camera_for_state"));
+    assert!(source.contains("first_person_combat_view"));
+    assert!(source.contains("third_person_combat_view"));
+
+    // Combat states map to first-person by default
+    assert!(source.contains("InteractiveState::Observe"));
+    assert!(source.contains("InteractiveState::Plan"));
+    assert!(source.contains("InteractiveState::CommitReveal"));
+    assert!(source.contains("InteractiveState::Resolve"));
+    assert!(source.contains("InteractiveState::Consequence"));
+    assert!(source.contains("InteractiveState::Replan"));
+    assert!(source.contains("\"first_person_combat_view\""));
+    assert!(source.contains("\"third_person_combat_view\""));
+
+    // V key toggle
+    assert!(source.contains("KeyCode::KeyV"));
+    assert!(source.contains("\"toggle_camera\""));
+    assert!(source.contains("CAMERA_TOGGLE"));
+    assert!(source.contains("first_person_default = !"));
+
+    // Scripted input supports toggle_camera action
+    assert!(source.contains("\"toggle_camera\" =>"));
+
+    // Scripted input file with camera toggle exists
+    let script = std::fs::read_to_string("content/input/unit075_windowed_script.json")
+        .expect("unit075 script file");
+    assert!(script.contains("oathyard.windowed_scripted_input.v1"));
+    assert!(script.contains("\"toggle_camera\""));
+    assert!(script.contains("first-person -> third-person"));
+    assert!(script.contains("third-person -> first-person"));
+
+    // Default is first-person (no third-person override before first combat state)
+    let init = source
+        .lines()
+        .filter(|l| l.contains("first_person_default"))
+        .filter(|l| l.contains("true"))
+        .count();
+    assert!(
+        init > 0,
+        "first_person_default should be initialized to true"
+    );
+
+    // Truth isolation preserved
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}
