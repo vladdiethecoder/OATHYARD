@@ -3044,8 +3044,8 @@ fn unit076_timeline_ui_truth_isolated() {
 
 #[test]
 fn unit077_dual_timeline_reveal_truth_isolated() {
-    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
-        .expect("renderer source");
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
 
     // Opponent timeline fields
     assert!(source.contains("opponent_timeline_slots"));
@@ -3067,8 +3067,8 @@ fn unit077_dual_timeline_reveal_truth_isolated() {
 
 #[test]
 fn unit078_combat_resolution_bridge_truth_isolated() {
-    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
-        .expect("renderer source");
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
 
     // Combat resolution structures
     assert!(source.contains("struct ResolvedContact"));
@@ -3101,8 +3101,8 @@ fn unit078_combat_resolution_bridge_truth_isolated() {
 
 #[test]
 fn unit079_match_result_injury_tracking_truth_isolated() {
-    let source = std::fs::read_to_string("crates/oathyard_renderer/src/main.rs")
-        .expect("renderer source");
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
 
     // Match result structures
     assert!(source.contains("struct MatchResult"));
@@ -3129,6 +3129,56 @@ fn unit079_match_result_injury_tracking_truth_isolated() {
     assert!(source.contains("\"match_result\": if let Some(ref r) = app.match_result"));
     assert!(source.contains("\"winner\": r.winner"));
     assert!(source.contains("\"summary\": r.summary"));
+
+    // Truth isolation
+    assert!(source.contains("truth_mutation"));
+    assert!(source.contains("owner_visual_acceptance\": false"));
+    assert!(source.contains("public_demo_ready\": false"));
+    assert!(source.contains("release_candidate_ready\": false"));
+}
+
+#[test]
+fn unit080_first_player_playtest_truth_isolated() {
+    // Verify the first-player playtest script
+    let script = std::fs::read_to_string("content/input/unit080_playtest.json")
+        .expect("unit080 playtest script");
+    assert!(script.contains("oathyard.windowed_scripted_input.v1"));
+    assert!(script.contains("advance"));
+    assert!(script.contains("\"timeline_right\""));
+    assert!(script.contains("\"place_step\""));
+    assert!(script.contains("\"place_thrust\""));
+    assert!(script.contains("\"place_guard\""));
+    assert!(script.contains("\"place_cut\""));
+    assert!(script.contains("\"place_recover\""));
+    assert!(script.contains("quit"));
+    let advance_count = script.matches("\"advance\"").count();
+    assert!(
+        advance_count >= 10,
+        "need >=10 advance actions, got {advance_count}"
+    );
+
+    // Verify the manifest source code exists
+    let source =
+        std::fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("renderer source");
+
+    // Playtest states present in InteractiveState enum
+    assert!(source.contains("InteractiveState"));
+    assert!(source.contains("MainMenu"));
+    assert!(source.contains("FighterSelect"));
+    assert!(source.contains("Timeline"));
+    assert!(source.contains("MatchResult"));
+    assert!(source.contains("FightFilm"));
+
+    // Timeline actions supported by scripted input
+    assert!(source.contains("\"place_step\""));
+    assert!(source.contains("\"place_cut\""));
+    assert!(source.contains("\"place_thrust\""));
+
+    // Manifest output supports playtest fields
+    assert!(source.contains("native_window_interactive_manifest.json"));
+    assert!(source.contains("combat_contacts"));
+    assert!(source.contains("match_result"));
+    assert!(source.contains("timeline_slots"));
 
     // Truth isolation
     assert!(source.contains("truth_mutation"));
