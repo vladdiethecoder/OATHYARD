@@ -389,14 +389,14 @@ fn tone_map(x: vec3<f32>) -> vec3<f32> {
     return pow(clamp(y, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
 }
 
-// Unit-049: SDF material palette
+// Unit-049: SDF material palette — Unit-060: increased saturation for separation.
 fn sdf_material_color(mat: f32, p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
-    if (mat < 1.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.14, 0.12, 0.09)); } // floor
-    if (mat < 2.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.50, 0.42, 0.28)); } // ring
-    if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.32, 0.28, 0.24)); } // stone
-    if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.72, 0.40, 0.28)); } // skin/fighter
-    if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.78, 0.76, 0.82)); } // blade
-    if (mat < 6.5) { return vec3<f32>(1.0, 0.48, 0.12); } // accent
+    if (mat < 1.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.22, 0.18, 0.12)); } // floor — warmer
+    if (mat < 2.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.62, 0.48, 0.20)); } // ring — golden
+    if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.40, 0.36, 0.32)); } // stone — warmer gray
+    if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.82, 0.50, 0.32)); } // skin/fighter — warmer
+    if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.85, 0.83, 0.88)); } // blade — brighter
+    if (mat < 6.5) { return vec3<f32>(1.0, 0.58, 0.15); } // accent — brighter orange
     // Unit-049: UI panel material — emissive warm glow with subtle pattern
     let ui_uv = fract(vec2<f32>(p.x * 3.0 + p.z * 2.0, p.y * 4.0));
     let ui_line = smoothstep(0.02, 0.0, abs(fract(p.y * 8.0) - 0.5)) * 0.15;
@@ -425,7 +425,7 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
         let fill = normalize(vec3<f32>(0.42, 0.36, 0.82));
         let rim = normalize(vec3<f32>(0.72, 0.54, -0.72));
         let diffuse = max(dot(n, key), 0.0) * soft_shadow(p + n * 0.01, key);
-        let fill_light = max(dot(n, fill), 0.0) * 0.24;
+        let fill_light = max(dot(n, fill), 0.0) * 0.35;
         let rim_light = pow(max(dot(reflect(-rim, n), -rd), 0.0), 2.5) * 0.42;
         // Unit-051: SSAO approximation for contact grounding
         let ssao = ssao_approx(p, n);
@@ -433,12 +433,16 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
         let ground_occlusion = mix(1.0, 0.55, smoothstep(0.1, -0.4, p.y));
         let ao = clamp(0.38 + 0.62 * n.y, 0.16, 1.0) * ssao * ground_occlusion;
         let base = sdf_material_color(hit.y, p, n);
-        color = base * (0.18 + diffuse * 1.55 + fill_light) * ao + vec3<f32>(0.65, 0.48, 0.28) * rim_light;
+        // Unit-060: Increased ambient for visibility (was 0.18).
+        color = base * (0.38 + diffuse * 1.55 + fill_light) * ao + vec3<f32>(0.65, 0.48, 0.28) * rim_light;
         let contact_bloom = exp(-32.0 * length(p - vec3<f32>(0.02, 0.42, -0.02)));
         color = color + vec3<f32>(0.85, 0.48, 0.10) * contact_bloom * 1.8;
     }
-    let fog = clamp(1.0 - exp(-0.060 * hit.x * hit.x), 0.0, 0.65);
-    let fog_color = vec3<f32>(0.14, 0.12, 0.10) + vec3<f32>(0.06, 0.04, 0.02) * input.uv.y;
+    // Unit-060: Reduced fog density and brighter fog color for scene readability.
+    // Was: exp(-0.060 * hit.x^2), max 0.65, dark color (0.14,0.12,0.10)
+    // Now: exp(-0.012 * hit.x^2), max 0.20, warmer/lighter color
+    let fog = clamp(1.0 - exp(-0.012 * hit.x * hit.x), 0.0, 0.20);
+    let fog_color = vec3<f32>(0.35, 0.32, 0.28) + vec3<f32>(0.08, 0.06, 0.03) * input.uv.y;
     color = mix(color, fog_color, fog);
     let vignette = smoothstep(1.42, 0.20, length(uv * vec2<f32>(0.82, 1.0)));
     color = color * (0.52 + 0.48 * vignette);
@@ -549,10 +553,11 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let diffuse = max(dot(n, key), 0.0);
     let fill_light = max(dot(n, fill), 0.0) * 0.25;
 
-    // Unit-051: Enhanced ambient occlusion with ground contact darkening
-    let ground_occlusion = mix(1.0, 0.50, smoothstep(0.15, -0.35, input.world_pos.y));
+    // Unit-060: Reduced ground occlusion severity for better visibility (was 0.50).
+    let ground_occlusion = mix(1.0, 0.68, smoothstep(0.15, -0.35, input.world_pos.y));
     let ao = clamp(0.42 + 0.58 * n.y, 0.18, 1.0) * ground_occlusion;
-    let color = base * (0.22 + diffuse * 1.65 + fill_light) * ao * input.shade;
+    // Unit-060: Increased ambient for visibility (was 0.22).
+    let color = base * (0.38 + diffuse * 1.65 + fill_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);

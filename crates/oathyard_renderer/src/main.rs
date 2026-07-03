@@ -165,37 +165,41 @@ struct CameraMode {
 
 fn material_for_mesh(asset_id: &str) -> MeshMaterial {
     match asset_id {
-        id if id.contains("longsword") => MeshMaterial { 
+        id if id.contains("longsword") => MeshMaterial {
             material_type: 0.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.78, 
-            tint_g: 0.76, 
-            tint_b: 0.82, 
-            tint_a: 1.0 
+            // Unit-060: Brighter blade for weapon silhouette separation.
+            tint_r: 0.85,
+            tint_g: 0.83,
+            tint_b: 0.90,
+            tint_a: 1.0,
         },
-        id if id.contains("gambeson") => MeshMaterial { 
+        id if id.contains("gambeson") => MeshMaterial {
             material_type: 1.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.55, 
-            tint_g: 0.35, 
-            tint_b: 0.22, 
-            tint_a: 1.0 
+            // Unit-060: Warmer gambeson color for armor identity.
+            tint_r: 0.62,
+            tint_g: 0.38,
+            tint_b: 0.22,
+            tint_a: 1.0,
         },
-        id if id.contains("fighter") => MeshMaterial { 
+        id if id.contains("fighter") => MeshMaterial {
             material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.72, 
-            tint_g: 0.40, 
-            tint_b: 0.28, 
-            tint_a: 1.0 
+            // Unit-060: Warmer skin tone for fighter readability.
+            tint_r: 0.80,
+            tint_g: 0.48,
+            tint_b: 0.32,
+            tint_a: 1.0,
         },
-        id if id.contains("witness_stone") => MeshMaterial { 
+        id if id.contains("witness_stone") => MeshMaterial {
             material_type: 3.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.38, 
-            tint_g: 0.36, 
-            tint_b: 0.42, 
-            tint_a: 1.0 
+            // Unit-060: Warmer stone for arena identity.
+            tint_r: 0.48,
+            tint_g: 0.42,
+            tint_b: 0.38,
+            tint_a: 1.0,
         },
         _ => MeshMaterial { 
             material_type: 0.0,
@@ -433,6 +437,10 @@ fn real_main() -> Result<(), String> {
             "dynamic_key_fill_rim_lighting": true,
             "contact_shadows_ao_equivalent": true,
             "fog_atmosphere": true,
+            "fog_density_unit060": 0.012,
+            "fog_max_unit060": 0.20,
+            "ambient_unit060": 0.38,
+            "fill_light_unit060": 0.35,
             "tone_mapping": true,
             "event_keyed_contact_bloom": true,
             "triplanar_procedural_pbr": true,
