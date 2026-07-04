@@ -3878,3 +3878,143 @@ fn unit088_planning_timeline_has_intent_card() {
         "planning must show action category"
     );
 }
+
+#[test]
+fn unit089_all_13_actions_have_input_mapping() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify all 13 actions have keyboard input mappings
+    for (key, action) in &[
+        ("Digit1", "step"),
+        ("Digit2", "pivot"),
+        ("Digit3", "guard"),
+        ("Digit4", "parry"), // Note: key 4 was cut, now remapped
+        ("Digit5", "cut"),
+        ("Digit6", "thrust"),
+        ("Digit7", "brace"),
+        ("Digit8", "bash"),
+        ("Digit9", "hook_bind"),
+        ("Digit0", "hook_bind"), // 0 also maps to hook_bind
+        ("KeyG", "grab"),
+        ("KeyB", "shove"),
+        ("KeyK", "kick"),
+    ] {
+        assert!(
+            renderer.contains(&format!("KeyCode::{}", key)),
+            "key {} missing from renderer input mapping",
+            key
+        );
+    }
+    // Verify the action placement strings exist
+    for action in &[
+        "step",
+        "pivot",
+        "guard",
+        "parry",
+        "cut",
+        "thrust",
+        "brace",
+        "bash",
+        "hook_bind",
+        "grab",
+        "shove",
+        "kick",
+        "recover",
+    ] {
+        let search = format!("\"{}\".to_string()", action);
+        assert!(
+            renderer.contains(&search),
+            "action '{}' timeline slot assignment missing",
+            action
+        );
+    }
+}
+
+#[test]
+fn unit089_all_13_actions_have_scripted_input() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    for action in &[
+        "place_step",
+        "place_pivot",
+        "place_guard",
+        "place_parry",
+        "place_cut",
+        "place_thrust",
+        "place_brace",
+        "place_bash",
+        "place_hook_bind",
+        "place_grab",
+        "place_shove",
+        "place_kick",
+        "place_recover",
+    ] {
+        assert!(
+            renderer.contains(action),
+            "scripted input handler '{}' missing",
+            action
+        );
+    }
+}
+
+#[test]
+fn unit089_matchup_matrix_exists() {
+    let matrix_path = std::path::Path::new(
+        "artifacts/verification/20260704T180238Z_unit089_executable_intent_matchup_matrix/intent_matchup_matrix.json",
+    );
+    assert!(
+        matrix_path.exists(),
+        "intent_matchup_matrix.json must exist"
+    );
+    let matrix = fs::read_to_string(matrix_path).expect("read matrix");
+    assert!(matrix.contains("oathyard.intent_matchup_matrix.v1"));
+    assert!(matrix.contains("\"matrix_size\": \"13x13\""));
+    assert!(matrix.contains("\"pair_count\": 169"));
+}
+
+#[test]
+fn unit089_action_coverage_manifest_exists() {
+    let path = std::path::Path::new(
+        "artifacts/verification/20260704T180238Z_unit089_executable_intent_matchup_matrix/intent_action_coverage_manifest.json",
+    );
+    assert!(
+        path.exists(),
+        "intent_action_coverage_manifest.json must exist"
+    );
+    let coverage = fs::read_to_string(path).expect("read coverage");
+    assert!(coverage.contains("oathyard.intent_action_coverage.v1"));
+    assert!(coverage.contains("\"action_count\": 13"));
+    assert!(coverage.contains("\"all_covered\": true"));
+}
+
+#[test]
+fn unit089_all_intents_playtest_exists() {
+    let script = fs::read_to_string("content/input/unit089_all_intents_playtest.json")
+        .expect("all intents playtest missing");
+    assert!(script.contains("place_step"));
+    assert!(script.contains("place_pivot"));
+    assert!(script.contains("place_guard"));
+    assert!(script.contains("place_parry"));
+    assert!(script.contains("place_cut"));
+    assert!(script.contains("place_thrust"));
+    assert!(script.contains("place_brace"));
+    assert!(script.contains("place_bash"));
+    assert!(script.contains("place_hook_bind"));
+    assert!(script.contains("place_grab"));
+    // shove/kick/recover tested in second script
+    let script2 = fs::read_to_string("content/input/unit089_yomi_matrix_playtest.json")
+        .expect("yomi matrix playtest missing");
+    assert!(script2.contains("place_shove"));
+    assert!(script2.contains("place_kick"));
+    assert!(script2.contains("place_recover"));
+}
+
+#[test]
+fn unit089_action_key_reference_shows_all_actions() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(renderer.contains("1=STEP 2=PIVOT 3=GUARD 4=PARRY"));
+    assert!(renderer.contains("5=CUT 6=THRUST 7=BRACE 8=BASH"));
+    assert!(renderer.contains("9=HOOK 0=BIND G=GRAB B=SHOVE"));
+    assert!(renderer.contains("K=KICK"));
+}

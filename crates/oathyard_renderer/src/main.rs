@@ -2722,10 +2722,11 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "EQUIP: +0", 35, 308, 150, 200, 150);
             draw_text(rgba, width, height, "STATE: +18 PERMILLE", 35, 338, 200, 180, 120);
             draw_text(rgba, width, height, "> COMMIT PLAN (ENTER)", 35, 368, 100, 255, 100);
-            // Action key reference
+            // Action key reference — all 13 actions
             draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY", 35, 398, 150, 180, 200);
             draw_text(rgba, width, height, "5=CUT 6=THRUST 7=BRACE 8=BASH", 35, 418, 150, 180, 200);
-            draw_text(rgba, width, height, "9=HOOK 0=GRAB Q=SHOVE E=KICK", 35, 438, 150, 180, 200);
+            draw_text(rgba, width, height, "9=HOOK 0=BIND G=GRAB B=SHOVE", 35, 438, 150, 180, 200);
+            draw_text(rgba, width, height, "K=KICK R(RECOV)=F6 RECOVER", 35, 458, 150, 180, 200);
         },
         "pre_contact_frame" | "pre_contact_frame_seed" => {
             // Unit-088: YOMI-style simultaneous reveal UI
@@ -4163,6 +4164,49 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 app.timeline_slots[app.timeline_cursor] = "recover".to_string();
                             }
                         }
+                        // Unit-089: Full 13-action input coverage
+                        winit::keyboard::KeyCode::Digit7 | winit::keyboard::KeyCode::Numpad7 => {
+                            logical = "action_parry".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "parry".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit8 | winit::keyboard::KeyCode::Numpad8 => {
+                            logical = "action_brace".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "brace".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit9 | winit::keyboard::KeyCode::Numpad9 => {
+                            logical = "action_bash".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "bash".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::Digit0 | winit::keyboard::KeyCode::Numpad0 => {
+                            logical = "action_hook_bind".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "hook_bind".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::KeyG => {
+                            logical = "action_grab".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "grab".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::KeyB => {
+                            logical = "action_shove".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "shove".to_string();
+                            }
+                        }
+                        winit::keyboard::KeyCode::KeyK => {
+                            logical = "action_kick".to_string();
+                            if app.interactive_state == InteractiveState::Timeline {
+                                app.timeline_slots[app.timeline_cursor] = "kick".to_string();
+                            }
+                        }
                         winit::keyboard::KeyCode::ArrowUp | winit::keyboard::KeyCode::KeyW => {
                             logical = "up".to_string();
                             // Unit-087: Roster cycling — Up cycles to previous option
@@ -4447,6 +4491,47 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         "place_recover" => {
                             if !app.timeline_slots.is_empty() {
                                 app.timeline_slots[app.timeline_cursor] = "recover".to_string();
+                            }
+                        }
+                        // Unit-089: Scripted input for all 13 actions
+                        "place_parry" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "parry".to_string();
+                            }
+                        }
+                        "place_brace" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "brace".to_string();
+                            }
+                        }
+                        "place_bash" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "bash".to_string();
+                            }
+                        }
+                        "place_hook_bind" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "hook_bind".to_string();
+                            }
+                        }
+                        "place_grab" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "grab".to_string();
+                            }
+                        }
+                        "place_shove" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "shove".to_string();
+                            }
+                        }
+                        "place_kick" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "kick".to_string();
+                            }
+                        }
+                        "place_pivot" => {
+                            if !app.timeline_slots.is_empty() {
+                                app.timeline_slots[app.timeline_cursor] = "pivot".to_string();
                             }
                         }
                         "timeline_right" => {
