@@ -69,59 +69,59 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
         bone_yaw2: [0.0; 4],
     };
     // Bone indices: 0=root, 1=spine, 2=head, 3=right_arm, 4=left_arm, 5=right_leg, 6=left_leg
+    // Unit-095: Amplified offsets (2x previous) for visibility at gameplay camera distance
     match clip_id {
         "idle" => {
-            pose.bone_offset_y[1] = 0.008; // spine
-            pose.bone_offset_y[2] = 0.005; // head
+            pose.bone_offset_y[1] = 0.016; // spine
+            pose.bone_offset_y[2] = 0.010; // head
         }
         "walk" => {
-            pose.bone_offset_z2[1] = 0.02;  // right leg (index 5 → bone_offset_z2[1])
-            pose.bone_offset_z2[2] = -0.02; // left leg (index 6 → bone_offset_z2[2])
-            pose.bone_yaw2[1] = 0.1;
-            pose.bone_yaw2[2] = -0.1;
+            pose.bone_offset_z2[1] = 0.04;  // right leg
+            pose.bone_offset_z2[2] = -0.04; // left leg
+            pose.bone_yaw2[1] = 0.20;
+            pose.bone_yaw2[2] = -0.20;
         }
         "guard_pose" => {
-            // Unit-051: Refined guard with weapon raised and centered
-            pose.bone_yaw[3] = -0.35;  // right arm raised to guard
-            pose.bone_yaw2[0] = 0.35;  // left arm supports weapon
-            pose.bone_offset_y[3] = 0.03;
-            pose.bone_offset_y2[0] = 0.03;
-            pose.bone_offset_z[3] = 0.015;  // weapon forward
-            pose.bone_offset_z2[0] = 0.015;
-            pose.bone_offset_y[1] = 0.005;  // slight spine straightening
+            pose.bone_yaw[3] = -0.70;  // right arm raised to guard
+            pose.bone_yaw2[0] = 0.70;  // left arm supports weapon
+            pose.bone_offset_y[3] = 0.06;
+            pose.bone_offset_y2[0] = 0.06;
+            pose.bone_offset_z[3] = 0.03;  // weapon forward
+            pose.bone_offset_z2[0] = 0.03;
+            pose.bone_offset_y[1] = 0.010;  // slight spine straightening
         }
         "cut" => {
-            // Unit-051: Diagonal cut — right arm swings down-across with torso twist
-            pose.bone_yaw[3] = -0.75;  // right arm extended in cut arc
-            pose.bone_offset_z[3] = 0.05;  // forward extension
-            pose.bone_offset_y[3] = -0.02;  // downward swing
-            pose.bone_yaw[1] = 0.22;  // torso twist into cut
-            pose.bone_offset_z2[1] = 0.03;  // right leg steps forward
-            pose.bone_offset_z2[2] = -0.015; // left leg braces back
+            // Diagonal cut — right arm swings down-across with torso twist
+            pose.bone_yaw[3] = -1.50;  // right arm extended in cut arc
+            pose.bone_offset_z[3] = 0.10;  // forward extension
+            pose.bone_offset_y[3] = -0.04;  // downward swing
+            pose.bone_yaw[1] = 0.44;  // torso twist into cut
+            pose.bone_offset_z2[1] = 0.06;  // right leg steps forward
+            pose.bone_offset_z2[2] = -0.03; // left leg braces back
         }
         "thrust" => {
-            // Unit-051: Straight thrust — arms forward, weight shifts forward
-            pose.bone_offset_z[3] = 0.08;  // right arm thrusts forward
-            pose.bone_offset_z2[0] = 0.06;  // left arm follows weapon shaft
-            pose.bone_offset_y[3] = 0.04;   // weapon at shoulder height
-            pose.bone_offset_y2[0] = 0.04;
-            pose.bone_yaw[3] = -0.15;  // slight inward rotation
-            pose.bone_offset_z2[1] = 0.04;  // right leg lunges forward
-            pose.bone_offset_z2[2] = -0.03; // left leg extends back
-            pose.bone_yaw[1] = 0.08;  // slight torso lean forward
+            // Straight thrust — arms forward, weight shifts forward
+            pose.bone_offset_z[3] = 0.16;  // right arm thrusts forward
+            pose.bone_offset_z2[0] = 0.12;  // left arm follows weapon shaft
+            pose.bone_offset_y[3] = 0.08;   // weapon at shoulder height
+            pose.bone_offset_y2[0] = 0.08;
+            pose.bone_yaw[3] = -0.30;  // slight inward rotation
+            pose.bone_offset_z2[1] = 0.08;  // right leg lunges forward
+            pose.bone_offset_z2[2] = -0.06; // left leg extends back
+            pose.bone_yaw[1] = 0.16;  // slight torso lean forward
         }
         "recover" => {
-            // Unit-051: Recovery settle — return from action to guard
-            pose.bone_yaw[3] = -0.20;  // right arm settling
-            pose.bone_offset_y[3] = 0.015;
-            pose.bone_offset_z[3] = 0.005;
-            pose.bone_offset_y[1] = 0.003;  // spine settling
+            // Recovery settle — return from action to guard
+            pose.bone_yaw[3] = -0.40;  // right arm settling
+            pose.bone_offset_y[3] = 0.030;
+            pose.bone_offset_z[3] = 0.010;
+            pose.bone_offset_y[1] = 0.006;  // spine settling
         }
         "attack" => {
             // Legacy attack: maps to cut
-            pose.bone_yaw[3] = -0.6;  // right arm swinging
-            pose.bone_offset_z[3] = 0.03;
-            pose.bone_yaw[1] = 0.15;  // torso twist
+            pose.bone_yaw[3] = -1.20;  // right arm swinging
+            pose.bone_offset_z[3] = 0.06;
+            pose.bone_yaw[1] = 0.30;  // torso twist
         }
         _ => {
             pose.pose_active = 0.0;
@@ -243,9 +243,9 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             || id.contains("bruiser_oath") => MeshMaterial {
             material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: if id.contains("opponent_") { 0.76 } else { 0.84 },
-            tint_g: if id.contains("opponent_") { 0.38 } else { 0.58 },
-            tint_b: if id.contains("opponent_") { 0.28 } else { 0.36 },
+            tint_r: if id.contains("opponent_") { 0.90 } else { 0.95 },
+            tint_g: if id.contains("opponent_") { 0.15 } else { 0.70 },
+            tint_b: if id.contains("opponent_") { 0.10 } else { 0.20 },
             tint_a: 1.0,
         },
         id if id.contains("gambeson")
@@ -303,7 +303,7 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "fighter_closeup_01" => CameraMode { eye: [0.0, 0.90, 2.0], look_at: [0.0, 0.45, -0.1], fov_radians: 0.58 },
         "armor_loadout_family_closeup_01" => CameraMode { eye: [0.0, 0.70, 1.9], look_at: [0.0, 0.32, -0.1], fov_radians: 0.60 },
         "weapon_family_closeup_01" => CameraMode { eye: [0.0, 0.55, 1.6], look_at: [0.0, 0.30, -0.1], fov_radians: 0.55 },
-        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 2.2, 4.5], look_at: [0.0, 0.0, -0.2], fov_radians: 0.75 },
+        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 1.6, 3.0], look_at: [0.0, 0.2, -0.1], fov_radians: 0.62 },
         "oathyard_arena_candidate_01" => CameraMode { eye: [0.0, 0.55, 3.35], look_at: [0.0, 0.18, -0.10], fov_radians: 0.78 },
         "gameplay_distance_fighter_weapon_01" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.35, -0.1], fov_radians: 0.70 },
         "gameplay_distance_fighter_loadout_family_01" => CameraMode { eye: [0.0, 1.15, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
@@ -2988,21 +2988,19 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "<>=OPPONENT", mid_w + mid_w/3 - 30, mid_h + 20, 255, 80, 40);
             }
 
-            // Unit-084: Loadout identification panel — top-right area below hash.
-            // Shows actual weapon/armor names so the player can identify loadouts
-            // without relying on 3D model differentiation alone.
+            // Unit-095: Loadout identification panel — wider to prevent text clipping
             if !p_fighter.is_empty() || !o_fighter.is_empty() {
-                let ly_x = (width as i32) - 460;
+                let ly_x = (width as i32) - 500;
                 let ly_y = 70;
-                draw_panel(rgba, width, height, ly_x, ly_y, 440, 150);
-                draw_title_bar(rgba, width, height, ly_x, ly_y, 440, "LOADOUT");
-                let p_line = format!("P: {}", p_fighter);
+                draw_panel(rgba, width, height, ly_x, ly_y, 480, 160);
+                draw_title_bar(rgba, width, height, ly_x, ly_y, 480, "LOADOUT");
+                let p_line = format!("P: {}", p_fighter.to_uppercase());
                 draw_text(rgba, width, height, &p_line, ly_x + 15, ly_y + 38, 255, 220, 60);
-                let pw_line = format!("  W:{} A:{}", p_weapon, p_armor);
+                let pw_line = format!("  W:{} A:{}", p_weapon.to_uppercase(), p_armor.to_uppercase());
                 draw_text(rgba, width, height, &pw_line, ly_x + 15, ly_y + 58, 255, 220, 120);
-                let o_line = format!("O: {}", o_fighter);
+                let o_line = format!("O: {}", o_fighter.to_uppercase());
                 draw_text(rgba, width, height, &o_line, ly_x + 15, ly_y + 88, 255, 80, 40);
-                let ow_line = format!("  W:{} A:{}", o_weapon, o_armor);
+                let ow_line = format!("  W:{} A:{}", o_weapon.to_uppercase(), o_armor.to_uppercase());
                 draw_text(rgba, width, height, &ow_line, ly_x + 15, ly_y + 108, 255, 100, 100);
             }
         },

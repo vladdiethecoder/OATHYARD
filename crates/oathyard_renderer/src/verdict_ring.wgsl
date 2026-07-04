@@ -238,11 +238,14 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
     var metallic = 0.0;
 
     // Unit-062: Clean seed mesh path — bypass all procedural patterns.
-    // Seed meshes from Meshy-6 are geometry-only (no UVs, no normals, no materials).
-    // Use per-asset tint with subtle world-space variation only.
     if (material_type < -0.5) {
         let subtle = (noise2(fract(vec2<f32>(world_pos.x * 0.5 + world_pos.z * 0.5, world_pos.y * 0.5))) - 0.5) * 0.06;
         return tint * (0.98 + subtle);  // Unit-064: full tint for color readability
+    }
+
+    // Unit-095: Fighter team-color path — output tint directly, bypass all procedural/texture mixing
+    if (material_type > 3.5 && material_type < 4.5) {
+        return tint;
     }
 
     if (material_type < 0.5) {
@@ -567,11 +570,23 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // candidate texture sample now drives visible asset identity.
     let procedural_base = procedural_pbr(input.world_pos, n, mat_type, tint);
     let normal_detail = clamp(length(sampled_normal - vec3<f32>(0.5)) * 0.85, 0.0, 0.22);
-    let map_contrast = clamp((sampled_base - vec3<f32>(0.5)) * 1.65 + vec3<f32>(0.5), vec3<f32>(0.02), vec3<f32>(1.18));
+    // Unit-095: Stronger team-color identity. The texture sample and class tint
+    // previously mixed at 0.86+ which washed out player/opponent distinction.
+    // Now use the tint as a team-color multiply overlay at higher weight.
+    let map_contrast = clamp(
+        (sampled_base - vec3<f32>(0.5)) * 1.65 + vec3<f32>(0.5),
+        vec3<f32>(0.02),
+        vec3<f32>(1.18),
+    );
     let material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22));
-    let class_tint = mix(tint, material_identity, vec3<f32>(0.68));
-    let texture_base = map_contrast * class_tint * 1.20;
-    let base = mix(procedural_base, texture_base, 0.86 + normal_detail * 0.45);
+    let class_tint = mix(tint, material_identity, vec3<f32>(0.45));
+    // Unit-095: Stronger team-color identity. For fighters (type=4), use tint directly
+    // to override pale candidate textures. For other assets, mix normally.
+    let team_tint = select(tint * 1.5, vec3<f32>(1.0), mat_type > 4.5);
+    let texture_base = map_contrast * class_tint * team_tint * 1.40;
+    // Unit-095: Fighters use stronger tint dominance to show team colors
+    let fighter_mix = select(0.50, 0.86 + normal_detail * 0.45, mat_type > 4.5);
+    let base = mix(procedural_base, texture_base, fighter_mix);
 
     // Unit-093: Demo-quality lighting — stronger key/fill/rim separation
     let key = normalize(vec3<f32>(-0.48, 0.88, 0.30));
