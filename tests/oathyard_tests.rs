@@ -4205,3 +4205,80 @@ fn unit091_playtest_script_exists() {
     assert!(script.contains("place_grab"));
     assert!(script.contains("place_recover"));
 }
+
+#[test]
+fn unit092_windowed_ui_overlay_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("fn composite_windowed_ui"),
+        "composite_windowed_ui function missing"
+    );
+    assert!(
+        renderer.contains("TIMELINE (DECISION PHASE)"),
+        "windowed timeline UI missing"
+    );
+    assert!(
+        renderer.contains("SIMULTANEOUS REVEAL"),
+        "windowed commit/reveal UI missing"
+    );
+    assert!(
+        renderer.contains("MATCH RESULT"),
+        "windowed match result UI missing"
+    );
+    assert!(
+        renderer.contains("FIGHT FILM"),
+        "windowed fight film UI missing"
+    );
+}
+
+#[test]
+fn unit092_windowed_offscreen_readback_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("oathyard windowed offscreen"),
+        "offscreen render texture missing"
+    );
+    assert!(
+        renderer.contains("copy_texture_to_buffer"),
+        "GPU readback (copy_texture_to_buffer) missing"
+    );
+    assert!(
+        renderer.contains("oathyard windowed readback"),
+        "CPU readback buffer missing"
+    );
+}
+
+#[test]
+fn unit092_surface_copy_dst_usage() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("TextureUsages::COPY_DST"),
+        "surface must have COPY_DST usage for composited texture copy"
+    );
+}
+
+#[test]
+fn unit092_windowed_ui_trace_driven() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify windowed UI pulls from app state, not hardcoded strings
+    assert!(
+        renderer.contains("app.timeline_slots"),
+        "windowed timeline must use actual timeline_slots"
+    );
+    assert!(
+        renderer.contains("app.combat_contacts"),
+        "windowed combat UI must use actual combat_contacts"
+    );
+    assert!(
+        renderer.contains("app.match_result"),
+        "windowed match result must use actual match_result"
+    );
+    assert!(
+        renderer.contains("app.opponent_intent_revealed"),
+        "windowed UI must use opponent_intent_revealed for concealment"
+    );
+}

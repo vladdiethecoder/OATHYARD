@@ -3489,7 +3489,7 @@ async fn setup_wgpu_surface(
     let alpha_mode = surface_caps.alpha_modes[0];
 
     let surface_config = wgpu::SurfaceConfiguration {
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_DST,
         format: surface_format,
         width: width.max(1),
         height: height.max(1),
@@ -4492,15 +4492,28 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             winit::event::WindowEvent::RedrawRequested => {
                 app.redraw_requested_count += 1;
 
+                let surf_w = app.surface_config.width;
+                let surf_h = app.surface_config.height;
+
+                // Unit-092: Render to an offscreen texture, composite CPU UI,
+                // then copy to surface for windowed UI overlay support.
+                let offscreen_texture = app.device.create_texture(&wgpu::TextureDescriptor {
+                    label: Some("oathyard windowed offscreen"),
+                    size: wgpu::Extent3d { width: surf_w, height: surf_h, depth_or_array_layers: 1 },
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: app.surface_format,
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+                    view_formats: &[],
+                });
+                let offscreen_view = offscreen_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
                 // Present a frame
                 let surface_texture = app.surface.get_current_texture();
                 match surface_texture {
                     wgpu::CurrentSurfaceTexture::Success(surface_tex)
                     | wgpu::CurrentSurfaceTexture::Suboptimal(surface_tex) => {
-                        let view = surface_tex
-                            .texture
-                            .create_view(&wgpu::TextureViewDescriptor::default());
-
                         let mut encoder = app.device.create_command_encoder(
                             &wgpu::CommandEncoderDescriptor {
                                 label: Some("oathyard windowed render encoder"),
@@ -4511,7 +4524,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                                 label: Some("oathyard windowed render pass"),
                                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                                    view: &view,
+                                    view: &offscreen_view,
                                     resolve_target: None,
                                     ops: wgpu::Operations {
                                         load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -4549,7 +4562,115 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             }
                         }
 
+                        // Unit-092: Copy offscreen to buffer for CPU UI compositing
+                        let bytes_per_pixel = 4; // RGBA8 or BGRA8
+                        let buffer_size = (surf_w as usize * surf_h as usize * bytes_per_pixel);
+                        let unpadded_bytes_per_row = surf_w as usize * bytes_per_pixel;
+                        // wgpu requires buffer copy alignment of 256 bytes
+                        let aligned_bytes_per_row = ((unpadded_bytes_per_row + 255) / 256) * 256;
+                        let padded_buffer_size = aligned_bytes_per_row * surf_h as usize;
+                        let padded_output_buffer = app.device.create_buffer(&wgpu::BufferDescriptor {
+                            label: Some("oathyard windowed readback padded"),
+                            size: padded_buffer_size as u64,
+                            usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+                            mapped_at_creation: false,
+                        });
+
+                        encoder.copy_texture_to_buffer(
+                            wgpu::TexelCopyTextureInfo {
+                                texture: &offscreen_texture,
+                                mip_level: 0,
+                                origin: wgpu::Origin3d::ZERO,
+                                aspect: wgpu::TextureAspect::All,
+                            },
+                            wgpu::TexelCopyBufferInfo {
+                                buffer: &padded_output_buffer,
+                                layout: wgpu::TexelCopyBufferLayout {
+                                    offset: 0,
+                                    bytes_per_row: Some(aligned_bytes_per_row as u32),
+                                    rows_per_image: Some(surf_h),
+                                },
+                            },
+                            wgpu::Extent3d { width: surf_w, height: surf_h, depth_or_array_layers: 1 },
+                        );
+
                         app.queue.submit(std::iter::once(encoder.finish()));
+
+                        // Read back, composite UI, write to surface
+                        let slice = padded_output_buffer.slice(..);
+                        let (tx, rx) = std::sync::mpsc::channel();
+                        slice.map_async(wgpu::MapMode::Read, move |result| {
+                            let _ = tx.send(result);
+                        });
+                        let _ = app.device.poll(wgpu::PollType::Wait { submission_index: None, timeout: None });
+                        let _ = rx.recv();
+
+                        {
+                            let data = slice.get_mapped_range();
+                            let mut rgba_buf = vec![0u8; buffer_size];
+                            // Unpad rows
+                            for y in 0..surf_h as usize {
+                                let src = &data[y * aligned_bytes_per_row..][..unpadded_bytes_per_row];
+                                let dst = &mut rgba_buf[y * unpadded_bytes_per_row..][..unpadded_bytes_per_row];
+                                dst.copy_from_slice(src);
+                            }
+                            drop(data);
+                            padded_output_buffer.unmap();
+
+                            // Unit-092: Composite windowed UI overlay
+                            composite_windowed_ui(&mut rgba_buf, surf_w, surf_h, app);
+
+                            // Copy composited result to surface texture via staging texture
+                            // Repad the buffer for texture upload
+                            let mut padded_buf = vec![0u8; padded_buffer_size];
+                            for y in 0..surf_h as usize {
+                                let src = &rgba_buf[y * unpadded_bytes_per_row..][..unpadded_bytes_per_row];
+                                let dst = &mut padded_buf[y * aligned_bytes_per_row..][..unpadded_bytes_per_row];
+                                dst.copy_from_slice(src);
+                            }
+
+                            let staging_texture = wgpu::util::DeviceExt::create_texture_with_data(
+                                &app.device,
+                                &app.queue,
+                                &wgpu::TextureDescriptor {
+                                    label: Some("oathyard windowed composited"),
+                                    size: wgpu::Extent3d { width: surf_w, height: surf_h, depth_or_array_layers: 1 },
+                                    mip_level_count: 1,
+                                    sample_count: 1,
+                                    dimension: wgpu::TextureDimension::D2,
+                                    format: app.surface_format,
+                                    usage: wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::TEXTURE_BINDING,
+                                    view_formats: &[],
+                                },
+                                wgpu_types::TextureDataOrder::default(),
+                                &padded_buf,
+                            );
+
+                            let mut surface_encoder = app.device.create_command_encoder(
+                                &wgpu::CommandEncoderDescriptor {
+                                    label: Some("oathyard windowed surface copy"),
+                                },
+                            );
+
+                            surface_encoder.copy_texture_to_texture(
+                                wgpu::TexelCopyTextureInfo {
+                                    texture: &staging_texture,
+                                    mip_level: 0,
+                                    origin: wgpu::Origin3d::ZERO,
+                                    aspect: wgpu::TextureAspect::All,
+                                },
+                                wgpu::TexelCopyTextureInfo {
+                                    texture: &surface_tex.texture,
+                                    mip_level: 0,
+                                    origin: wgpu::Origin3d::ZERO,
+                                    aspect: wgpu::TextureAspect::All,
+                                },
+                                wgpu::Extent3d { width: surf_w, height: surf_h, depth_or_array_layers: 1 },
+                            );
+
+                            app.queue.submit(std::iter::once(surface_encoder.finish()));
+                        }
+
                         surface_tex.present();
                         app.frames_presented += 1;
 
@@ -4749,6 +4870,189 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             _ => {}
         }
     }
+}
+
+// Unit-092: Composite CPU UI overlay into the windowed render buffer.
+// Draws game state, timeline, action labels, and combat results
+// using the existing bitmap font system.
+fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &WindowedApp) {
+    let state_label = app.interactive_state.as_str();
+
+    // Top-left: state label panel
+    draw_panel(rgba, width, height, 20, 20, 600, 35);
+    draw_text(rgba, width, height, state_label, 35, 28, 255, 220, 120);
+
+    // State-specific UI
+    match app.interactive_state {
+        InteractiveState::Boot | InteractiveState::MainMenu => {
+            draw_text(rgba, width, height, "> LOCAL DUEL (ENTER)", 35, 78, 255, 255, 100);
+            draw_text(rgba, width, height, "  QUIT (ESC/Q)", 35, 98, 200, 200, 200);
+        }
+        InteractiveState::FighterSelect => {
+            let fighter = ROSTER_FIGHTERS_WINDOWED
+                .get(app.roster_fighter_idx)
+                .copied()
+                .unwrap_or("unknown");
+            draw_text(rgba, width, height, "FIGHTER SELECT", 35, 78, 255, 220, 120);
+            let line = format!("> {} (UP/DOWN to cycle)", fighter.to_uppercase());
+            draw_text(rgba, width, height, &line, 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "ENTER to confirm", 35, 138, 200, 200, 200);
+        }
+        InteractiveState::LoadoutSelect => {
+            let weapon = ROSTER_WEAPONS_WINDOWED
+                .get(app.roster_weapon_idx)
+                .copied()
+                .unwrap_or("unknown");
+            let armor = ROSTER_ARMOR_WINDOWED
+                .get(app.roster_armor_idx)
+                .copied()
+                .unwrap_or("unknown");
+            draw_text(rgba, width, height, "LOADOUT SELECT", 35, 78, 255, 220, 120);
+            let w_line = format!("WEAPON: {} (UP/DOWN)", weapon.to_uppercase());
+            draw_text(rgba, width, height, &w_line, 35, 108, 255, 220, 120);
+            let a_line = format!("ARMOR: {} (LEFT/RIGHT)", armor.to_uppercase());
+            draw_text(rgba, width, height, &a_line, 35, 138, 255, 220, 120);
+            draw_text(rgba, width, height, "ENTER to confirm", 35, 168, 200, 200, 200);
+        }
+        InteractiveState::ArenaSelect => {
+            let arena = ROSTER_ARENAS_WINDOWED
+                .get(app.roster_arena_idx)
+                .copied()
+                .unwrap_or("unknown");
+            draw_text(rgba, width, height, "ARENA SELECT", 35, 78, 255, 220, 120);
+            let a_line = format!("> {} (LEFT/RIGHT)", arena.to_uppercase());
+            draw_text(rgba, width, height, &a_line, 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "ENTER to start duel", 35, 138, 200, 200, 200);
+        }
+        InteractiveState::MatchIntro => {
+            draw_text(rgba, width, height, "MATCH INTRO", 35, 78, 255, 220, 120);
+            draw_text(rgba, width, height, "ENTER to begin combat", 35, 108, 200, 200, 200);
+        }
+        InteractiveState::Observe => {
+            draw_text(rgba, width, height, "OBSERVE", 35, 78, 255, 220, 120);
+            draw_text(rgba, width, height, "ENTER to plan your actions", 35, 108, 200, 200, 200);
+        }
+        InteractiveState::Timeline => {
+            draw_text(rgba, width, height, "TIMELINE (DECISION PHASE)", 35, 78, 255, 220, 120);
+            // Show current slot and action
+            let slot_line = format!(
+                "SLOT {}/{}: {}",
+                app.timeline_cursor + 1,
+                app.timeline_slot_count,
+                app.timeline_slots
+                    .get(app.timeline_cursor)
+                    .map(|s| s.as_str())
+                    .unwrap_or("empty")
+                    .to_uppercase()
+            );
+            draw_text(rgba, width, height, &slot_line, 35, 108, 255, 255, 100);
+            // Show first 5 slots
+            for i in 0..5.min(app.timeline_slots.len()) {
+                let marker = if i == app.timeline_cursor { ">" } else { " " };
+                let s = &app.timeline_slots[i];
+                let line = format!("{}[{}] {}", marker, i, s.to_uppercase());
+                draw_text(rgba, width, height, &line, 35, 138 + i as i32 * 20, 200, 200, 200);
+            }
+            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY", 35, 258, 150, 180, 200);
+            draw_text(rgba, width, height, "5=CUT 6=THRUST 7=BRACE 8=BASH", 35, 278, 150, 180, 200);
+            draw_text(rgba, width, height, "9=HOOK 0=BIND G=GRAB B=SHOVE K=KICK", 35, 298, 150, 180, 200);
+            draw_text(rgba, width, height, "R=F6=RECOVER  L/R=cursor  ENTER=commit", 35, 318, 150, 180, 200);
+        }
+        InteractiveState::Plan => {
+            draw_text(rgba, width, height, "PLAN - COMMITTING...", 35, 78, 255, 220, 120);
+        }
+        InteractiveState::CommitReveal => {
+            draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 78, 255, 255, 100);
+            let p_action = app
+                .timeline_slots
+                .first()
+                .map(|s| s.as_str())
+                .unwrap_or("unknown");
+            let o_action = if app.opponent_intent_revealed {
+                app.opponent_timeline_slots
+                    .first()
+                    .map(|s| s.as_str())
+                    .unwrap_or("unknown")
+            } else {
+                "???"
+            };
+            let p_line = format!("PLAYER: {}", p_action.to_uppercase());
+            draw_text(rgba, width, height, &p_line, 35, 108, 255, 220, 60);
+            let o_line = format!("OPPONENT: {}", o_action.to_uppercase());
+            draw_text(rgba, width, height, &o_line, 35, 138, 255, 80, 40);
+            if app.opponent_intent_revealed {
+                // Show matchup from combat_contacts
+                if let Some(ref contact) = app.combat_contacts.first() {
+                    let matchup_line = format!("MATCHUP: {}", contact.outcome);
+                    draw_text(rgba, width, height, &matchup_line, 35, 168, 255, 220, 120);
+                }
+            }
+            draw_text(rgba, width, height, "ENTER to continue", 35, 198, 200, 200, 200);
+        }
+        InteractiveState::Resolve => {
+            draw_text(rgba, width, height, "RESOLVE (CONTACT)", 35, 78, 255, 220, 120);
+            if let Some(ref contact) = app.combat_contacts.first() {
+                let action_line = format!("{} vs {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
+                draw_text(rgba, width, height, &action_line, 35, 108, 255, 220, 120);
+                let outcome_line = format!("RESULT: {}", contact.outcome);
+                draw_text(rgba, width, height, &outcome_line, 35, 138, 255, 160, 80);
+            }
+            draw_text(rgba, width, height, "ENTER to continue", 35, 168, 200, 200, 200);
+        }
+        InteractiveState::Consequence => {
+            draw_text(rgba, width, height, "CONSEQUENCE", 35, 78, 255, 220, 120);
+            if let Some(ref contact) = app.combat_contacts.first() {
+                let inj_line = format!("INJURY: {} (severity {})", contact.injury, contact.injury_severity);
+                draw_text(rgba, width, height, &inj_line, 35, 108, 255, 160, 80);
+            }
+            draw_text(rgba, width, height, "ENTER to continue", 35, 138, 200, 200, 200);
+        }
+        InteractiveState::Replan => {
+            draw_text(rgba, width, height, "REPLAN", 35, 78, 255, 220, 120);
+            draw_text(rgba, width, height, "ENTER for match result", 35, 108, 200, 200, 200);
+        }
+        InteractiveState::MatchResult => {
+            draw_text(rgba, width, height, "MATCH RESULT", 35, 78, 255, 220, 120);
+            if let Some(ref result) = app.match_result {
+                let winner_line = format!("WINNER: {}", result.winner.to_uppercase());
+                draw_text(rgba, width, height, &winner_line, 35, 108, 255, 255, 100);
+                let score_line = format!("P:{} O:{}", result.player_injury_score, result.opponent_injury_score);
+                draw_text(rgba, width, height, &score_line, 35, 138, 200, 200, 200);
+            }
+            draw_text(rgba, width, height, "ENTER for replay", 35, 168, 200, 200, 200);
+        }
+        InteractiveState::Replay => {
+            draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
+            if let Some(ref contact) = app.combat_contacts.first() {
+                let trace_line = format!("T0: {} vs {} -> {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase(), contact.outcome);
+                draw_text(rgba, width, height, &trace_line, 35, 108, 200, 180, 100);
+            }
+            draw_text(rgba, width, height, "ENTER for fight film", 35, 138, 200, 200, 200);
+        }
+        InteractiveState::FightFilm => {
+            draw_text(rgba, width, height, "FIGHT FILM", 35, 78, 255, 220, 120);
+            if let Some(ref contact) = app.combat_contacts.first() {
+                let key_line = format!("KEY: {} vs {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
+                draw_text(rgba, width, height, &key_line, 35, 108, 255, 220, 120);
+                let why_line = format!("WHY: {}", contact.outcome);
+                draw_text(rgba, width, height, &why_line, 35, 138, 200, 180, 100);
+            }
+            draw_text(rgba, width, height, "ENTER to quit", 35, 168, 200, 200, 200);
+        }
+        InteractiveState::Settings => {
+            draw_text(rgba, width, height, "SETTINGS/HELP", 35, 78, 255, 220, 120);
+            draw_text(rgba, width, height, "INPUT: KEYBOARD", 35, 108, 200, 200, 200);
+            draw_text(rgba, width, height, "V: TOGGLE CAMERA", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to return", 35, 168, 200, 200, 200);
+        }
+        InteractiveState::Quit => {
+            draw_text(rgba, width, height, "QUIT", 35, 78, 255, 100, 100);
+        }
+    }
+
+    // Bottom-right: truth status
+    draw_panel(rgba, width, height, (width as i32) - 260, (height as i32) - 45, 240, 28);
+    draw_text(rgba, width, height, "TM:F", (width as i32) - 252, (height as i32) - 38, 150, 255, 150);
 }
 
 fn write_window_manifest(app: &WindowedApp) {
