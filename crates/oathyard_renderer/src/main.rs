@@ -4996,6 +4996,38 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 draw_text(rgba, width, height, &action_line, 35, 108, 255, 220, 120);
                 let outcome_line = format!("RESULT: {}", contact.outcome);
                 draw_text(rgba, width, height, &outcome_line, 35, 138, 255, 160, 80);
+                // Unit-093: Action-specific contact markers
+                let mid_w = (width as i32) / 2;
+                let mid_h = (height as i32) / 2;
+                match contact.player_action.as_str() {
+                    "cut" => {
+                        // Slash arc marker
+                        draw_contact_marker(rgba, width, height, mid_w - 80, mid_h, mid_w + 40, mid_h - 20);
+                        draw_text(rgba, width, height, "X", mid_w - 20, mid_h - 30, 255, 200, 50);
+                    }
+                    "thrust" => {
+                        // Forward line marker
+                        draw_contact_marker(rgba, width, height, mid_w - 60, mid_h, mid_w + 60, mid_h);
+                        draw_text(rgba, width, height, "->", mid_w - 10, mid_h - 30, 255, 200, 50);
+                    }
+                    "bash" | "shove" | "kick" => {
+                        // Impact burst marker
+                        fill_rect(rgba, width, height, mid_w - 15, mid_h - 15, 30, 30, 255, 100, 50);
+                        draw_text(rgba, width, height, "BAM", mid_w - 15, mid_h - 35, 255, 100, 50);
+                    }
+                    "guard" | "parry" | "brace" => {
+                        // Block/shield marker
+                        draw_panel(rgba, width, height, mid_w - 20, mid_h - 20, 40, 40);
+                        draw_text(rgba, width, height, "BLK", mid_w - 15, mid_h - 10, 100, 200, 255);
+                    }
+                    "grab" | "hook_bind" => {
+                        // Bind/grapple marker
+                        draw_text(rgba, width, height, "><", mid_w - 10, mid_h - 20, 200, 200, 50);
+                    }
+                    _ => {
+                        draw_contact_marker(rgba, width, height, mid_w - 40, mid_h, mid_w + 40, mid_h);
+                    }
+                }
             }
             draw_text(rgba, width, height, "ENTER to continue", 35, 168, 200, 200, 200);
         }
@@ -5004,6 +5036,29 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
             if let Some(ref contact) = app.combat_contacts.first() {
                 let inj_line = format!("INJURY: {} (severity {})", contact.injury, contact.injury_severity);
                 draw_text(rgba, width, height, &inj_line, 35, 108, 255, 160, 80);
+                // Unit-093: Severity-based consequence VFX
+                let mid_w = (width as i32) / 2;
+                let mid_h = (height as i32) / 2 + 80;
+                match contact.injury_severity {
+                    0 => {
+                        draw_text(rgba, width, height, "NO DAMAGE", mid_w - 40, mid_h, 100, 255, 100);
+                    }
+                    1..=2 => {
+                        // Minor: small yellow flash
+                        fill_rect(rgba, width, height, mid_w - 20, mid_h - 5, 40, 10, 255, 200, 50);
+                        draw_text(rgba, width, height, "GRAZE", mid_w - 20, mid_h + 10, 255, 200, 50);
+                    }
+                    3..=4 => {
+                        // Medium: orange burst
+                        fill_rect(rgba, width, height, mid_w - 30, mid_h - 10, 60, 20, 255, 140, 30);
+                        draw_text(rgba, width, height, "WOUNDED", mid_w - 30, mid_h + 15, 255, 140, 30);
+                    }
+                    _ => {
+                        // Severe: red flash
+                        fill_rect(rgba, width, height, mid_w - 40, mid_h - 15, 80, 30, 255, 50, 30);
+                        draw_text(rgba, width, height, "CRITICAL", mid_w - 30, mid_h + 20, 255, 50, 30);
+                    }
+                }
             }
             draw_text(rgba, width, height, "ENTER to continue", 35, 138, 200, 200, 200);
         }
@@ -5014,12 +5069,20 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::MatchResult => {
             draw_text(rgba, width, height, "MATCH RESULT", 35, 78, 255, 220, 120);
             if let Some(ref result) = app.match_result {
-                let winner_line = format!("WINNER: {}", result.winner.to_uppercase());
-                draw_text(rgba, width, height, &winner_line, 35, 108, 255, 255, 100);
-                let score_line = format!("P:{} O:{}", result.player_injury_score, result.opponent_injury_score);
+                // Unit-093: Impactful match result display
+                let winner_color = match result.winner.as_str() {
+                    "player" => (255u8, 255u8, 100u8),
+                    "opponent" => (255u8, 80u8, 40u8),
+                    _ => (200u8, 200u8, 200u8),
+                };
+                let winner_line = format!("*** WINNER: {} ***", result.winner.to_uppercase());
+                draw_text(rgba, width, height, &winner_line, 35, 108, winner_color.0, winner_color.1, winner_color.2);
+                let score_line = format!("PLAYER INJURY: {}  |  OPPONENT INJURY: {}", result.player_injury_score, result.opponent_injury_score);
                 draw_text(rgba, width, height, &score_line, 35, 138, 200, 200, 200);
+                let why_line = format!("WHY: {}", result.end_condition);
+                draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER for replay", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER for replay  |  R for replay  |  F for fight film", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
@@ -5053,6 +5116,94 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
     // Bottom-right: truth status
     draw_panel(rgba, width, height, (width as i32) - 260, (height as i32) - 45, 240, 28);
     draw_text(rgba, width, height, "TM:F", (width as i32) - 252, (height as i32) - 38, 150, 255, 150);
+
+    // Unit-093: Runtime audio feedback — deterministic generated tones
+    // Plays a short beep for state transitions and combat events
+    play_state_audio(app);
+}
+
+// Unit-093: Minimal deterministic audio feedback.
+// Generates a short WAV tone and plays it via the system audio backend.
+// This is placeholder audio — deterministic, no external files, truth_mutation=false.
+fn play_state_audio(app: &WindowedApp) {
+    use std::process::Command;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static LAST_AUDIO_FRAME: AtomicU64 = AtomicU64::new(0);
+    let current_frame = app.frames_presented as u64;
+
+    // Only play audio on state transitions (not every frame)
+    if app.transitions.is_empty() {
+        return;
+    }
+    let last_transition = &app.transitions[app.transitions.len() - 1];
+    let expected_frame = LAST_AUDIO_FRAME.load(Ordering::Relaxed);
+    if current_frame <= expected_frame + 5 {
+        return; // Throttle: at most 1 audio per 5 frames
+    }
+    LAST_AUDIO_FRAME.store(current_frame, Ordering::Relaxed);
+
+    // Determine tone frequency from the transition
+    let freq: u32 = if last_transition.contains("COMMIT_REVEAL") || last_transition.contains("REVEAL") {
+        660 // Higher pitch for reveal
+    } else if last_transition.contains("CONTACT") || last_transition.contains("RESOLVE") {
+        220 // Low impact thud
+    } else if last_transition.contains("CONSEQUENCE") {
+        330 // Mid consequence
+    } else if last_transition.contains("MATCH_RESULT") || last_transition.contains("RESULT") {
+        880 // Victory chime
+    } else if last_transition.contains("QUIT") {
+        110 // Low quit
+    } else {
+        440 // Default UI beep
+    };
+
+    // Generate a minimal WAV file (44 bytes header + 1600 bytes data = 0.1s at 8kHz)
+    let sample_rate = 8000u32;
+    let duration_samples = 800u32; // 0.1 seconds
+    let num_channels = 1u16;
+    let bits_per_sample = 16u16;
+    let data_size = duration_samples * 2; // 16-bit = 2 bytes per sample
+    let byte_rate = sample_rate * (bits_per_sample as u32 / 8) * (num_channels as u32);
+    let block_align = (bits_per_sample / 8) * num_channels;
+
+    let mut wav = Vec::with_capacity(44 + data_size as usize);
+    wav.extend_from_slice(b"RIFF");
+    wav.extend_from_slice(&(36 + data_size).to_le_bytes());
+    wav.extend_from_slice(b"WAVE");
+    wav.extend_from_slice(b"fmt ");
+    wav.extend_from_slice(&16u32.to_le_bytes());
+    wav.extend_from_slice(&1u16.to_le_bytes()); // PCM
+    wav.extend_from_slice(&num_channels.to_le_bytes());
+    wav.extend_from_slice(&sample_rate.to_le_bytes());
+    wav.extend_from_slice(&byte_rate.to_le_bytes());
+    wav.extend_from_slice(&block_align.to_le_bytes());
+    wav.extend_from_slice(&bits_per_sample.to_le_bytes());
+    wav.extend_from_slice(b"data");
+    wav.extend_from_slice(&data_size.to_le_bytes());
+
+    // Generate sine wave with quick decay envelope
+    for i in 0..duration_samples {
+        let t = i as f64 / sample_rate as f64;
+        let envelope = (1.0 - (i as f64 / duration_samples as f64)).powi(2);
+        let sample = (freq as f64 * 2.0 * std::f64::consts::PI * t).sin() * envelope * 0.3;
+        let s16 = (sample * 32767.0) as i16;
+        wav.extend_from_slice(&s16.to_le_bytes());
+    }
+
+    // Write to temp file and play
+    let wav_path = std::env::temp_dir().join(format!("oathyard_beep_{}.wav", std::process::id()));
+    if std::fs::write(&wav_path, &wav).is_ok() {
+        // Try multiple audio backends
+        let _ = Command::new("paplay").arg(&wav_path).arg("--client-name=oathyard").spawn();
+        let _ = Command::new("aplay").arg(&wav_path).arg("-q").spawn();
+        // Clean up after a delay (best-effort, non-blocking)
+        let path_clone = wav_path.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            let _ = std::fs::remove_file(&path_clone);
+        });
+    }
 }
 
 fn write_window_manifest(app: &WindowedApp) {

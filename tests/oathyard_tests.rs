@@ -4282,3 +4282,111 @@ fn unit092_windowed_ui_trace_driven() {
         "windowed UI must use opponent_intent_revealed for concealment"
     );
 }
+
+#[test]
+fn unit093_demo_playtest_script_exists() {
+    let script = fs::read_to_string("content/input/unit093_internal_demo_playtest.json")
+        .expect("demo playtest missing");
+    assert!(script.contains("place_cut"));
+    assert!(script.contains("place_thrust"));
+    assert!(script.contains("place_guard"));
+    assert!(script.contains("place_brace"));
+    assert!(script.contains("place_bash"));
+    assert!(script.contains("place_hook_bind"));
+    assert!(script.contains("place_grab"));
+    assert!(script.contains("place_step"));
+    assert!(script.contains("place_pivot"));
+    assert!(script.contains("place_recover"));
+    assert!(script.contains("MATCH_RESULT"));
+    assert!(script.contains("FIGHT_FILM"));
+    assert!(script.contains("SETTINGS"));
+}
+
+#[test]
+fn unit093_action_specific_contact_markers_exist() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify action-specific markers exist in windowed Resolve state
+    assert!(
+        renderer.contains("Unit-093: Action-specific contact markers"),
+        "action-specific contact markers missing"
+    );
+    assert!(renderer.contains("\"cut\" =>"), "cut marker missing");
+    assert!(renderer.contains("\"thrust\" =>"), "thrust marker missing");
+    assert!(
+        renderer.contains("\"bash\" | \"shove\" | \"kick\" =>"),
+        "impact burst marker missing"
+    );
+    assert!(
+        renderer.contains("\"guard\" | \"parry\" | \"brace\" =>"),
+        "block marker missing"
+    );
+    assert!(
+        renderer.contains("\"grab\" | \"hook_bind\" =>"),
+        "bind marker missing"
+    );
+}
+
+#[test]
+fn unit093_severity_vfx_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("Unit-093: Severity-based consequence VFX"),
+        "severity-based VFX missing"
+    );
+    assert!(renderer.contains("NO DAMAGE"), "severity 0 VFX missing");
+    assert!(renderer.contains("GRAZE"), "minor severity VFX missing");
+    assert!(renderer.contains("WOUNDED"), "medium severity VFX missing");
+    assert!(renderer.contains("CRITICAL"), "severe VFX missing");
+}
+
+#[test]
+fn unit093_audio_feedback_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("fn play_state_audio"),
+        "play_state_audio function missing"
+    );
+    assert!(
+        renderer.contains("paplay") || renderer.contains("aplay"),
+        "audio playback backend missing"
+    );
+    assert!(renderer.contains("660"), "reveal tone frequency missing");
+    assert!(renderer.contains("220"), "contact tone frequency missing");
+    assert!(renderer.contains("880"), "victory tone frequency missing");
+}
+
+#[test]
+fn unit093_impactful_match_result_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("Unit-093: Impactful match result"),
+        "impactful match result display missing"
+    );
+    assert!(renderer.contains("*** WINNER:"), "winner highlight missing");
+    assert!(
+        renderer.contains("winner_color"),
+        "winner color coding missing"
+    );
+}
+
+#[test]
+fn unit093_lighting_improvements() {
+    let shader =
+        fs::read_to_string("crates/oathyard_renderer/src/verdict_ring.wgsl").expect("read shader");
+    assert!(
+        shader.contains("back_light"),
+        "back light missing from demo lighting"
+    );
+    assert!(
+        shader.contains("Unit-093: Stronger fresnel"),
+        "strengthened fresnel missing"
+    );
+    assert!(
+        shader.contains("Unit-093: Demo-quality lighting"),
+        "demo lighting comment missing"
+    );
+}

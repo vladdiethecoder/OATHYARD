@@ -573,11 +573,13 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let texture_base = map_contrast * class_tint * 1.20;
     let base = mix(procedural_base, texture_base, 0.86 + normal_detail * 0.45);
 
-    // Lighting
+    // Unit-093: Demo-quality lighting — stronger key/fill/rim separation
     let key = normalize(vec3<f32>(-0.48, 0.88, 0.30));
     let fill = normalize(vec3<f32>(0.42, 0.36, 0.82));
+    let back = normalize(vec3<f32>(0.30, 0.55, -0.78));
     let diffuse = max(dot(n, key), 0.0);
-    let fill_light = max(dot(n, fill), 0.0) * 0.25;
+    let fill_light = max(dot(n, fill), 0.0) * 0.35;
+    let back_light = max(dot(n, back), 0.0) * 0.20;
 
     // Unit-062: Softer shading for seed meshes — reduce contrast between lit
     // and shadowed faces on high-vertex-count geometry-only meshes.
@@ -585,7 +587,7 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let texture_roughness = clamp(sampled_orm.g, 0.12, 1.0);
     let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
     let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion * texture_ao;
-    let color = base * (0.54 + diffuse * 1.38 + fill_light) * ao * input.shade;
+    let color = base * (0.54 + diffuse * 1.48 + fill_light + back_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
@@ -596,7 +598,8 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // Adds a warm glow at glancing angles, making object edges pop against background.
     let view_dir = normalize(camera.eye.xyz - input.world_pos);
     let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 3.0);
-    let fresnel_rim = vec3<f32>(0.72, 0.54, 0.28) * fresnel * 0.15;
+    // Unit-093: Stronger fresnel for demo readability
+    let fresnel_rim = vec3<f32>(0.82, 0.64, 0.38) * fresnel * 0.22;
 
     // Unit-054 RI-02: Enhanced specular response with material-dependent power.
     // Metals get sharper highlights; non-metals get broader, softer highlights.
