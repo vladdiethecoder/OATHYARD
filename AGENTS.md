@@ -69,7 +69,72 @@ For focused replay work:
 ./tools/truth_edge_audit.sh
 ./tools/negative_audit.sh
 ./tools/package.sh
+./tools/smoke_package.sh
+./tools/audit_visual_artifacts.sh
+./tools/visual_gap_audit.sh
+./tools/visual_evidence_index.sh
+./tools/ai_sweep.sh
 ```
+
+### Visual Inspection Protocol
+
+Run visual gates in this order (each depends on prior verification):
+
+1. Build + truth baseline: `build.sh`, `test.sh`, `cargo build --locked`, `cargo test --locked`
+2. Asset pipeline: `build_assets.sh`, `validate_assets.sh`
+3. Duel + replay: `run_duel.sh`, `replay_verify.sh`, `export_replay_bundle.sh`, `verify_replay_bundle.sh`
+4. Visual gates: `native_combat_render.sh`, `capture_high_fidelity_screens.sh`, `visual_gap_audit.sh`, `visual_benchmark.sh`, `render_asset_previews.sh`, `asset_visual_atlas.sh`, `asset_budget_audit.sh`, `audit_3d_runtime.sh`
+5. Visual artifact audit: `audit_visual_artifacts.sh`
+6. Final acceptance: `final_acceptance.sh`
+
+A capture counts as visual evidence only when ALL five conditions in `docs/visual/THREE_D_ONLY_VISUAL_EVIDENCE.md` (section "Allowed visual evidence") are satisfied verbatim. Do not paraphrase or interpret these conditions.
+
+Every artifact directory produced by a visual gate must be classified into exactly one bucket:
+
+- **VISUAL-EVIDENCE**: native 3D capture + complete manifest + `truth_mutation=false` + current-run (generated after replay/truth verification)
+- **NONVISUAL**: JSON/MD/hash/log/manifest output; valid, preserved as-is
+- **BLOCKED**: no native 3D capture exists; tool wrote blocked JSON/MD status
+- **FORBIDDEN**: standalone 2D diagram, frame dump, proof packet, debug panel, browser canvas output, or fallback capture presented as visual evidence
+
+Unit-081 status (commit e3ded0b): `./tools/native_combat_render.sh` currently produces a valid 1920x1080 PNG with complete manifest (renderer_id, camera_mode, replay hash, truth_mutation=false). The commit message "failure" reflects earlier incomplete state; the current tooling is functional. Verify by checking exit code 0 and presence of `production_renderer_native_combat_3d_1920x1080.png` under `artifacts/native_combat/latest/render/`.
+
+### Artifact Catalog
+
+Current as of commit e3ded0b. Re-verify before relying.
+
+| Artifact Directory | Classification | Notes |
+|---|---|---|
+| artifacts/latest | NONVISUAL | replay.json, trace.json, final_state_hash.txt |
+| artifacts/export_bundle/latest | NONVISUAL | bundle with manifest, replay, hashes |
+| artifacts/native_combat/latest/render/ | VISUAL-EVIDENCE | 1920x1080 PNG from wgpu/Vulkan/RTX 5090, manifest-backed |
+| artifacts/high_fidelity_screens/latest | BLOCKED | missing 56 capture slots |
+| artifacts/visual_review/latest | BLOCKED | visual_benchmark failed, 0 native slots |
+| artifacts/runtime_3d | BLOCKED | audit failed with 5 failures |
+| artifacts/production_renderer/latest | BLOCKED | no manifest produced |
+| artifacts/contact_matrix/latest | NONVISUAL | contact packets |
+| artifacts/truth_stress/latest | NONVISUAL | stress test results |
+| artifacts/truth_edge/latest | NONVISUAL | edge case audit |
+| artifacts/negative_audit/latest | NONVISUAL | negative input audit |
+| artifacts/ai/latest | NONVISUAL | AI duel artifacts |
+| artifacts/ai_sweep/latest | NONVISUAL | AI sweep results |
+| artifacts/match_sweep | NONVISUAL | match sweep summary |
+| artifacts/verify_a, artifacts/verify_b | NONVISUAL | determinism verification |
+| artifacts/asset_budget/latest | NONVISUAL | budget report |
+| artifacts/asset_atlas/latest | NONVISUAL | atlas hashes + manifest |
+| artifacts/asset_previews/latest | NONVISUAL | manifest only (PNGs under assets/model_candidates/) |
+| artifacts/fight_film/latest | NONVISUAL | shot manifests |
+| artifacts/input/verify | NONVISUAL | input map artifacts |
+| artifacts/accessibility/verify | NONVISUAL | accessibility report |
+| artifacts/settings/verify | NONVISUAL | runtime settings |
+| artifacts/audio_vfx/latest | NONVISUAL | WAV + caption JSON |
+| artifacts/environment/verify | NONVISUAL | environment audit |
+| artifacts/readiness | NONVISUAL | readiness audit |
+| artifacts/package | NONVISUAL | package tar |
+| artifacts/package_smoke | NONVISUAL | smoke test results |
+| artifacts/visual_artifact_audit/latest | NONVISUAL | audit report |
+| artifacts/renderer_target/verify | NONVISUAL | renderer target audit |
+
+**FORBIDDEN bucket: empty** — `audit_visual_artifacts.sh` exit 0 confirms no forbidden 2D substitutes in tracked files.
 
 ## Determinism Rules
 
