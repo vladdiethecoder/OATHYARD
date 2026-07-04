@@ -470,7 +470,7 @@ fn real_main() -> Result<(), String> {
     }
     let frame_path = out_dir.join(format!("{file_stem}.png"));
     // Unit-061: Composite readable UI overlays into the RGBA buffer before PNG write.
-    composite_ui_overlay(&mut render.rgba, WIDTH, HEIGHT, &capture_id, &packet_json);
+    composite_ui_overlay(&mut render.rgba, WIDTH, HEIGHT, &capture_id, &packet_json, &candidate_assets);
     write_png_rgba(&frame_path, WIDTH, HEIGHT, &render.rgba)?;
     let frame_sha256 = sha256_file(&frame_path)?;
     let packet_sha256 = sha256_bytes(packet_text.as_bytes());
@@ -2631,7 +2631,7 @@ fn draw_contact_marker(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i3
     fill_rect(rgba, width, height, x1 - 4, y1 - 4, 8, 8, 255, 255, 100);
 }
 
-fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &str, packet: &Value) {
+fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &str, packet: &Value, candidate_assets: &[String]) {
     let label = state_label(capture_id);
 
     // Extract packet data for UI
@@ -2790,6 +2790,32 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "LOCAL PLAYABLE: YES", 35, 198, 150, 255, 150);
         },
         _ => {
+            // Unit-084: Extract loadout from candidate_assets so the player can
+            // identify which fighter has which weapon and armor.
+            let mut p_fighter = "";
+            let mut o_fighter = "";
+            let mut p_weapon = "";
+            let mut o_weapon = "";
+            let mut p_armor = "";
+            let mut o_armor = "";
+            for asset in candidate_assets {
+                match infer_mesh_asset_class(asset) {
+                    "fighter" => {
+                        if p_fighter.is_empty() { p_fighter = asset; }
+                        else if o_fighter.is_empty() { o_fighter = asset; }
+                    }
+                    "weapon" => {
+                        if p_weapon.is_empty() { p_weapon = asset; }
+                        else if o_weapon.is_empty() { o_weapon = asset; }
+                    }
+                    "armor" => {
+                        if p_armor.is_empty() { p_armor = asset; }
+                        else if o_armor.is_empty() { o_armor = asset; }
+                    }
+                    _ => {}
+                }
+            }
+
             // Default OBSERVE panel — show end condition if available
             if !end_status.is_empty() {
                 draw_panel(rgba, width, height, 20, 70, 550, 110);
@@ -2810,6 +2836,24 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "^=PLAYER", mid_w - mid_w/3 - 30, mid_h + 20, 255, 220, 60);
             draw_marker_shape(rgba, width, height, mid_w + mid_w/3 + 10, mid_h - 20, 28, 255, 80, 40, false);
             draw_text(rgba, width, height, "<>=OPPONENT", mid_w + mid_w/3 - 30, mid_h + 20, 255, 80, 40);
+            }
+
+            // Unit-084: Loadout identification panel — top-right area below hash.
+            // Shows actual weapon/armor names so the player can identify loadouts
+            // without relying on 3D model differentiation alone.
+            if !p_fighter.is_empty() || !o_fighter.is_empty() {
+                let ly_x = (width as i32) - 460;
+                let ly_y = 70;
+                draw_panel(rgba, width, height, ly_x, ly_y, 440, 150);
+                draw_title_bar(rgba, width, height, ly_x, ly_y, 440, "LOADOUT");
+                let p_line = format!("P: {}", p_fighter);
+                draw_text(rgba, width, height, &p_line, ly_x + 15, ly_y + 38, 255, 220, 60);
+                let pw_line = format!("  W:{} A:{}", p_weapon, p_armor);
+                draw_text(rgba, width, height, &pw_line, ly_x + 15, ly_y + 58, 255, 220, 120);
+                let o_line = format!("O: {}", o_fighter);
+                draw_text(rgba, width, height, &o_line, ly_x + 15, ly_y + 88, 255, 80, 40);
+                let ow_line = format!("  W:{} A:{}", o_weapon, o_armor);
+                draw_text(rgba, width, height, &ow_line, ly_x + 15, ly_y + 108, 255, 100, 100);
             }
         },
     }
