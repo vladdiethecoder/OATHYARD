@@ -3157,6 +3157,35 @@ struct WindowedGpuMesh {
     _textures: (wgpu::Texture, wgpu::Texture, wgpu::Texture),
 }
 
+// Unit-087: Roster arrays for in-game selection cycling
+const ROSTER_FIGHTERS_WINDOWED: &[&str] = &[
+    "saltreach_duelist",
+    "oathyard_writ",
+    "bruiser_oath",
+    "chainbreaker",
+    "gate_shield",
+    "reed_sentinel",
+];
+const ROSTER_WEAPONS_WINDOWED: &[&str] = &[
+    "longsword",
+    "arming_sword",
+    "ash_spear",
+    "bearded_axe",
+    "billhook",
+    "curved_sword",
+    "iron_maul",
+    "round_shield",
+];
+const ROSTER_ARMOR_WINDOWED: &[&str] = &[
+    "gambeson",
+    "mail_hauberk",
+    "bruiser_padded_plate",
+    "fencer_light",
+    "heavy_plate",
+    "lamellar",
+];
+const ROSTER_ARENAS_WINDOWED: &[&str] = &["oathyard_verdict_ring", "training_yard"];
+
 struct WindowedApp {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -3201,6 +3230,11 @@ struct WindowedApp {
     mesh_triangle_count: usize,
     saltreach_consumed: bool,
     training_yard_consumed: bool,
+    // Unit-087: In-game roster selection state
+    roster_fighter_idx: usize,
+    roster_weapon_idx: usize,
+    roster_armor_idx: usize,
+    roster_arena_idx: usize,
 }
 
 mod wgpu_mesh {
@@ -3876,6 +3910,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             mesh_triangle_count: self.mesh_triangle_count,
             saltreach_consumed: self.saltreach_consumed,
             training_yard_consumed: self.training_yard_consumed,
+            roster_fighter_idx: 0,
+            roster_weapon_idx: 0,
+            roster_armor_idx: 0,
+            roster_arena_idx: 0,
         });
 
         self.window = Some(window);
@@ -4005,6 +4043,30 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 app.timeline_cursor -= 1;
                                 logical = format!("timeline_cursor_{}", app.timeline_cursor);
                             }
+                            // Unit-087: ArenaSelect cycles arenas
+                            if app.interactive_state == InteractiveState::ArenaSelect {
+                                if app.roster_arena_idx > 0 {
+                                    app.roster_arena_idx -= 1;
+                                } else {
+                                    app.roster_arena_idx = ROSTER_ARENAS_WINDOWED.len() - 1;
+                                }
+                                logical = format!(
+                                    "arena_prev -> {}",
+                                    ROSTER_ARENAS_WINDOWED[app.roster_arena_idx]
+                                );
+                            }
+                            // Unit-087: LoadoutSelect Left cycles armor
+                            if app.interactive_state == InteractiveState::LoadoutSelect {
+                                if app.roster_armor_idx > 0 {
+                                    app.roster_armor_idx -= 1;
+                                } else {
+                                    app.roster_armor_idx = ROSTER_ARMOR_WINDOWED.len() - 1;
+                                }
+                                logical = format!(
+                                    "armor_prev -> {}",
+                                    ROSTER_ARMOR_WINDOWED[app.roster_armor_idx]
+                                );
+                            }
                         }
                         winit::keyboard::KeyCode::ArrowRight | winit::keyboard::KeyCode::KeyD => {
                             logical = "next".to_string();
@@ -4014,6 +4076,28 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             {
                                 app.timeline_cursor += 1;
                                 logical = format!("timeline_cursor_{}", app.timeline_cursor);
+                            }
+                            // Unit-087: ArenaSelect cycles arenas
+                            if app.interactive_state == InteractiveState::ArenaSelect {
+                                app.roster_arena_idx += 1;
+                                if app.roster_arena_idx >= ROSTER_ARENAS_WINDOWED.len() {
+                                    app.roster_arena_idx = 0;
+                                }
+                                logical = format!(
+                                    "arena_next -> {}",
+                                    ROSTER_ARENAS_WINDOWED[app.roster_arena_idx]
+                                );
+                            }
+                            // Unit-087: LoadoutSelect Right cycles armor
+                            if app.interactive_state == InteractiveState::LoadoutSelect {
+                                app.roster_armor_idx += 1;
+                                if app.roster_armor_idx >= ROSTER_ARMOR_WINDOWED.len() {
+                                    app.roster_armor_idx = 0;
+                                }
+                                logical = format!(
+                                    "armor_next -> {}",
+                                    ROSTER_ARMOR_WINDOWED[app.roster_armor_idx]
+                                );
                             }
                         }
                         winit::keyboard::KeyCode::Digit1 | winit::keyboard::KeyCode::Numpad1 => {
@@ -4054,11 +4138,59 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         }
                         winit::keyboard::KeyCode::ArrowUp | winit::keyboard::KeyCode::KeyW => {
                             logical = "up".to_string();
-                            // Presentation-only: menu up
+                            // Unit-087: Roster cycling — Up cycles to previous option
+                            match app.interactive_state {
+                                InteractiveState::FighterSelect => {
+                                    if app.roster_fighter_idx > 0 {
+                                        app.roster_fighter_idx -= 1;
+                                    } else {
+                                        app.roster_fighter_idx = ROSTER_FIGHTERS_WINDOWED.len() - 1;
+                                    }
+                                    logical = format!(
+                                        "fighter_prev -> {}",
+                                        ROSTER_FIGHTERS_WINDOWED[app.roster_fighter_idx]
+                                    );
+                                }
+                                InteractiveState::LoadoutSelect => {
+                                    if app.roster_weapon_idx > 0 {
+                                        app.roster_weapon_idx -= 1;
+                                    } else {
+                                        app.roster_weapon_idx = ROSTER_WEAPONS_WINDOWED.len() - 1;
+                                    }
+                                    logical = format!(
+                                        "weapon_prev -> {}",
+                                        ROSTER_WEAPONS_WINDOWED[app.roster_weapon_idx]
+                                    );
+                                }
+                                _ => {}
+                            }
                         }
                         winit::keyboard::KeyCode::ArrowDown | winit::keyboard::KeyCode::KeyS => {
                             logical = "down".to_string();
-                            // Presentation-only: menu down
+                            // Unit-087: Roster cycling — Down cycles to next option
+                            match app.interactive_state {
+                                InteractiveState::FighterSelect => {
+                                    app.roster_fighter_idx += 1;
+                                    if app.roster_fighter_idx >= ROSTER_FIGHTERS_WINDOWED.len() {
+                                        app.roster_fighter_idx = 0;
+                                    }
+                                    logical = format!(
+                                        "fighter_next -> {}",
+                                        ROSTER_FIGHTERS_WINDOWED[app.roster_fighter_idx]
+                                    );
+                                }
+                                InteractiveState::LoadoutSelect => {
+                                    app.roster_weapon_idx += 1;
+                                    if app.roster_weapon_idx >= ROSTER_WEAPONS_WINDOWED.len() {
+                                        app.roster_weapon_idx = 0;
+                                    }
+                                    logical = format!(
+                                        "weapon_next -> {}",
+                                        ROSTER_WEAPONS_WINDOWED[app.roster_weapon_idx]
+                                    );
+                                }
+                                _ => {}
+                            }
                         }
                         winit::keyboard::KeyCode::KeyQ => {
                             logical = "quit".to_string();
@@ -4383,8 +4515,8 @@ fn write_window_manifest(app: &WindowedApp) {
             "F": "fight film view",
             "P": "pause/resume",
             "H/F1": "settings/help overlay",
-            "Up/Down/W/S": "menu selection",
-            "Left/Right/A/D": "prev/next",
+            "Up/Down/W/S": "fighter select: cycle fighter; loadout: cycle weapon",
+            "Left/Right/A/D": "timeline: move cursor; arena: cycle arena; loadout: cycle armor",
             "V": "toggle first-person/third-person camera",
             "1-6": "timeline action placement (step/pivot/guard/cut/thrust/recover)",
             "CloseRequested": "window close button",
@@ -4406,6 +4538,33 @@ fn write_window_manifest(app: &WindowedApp) {
         "public_demo_ready": false,
         "release_candidate_ready": false,
         "production_renderer_complete": false,
+        // Unit-087: In-game roster selection evidence
+        "roster_selection": {
+            "selected_fighter": ROSTER_FIGHTERS_WINDOWED
+                .get(app.roster_fighter_idx)
+                .copied()
+                .unwrap_or("unknown"),
+            "selected_weapon": ROSTER_WEAPONS_WINDOWED
+                .get(app.roster_weapon_idx)
+                .copied()
+                .unwrap_or("unknown"),
+            "selected_armor": ROSTER_ARMOR_WINDOWED
+                .get(app.roster_armor_idx)
+                .copied()
+                .unwrap_or("unknown"),
+            "selected_arena": ROSTER_ARENAS_WINDOWED
+                .get(app.roster_arena_idx)
+                .copied()
+                .unwrap_or("unknown"),
+            "fighter_idx": app.roster_fighter_idx,
+            "weapon_idx": app.roster_weapon_idx,
+            "armor_idx": app.roster_armor_idx,
+            "arena_idx": app.roster_arena_idx,
+            "available_fighters": ROSTER_FIGHTERS_WINDOWED,
+            "available_weapons": ROSTER_WEAPONS_WINDOWED,
+            "available_armor": ROSTER_ARMOR_WINDOWED,
+            "available_arenas": ROSTER_ARENAS_WINDOWED,
+        },
     });
 
     let manifest_path = app.out_dir.join("native_window_runtime_manifest.json");

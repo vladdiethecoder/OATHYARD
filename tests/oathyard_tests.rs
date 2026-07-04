@@ -3626,3 +3626,123 @@ fn unit086_roster_selection_params_exist() {
         "--roster-only flag missing"
     );
 }
+
+#[test]
+fn unit087_in_executable_roster_ui_exists() {
+    let renderer_source =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer main.rs");
+    assert!(
+        renderer_source.contains("roster_fighter_idx"),
+        "roster_fighter_idx field missing from WindowedApp"
+    );
+    assert!(
+        renderer_source.contains("roster_weapon_idx"),
+        "roster_weapon_idx field missing"
+    );
+    assert!(
+        renderer_source.contains("roster_armor_idx"),
+        "roster_armor_idx field missing"
+    );
+    assert!(
+        renderer_source.contains("roster_arena_idx"),
+        "roster_arena_idx field missing"
+    );
+    assert!(
+        renderer_source.contains("ROSTER_FIGHTERS_WINDOWED"),
+        "ROSTER_FIGHTERS_WINDOWED constant missing"
+    );
+    assert!(
+        renderer_source.contains("ROSTER_WEAPONS_WINDOWED"),
+        "ROSTER_WEAPONS_WINDOWED constant missing"
+    );
+    assert!(
+        renderer_source.contains("ROSTER_ARMOR_WINDOWED"),
+        "ROSTER_ARMOR_WINDOWED constant missing"
+    );
+    assert!(
+        renderer_source.contains("ROSTER_ARENAS_WINDOWED"),
+        "ROSTER_ARENAS_WINDOWED constant missing"
+    );
+}
+
+#[test]
+fn unit087_roster_ui_navigation_in_fighter_select() {
+    let renderer_source =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer main.rs");
+    // Verify FighterSelect has Up/Down cycling
+    assert!(
+        renderer_source.contains("InteractiveState::FighterSelect =>")
+            && renderer_source.contains("fighter_next"),
+        "FighterSelect must have cycling via Up/Down"
+    );
+    // Verify LoadoutSelect has weapon and armor cycling
+    assert!(
+        renderer_source.contains("weapon_next"),
+        "LoadoutSelect must have weapon cycling"
+    );
+    assert!(
+        renderer_source.contains("armor_next"),
+        "LoadoutSelect must have armor cycling"
+    );
+    // Verify ArenaSelect has Left/Right cycling
+    assert!(
+        renderer_source.contains("arena_next"),
+        "ArenaSelect must have arena cycling"
+    );
+}
+
+#[test]
+fn unit087_roster_selection_in_manifest() {
+    let renderer_source =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer main.rs");
+    assert!(
+        renderer_source.contains("\"roster_selection\""),
+        "roster_selection section missing from windowed manifest"
+    );
+    assert!(
+        renderer_source.contains("selected_fighter"),
+        "selected_fighter field missing from manifest"
+    );
+    assert!(
+        renderer_source.contains("selected_weapon"),
+        "selected_weapon field missing from manifest"
+    );
+    assert!(
+        renderer_source.contains("selected_armor"),
+        "selected_armor field missing from manifest"
+    );
+    assert!(
+        renderer_source.contains("selected_arena"),
+        "selected_arena field missing from manifest"
+    );
+}
+
+#[test]
+fn unit087_roster_ui_scripted_input_exists() {
+    let script_path = std::path::Path::new("content/input/unit087_roster_ui_playtest.json");
+    assert!(
+        script_path.exists(),
+        "unit087_roster_ui_playtest.json must exist"
+    );
+    let script = fs::read_to_string(script_path).expect("read roster ui script");
+    assert!(
+        script.contains("\"schema\": \"oathyard.windowed_scripted_input.v1\""),
+        "script schema missing"
+    );
+    assert!(
+        script.contains("\"action\": \"down\""),
+        "script must contain down action for roster cycling"
+    );
+    assert!(
+        script.contains("FIGHTER_SELECT"),
+        "script must visit FIGHTER_SELECT"
+    );
+    assert!(
+        script.contains("LOADOUT_SELECT"),
+        "script must visit LOADOUT_SELECT"
+    );
+    assert!(
+        script.contains("ARENA_SELECT"),
+        "script must visit ARENA_SELECT"
+    );
+}

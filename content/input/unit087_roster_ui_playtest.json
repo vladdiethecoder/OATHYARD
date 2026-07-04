@@ -1,0 +1,28 @@
+{
+  "schema": "oathyard.windowed_scripted_input.v1",
+  "description": "Unit-087: In-executable roster UI playtest — navigate fighter/loadout/arena selection with Up/Down/Left/Right, complete duel loop.",
+  "scenario_id": "unit087_roster_ui",
+  "inputs": [
+    {"at_frame": 5,  "action": "advance",    "label": "BOOT -> MAIN_MENU"},
+    {"at_frame": 10, "action": "advance",    "label": "MAIN_MENU -> FIGHTER_SELECT"},
+    {"at_frame": 15, "action": "down",       "label": "FIGHTER_SELECT: cycle to bruiser_oath"},
+    {"at_frame": 20, "action": "down",       "label": "FIGHTER_SELECT: cycle to chainbreaker"},
+    {"at_frame": 25, "action": "advance",    "label": "FIGHTER_SELECT -> LOADOUT_SELECT"},
+    {"at_frame": 30, "action": "down",       "label": "LOADOUT_SELECT: cycle weapon to arming_sword"},
+    {"at_frame": 35, "action": "right",      "label": "LOADOUT_SELECT: cycle armor to mail_hauberk"},
+    {"at_frame": 40, "action": "advance",    "label": "LOADOUT_SELECT -> ARENA_SELECT"},
+    {"at_frame": 45, "action": "right",      "label": "ARENA_SELECT: cycle to training_yard"},
+    {"at_frame": 50, "action": "advance",    "label": "ARENA_SELECT -> MATCH_INTRO"},
+    {"at_frame": 55, "action": "advance",    "label": "MATCH_INTRO -> OBSERVE"},
+    {"at_frame": 60, "action": "advance",    "label": "OBSERVE -> TIMELINE"},
+    {"at_frame": 65, "action": "advance",    "label": "TIMELINE -> PLAN (resolve combat)"},
+    {"at_frame": 70, "action": "advance",    "label": "PLAN -> COMMIT_REVEAL"},
+    {"at_frame": 75, "action": "advance",    "label": "COMMIT_REVEAL -> RESOLVE"},
+    {"at_frame": 80, "action": "advance",    "label": "RESOLVE -> CONSEQUENCE"},
+    {"at_frame": 85, "action": "advance",    "label": "CONSEQUENCE -> REPLAN"},
+    {"at_frame": 90, "action": "advance",    "label": "REPLAN -> MATCH_RESULT"},
+    {"at_frame": 95, "action": "advance",    "label": "MATCH_RESULT -> REPLAY"},
+    {"at_frame": 100, "action": "advance",   "label": "REPLAY -> FIGHT_FILM"},
+    {"at_frame": 105, "action": "advance",   "label": "FIGHT_FILM -> QUIT"}
+  ]
+}
