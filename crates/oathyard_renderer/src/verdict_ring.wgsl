@@ -565,6 +565,19 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let mat_type = mesh_material.material_type;
     let tint = mesh_material.tint.rgb;
 
+    // Unit-095: For fighters (mat_type=4), output hardcoded team colors
+    // using vertex color to distinguish player vs opponent.
+    // Player meshes have vertex color偏向 (higher G channel), opponent lower G.
+    if (mat_type > 3.5 && mat_type < 4.5) {
+        if (input.color.g > 0.5) {
+            return vec4<f32>(0.95, 0.75, 0.15, 1.0);  // player gold
+        } else {
+            return vec4<f32>(0.85, 0.15, 0.10, 1.0);  // opponent crimson
+        }
+    }
+
+    // Normal mesh rendering for non-fighter meshes (weapons, armor, arena)
+
     // Unit-062: Use pre-computed per-vertex normals from face geometry.
     // Was: cross(dpdx, dpdy) which produced unstable/faceted shading.
     let n = normalize(input.normal);

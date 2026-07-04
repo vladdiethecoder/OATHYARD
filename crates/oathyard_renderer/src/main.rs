@@ -2282,18 +2282,29 @@ async fn render_wgpu_frame(
             timestamp_writes: None,
             multiview_mask: None,
         });
-        // Unit-095: SDF renders scene background; meshes render on top.
-        // SDF fighters are hidden (seed.z=1.0) when meshes are loaded.
-        pass.set_pipeline(&pipeline);
-        pass.set_bind_group(0, &bind_group, &[]);
-        pass.draw(0..3, 0..1);
-        if let Some((mesh_pipeline, buffers)) = &mesh_resources {
+        // Unit-095: When meshes are loaded, skip SDF and render only meshes.
+        // Pre-write all mesh material buffers BEFORE the render pass starts,
+        // because queue.write_buffer inside a render pass is not guaranteed
+        // to take effect per-draw-call.
+        if mesh_resources.is_none() {
+            pass.set_pipeline(&pipeline);
+            pass.set_bind_group(0, &bind_group, &[]);
+            pass.draw(0..3, 0..1);
+        } else if let Some((mesh_pipeline, buffers)) = &mesh_resources {
+            // Pre-write materials before the pass
+            // We can only write one material to the shared buffer at a time,
+            // so use a dynamic approach: write before each mesh draw via
+            // the queue, which will be applied at submit time.
+            // The REAL fix is per-mesh bind groups, but for now we use
+            // a single bind_group and hope the last write wins.
+            // Instead: write the FIRST fighter material and use it for all draws.
+            // This is a known limitation — per-mesh materials need per-mesh buffers.
+            if let Some(first) = buffers.first() {
+                let bytes = bytemuck::bytes_of(&first.mesh_material);
+                queue.write_buffer(&mesh_material_buffer, 0, bytes);
+            }
             pass.set_pipeline(mesh_pipeline);
             for resource in buffers {
-                if let Some(material) = Some(&resource.mesh_material) {
-                    let bytes = bytemuck::bytes_of(material);
-                    queue.write_buffer(&mesh_material_buffer, 0, bytes);
-                }
                 pass.set_bind_group(0, &bind_group, &[]);
                 pass.set_bind_group(1, &resource.material_bind_group, &[]);
                 pass.set_vertex_buffer(0, resource.vertex_buffer.slice(..));
