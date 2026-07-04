@@ -1226,7 +1226,7 @@ pub struct DuelEndCondition {
 }
 
 impl DuelEndCondition {
-    fn winner_token(&self) -> String {
+    pub fn winner_token(&self) -> String {
         match self.winner {
             Some(seat) => format!("seat_{seat}"),
             None => "none".to_string(),

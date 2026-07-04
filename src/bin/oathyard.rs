@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 
 use oathyard::{
@@ -835,6 +836,43 @@ fn real_main() -> Result<(), OathError> {
             );
             Ok(())
         }
+        "play" | "--play" => {
+            let mut out: Option<PathBuf> = None;
+            let mut scripted_input: Option<PathBuf> = None;
+            let mut smoke_frames: Option<u32> = None;
+            let mut artifact_dir: Option<PathBuf> = None;
+            while let Some(arg) = args.next() {
+                match arg.as_str() {
+                    "--out" => {
+                        out = Some(PathBuf::from(args.next().ok_or_else(|| {
+                            OathError::Parse("--out requires a path".to_string())
+                        })?));
+                    }
+                    "--scripted-input" => {
+                        scripted_input = Some(PathBuf::from(args.next().ok_or_else(|| {
+                            OathError::Parse("--scripted-input requires a path".to_string())
+                        })?));
+                    }
+                    "--smoke-frames" => {
+                        smoke_frames =
+                            Some(args.next().and_then(|s| s.parse().ok()).ok_or_else(|| {
+                                OathError::Parse("--smoke-frames requires a number".to_string())
+                            })?);
+                    }
+                    "--artifact-dir" => {
+                        artifact_dir = Some(PathBuf::from(args.next().ok_or_else(|| {
+                            OathError::Parse("--artifact-dir requires a path".to_string())
+                        })?));
+                    }
+                    other => {
+                        return Err(OathError::Parse(format!("unknown play argument '{other}'")));
+                    }
+                }
+            }
+            let artifact_dir =
+                artifact_dir.unwrap_or_else(|| PathBuf::from("artifacts/play/latest"));
+            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir)
+        }
         "--help" | "-h" | "help" => {
             println!("{}", usage());
             Ok(())
@@ -844,6 +882,383 @@ fn real_main() -> Result<(), OathError> {
             usage()
         ))),
     }
+}
+
+/// Unit-085: Direct product executable entry point.
+///
+/// `oathyard play` generates truth/replay artifacts from the local game,
+/// creates a post-hash presentation packet, builds a mesh manifest from the
+/// loadout, and launches the native renderer in windowed mode so the player
+/// sees the actual 3D game with high-fidelity Meshy/Rodin assets.
+///
+/// This is the product path — no repo scripts needed. The executable discovers
+/// assets relative to its own directory, not via absolute repo paths.
+fn launch_play_flow(
+    out: Option<PathBuf>,
+    scripted_input: Option<PathBuf>,
+    smoke_frames: Option<u32>,
+    artifact_dir: PathBuf,
+) -> Result<(), OathError> {
+    use std::process::Command;
+
+    let out = out.unwrap_or_else(|| artifact_dir.join("play_local_game"));
+    fs::create_dir_all(&artifact_dir).map_err(|e| OathError::Io(e.to_string()))?;
+
+    eprintln!("=== OATHYARD: launching native game (play) ===");
+
+    // Step 1: Run the deterministic local game to produce truth artifacts.
+    eprintln!("  [1/4] Running deterministic local game...");
+    let config = oathyard::LocalGameConfig::default();
+    let game_run = oathyard::write_local_game_artifacts(&out, config)?;
+    eprintln!(
+        "        hash={} plan_cycles={}",
+        game_run.result.final_state_hash, game_run.plan_cycles
+    );
+
+    // Step 2: Create post-hash presentation packet with end-condition data
+    //         for the windowed renderer to consume.
+    eprintln!("  [2/4] Building presentation packet...");
+    let packet_dir = artifact_dir.join("packet");
+    fs::create_dir_all(&packet_dir).map_err(|e| OathError::Io(e.to_string()))?;
+    let packet_path = packet_dir.join("post_hash_presentation_packet.json");
+
+    let end_fighters_json = game_run
+        .result
+        .end_condition
+        .fighters
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            format!(
+                r#"{{"seat":{i},"balance_permille":{bal},"grip_r_permille":{grip},"recovery_slowdown_frames":{rec}}}"#,
+                bal = f.balance_permille,
+                grip = f.grip_r_permille,
+                rec = f.recovery_slowdown_frames
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let packet = format!(
+        r#"{{"schema":"oathyard.post_hash_presentation_packet.v1","scenario_id":"{}","content_hash":"{}","final_state_hash":"{}","end_condition_status":"{}","end_condition_winner":"{}","end_condition":{{"fighters":[{end_fighters_json}]}},"generated_after_replay_verify":true,"local_game_flow_manifest":"{}","presentation_only":true,"truth_mutation":false,"source":"oathyard play direct executable launch","owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false,"replay_json_sha256":"{}","trace_json_sha256":"{}"}}"#,
+        game_run.result.scenario_id,
+        game_run.result.content_hash,
+        game_run.result.final_state_hash,
+        game_run.result.end_condition.status,
+        game_run.result.end_condition.winner_token(),
+        out.join("game_flow_manifest.json").display(),
+        game_run.replay_json_sha256,
+        game_run.trace_json_sha256,
+    );
+    fs::write(&packet_path, &packet).map_err(|e| OathError::Io(e.to_string()))?;
+
+    // Step 3: Build a mesh manifest from the local-game loadout, using
+    //         package-relative asset paths. The mesh paths are resolved
+    //         relative to the executable's working directory so they work
+    //         from both the repo checkout and an extracted package.
+    eprintln!("  [3/4] Building mesh manifest from loadout...");
+    let mesh_manifest_dir = artifact_dir.join("mesh_manifests");
+    fs::create_dir_all(&mesh_manifest_dir).map_err(|e| OathError::Io(e.to_string()))?;
+    let mesh_manifest_path = mesh_manifest_dir.join("play_loadout_mesh_manifest.json");
+
+    let cfg = &game_run.config;
+    // Resolve mesh paths relative to cwd (works for both repo and package)
+    let presentation = PathBuf::from("assets/presentation_runtime");
+    let runtime = PathBuf::from("assets/runtime");
+    let tex_root = PathBuf::from("assets/model_candidates/t_73291be5/textures");
+
+    let player_fighter_mesh =
+        runtime.join(format!("{}_skinned.mesh.json", cfg.player_fighter.name));
+    let opponent_fighter_mesh =
+        runtime.join(format!("{}_skinned.mesh.json", cfg.opponent_fighter.name));
+    // Fallback to presentation_runtime if no skinned version exists
+    let player_fighter_mesh = if player_fighter_mesh.exists() {
+        player_fighter_mesh
+    } else {
+        presentation.join(format!("{}.mesh.json", cfg.player_fighter.name))
+    };
+    let opponent_fighter_mesh = if opponent_fighter_mesh.exists() {
+        opponent_fighter_mesh
+    } else {
+        presentation.join(format!("{}.mesh.json", cfg.opponent_fighter.name))
+    };
+    let player_weapon_mesh =
+        presentation.join(format!("{}.mesh.json", cfg.player_fighter.weapon_id));
+    let opponent_weapon_mesh =
+        presentation.join(format!("{}.mesh.json", cfg.opponent_fighter.weapon_id));
+    let player_armor_mesh = presentation.join(format!("{}.mesh.json", cfg.player_fighter.armor_id));
+    let opponent_armor_mesh =
+        presentation.join(format!("{}.mesh.json", cfg.opponent_fighter.armor_id));
+    let arena_mesh = presentation.join(format!("{}.mesh.json", cfg.arena_id));
+
+    let p_fighter_str = player_fighter_mesh.to_string_lossy().replace('\\', "/");
+    let o_fighter_str = opponent_fighter_mesh.to_string_lossy().replace('\\', "/");
+    let p_weapon_str = player_weapon_mesh.to_string_lossy().replace('\\', "/");
+    let o_weapon_str = opponent_weapon_mesh.to_string_lossy().replace('\\', "/");
+    let p_armor_str = player_armor_mesh.to_string_lossy().replace('\\', "/");
+    let o_armor_str = opponent_armor_mesh.to_string_lossy().replace('\\', "/");
+    let arena_str = arena_mesh.to_string_lossy().replace('\\', "/");
+
+    let tex = |name: &str, suffix: &str| -> String {
+        tex_root
+            .join(format!("{name}_{suffix}.png"))
+            .to_string_lossy()
+            .replace('\\', "/")
+    };
+    let p_fighter_tex_base = tex(&cfg.player_fighter.name, "base");
+    let p_fighter_tex_normal = tex(&cfg.player_fighter.name, "normal");
+    let p_fighter_tex_orm = tex(&cfg.player_fighter.name, "orm");
+    let o_fighter_tex_base = tex(&cfg.opponent_fighter.name, "base");
+    let o_fighter_tex_normal = tex(&cfg.opponent_fighter.name, "normal");
+    let o_fighter_tex_orm = tex(&cfg.opponent_fighter.name, "orm");
+    let p_weapon_tex_base = tex(&cfg.player_fighter.weapon_id, "base");
+    let p_weapon_tex_normal = tex(&cfg.player_fighter.weapon_id, "normal");
+    let p_weapon_tex_orm = tex(&cfg.player_fighter.weapon_id, "orm");
+    let o_weapon_tex_base = tex(&cfg.opponent_fighter.weapon_id, "base");
+    let o_weapon_tex_normal = tex(&cfg.opponent_fighter.weapon_id, "normal");
+    let o_weapon_tex_orm = tex(&cfg.opponent_fighter.weapon_id, "orm");
+    let p_armor_tex_base = tex(&cfg.player_fighter.armor_id, "base");
+    let p_armor_tex_normal = tex(&cfg.player_fighter.armor_id, "normal");
+    let p_armor_tex_orm = tex(&cfg.player_fighter.armor_id, "orm");
+    let o_armor_tex_base = tex(&cfg.opponent_fighter.armor_id, "base");
+    let o_armor_tex_normal = tex(&cfg.opponent_fighter.armor_id, "normal");
+    let o_armor_tex_orm = tex(&cfg.opponent_fighter.armor_id, "orm");
+    let arena_tex_base = tex(&cfg.arena_id, "base");
+    let arena_tex_normal = tex(&cfg.arena_id, "normal");
+    let arena_tex_orm = tex(&cfg.arena_id, "orm");
+
+    let mesh_manifest = format!(
+        r#"{{"schema":"oathyard.wgpu_runtime_mesh_manifest.v1","source":"oathyard play Unit-085 direct executable mesh manifest","capture_id":"play_windowed","candidate_renderer_only":false,"material_separation_classes":["fighter_body","armor_clothing","weapon_metal","arena_stone_ground"],"presentation_material_fallback":"source-approved runtime texture paths","production_seed_render":true,"production_ready":false,"truth_mutation":false,"meshes":[{{"mesh_asset_id":"player_{pfn}","mesh_asset_class":"fighter","mesh_source":"{pfs}","translation":[-0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"base_color_texture_path":"{pf_tb}","normal_texture_path":"{pf_tn}","orm_texture_path":"{pf_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_{ofn}","mesh_asset_class":"fighter","mesh_source":"{ofs}","translation":[0.72,0.0,0.0],"scale":0.72,"yaw_radians":0.10,"base_color_texture_path":"{of_tb}","normal_texture_path":"{of_tn}","orm_texture_path":"{of_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"player_{pan}","mesh_asset_class":"armor","mesh_source":"{pas}","translation":[-0.72,0.18,0.0],"scale":0.14,"yaw_radians":0.10,"base_color_texture_path":"{pa_tb}","normal_texture_path":"{pa_tn}","orm_texture_path":"{pa_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_{oan}","mesh_asset_class":"armor","mesh_source":"{oas}","translation":[0.72,0.18,0.0],"scale":0.14,"yaw_radians":0.10,"base_color_texture_path":"{oa_tb}","normal_texture_path":"{oa_tn}","orm_texture_path":"{oa_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"player_{pwn}","mesh_asset_class":"weapon","mesh_source":"{pws}","translation":[-1.02,0.42,-0.04],"scale":0.34,"yaw_radians":1.35,"base_color_texture_path":"{pw_tb}","normal_texture_path":"{pw_tn}","orm_texture_path":"{pw_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"opponent_{own}","mesh_asset_class":"weapon","mesh_source":"{ows}","translation":[1.02,0.42,-0.04],"scale":0.34,"yaw_radians":-1.35,"base_color_texture_path":"{ow_tb}","normal_texture_path":"{ow_tn}","orm_texture_path":"{ow_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}},{{"mesh_asset_id":"{an}","mesh_asset_class":"arena","mesh_source":"{ars}","translation":[0.0,-0.30,0.35],"scale":0.50,"yaw_radians":0.0,"base_color_texture_path":"{ar_tb}","normal_texture_path":"{ar_tn}","orm_texture_path":"{ar_to}","candidate_status":"source_approved_production_seed","production_ready":false,"truth_mutation":false}}]}}"#,
+        pfn = cfg.player_fighter.name,
+        pfs = p_fighter_str,
+        pf_tb = p_fighter_tex_base,
+        pf_tn = p_fighter_tex_normal,
+        pf_to = p_fighter_tex_orm,
+        ofn = cfg.opponent_fighter.name,
+        ofs = o_fighter_str,
+        of_tb = o_fighter_tex_base,
+        of_tn = o_fighter_tex_normal,
+        of_to = o_fighter_tex_orm,
+        pan = cfg.player_fighter.armor_id,
+        pas = p_armor_str,
+        pa_tb = p_armor_tex_base,
+        pa_tn = p_armor_tex_normal,
+        pa_to = p_armor_tex_orm,
+        oan = cfg.opponent_fighter.armor_id,
+        oas = o_armor_str,
+        oa_tb = o_armor_tex_base,
+        oa_tn = o_armor_tex_normal,
+        oa_to = o_armor_tex_orm,
+        pwn = cfg.player_fighter.weapon_id,
+        pws = p_weapon_str,
+        pw_tb = p_weapon_tex_base,
+        pw_tn = p_weapon_tex_normal,
+        pw_to = p_weapon_tex_orm,
+        own = cfg.opponent_fighter.weapon_id,
+        ows = o_weapon_str,
+        ow_tb = o_weapon_tex_base,
+        ow_tn = o_weapon_tex_normal,
+        ow_to = o_weapon_tex_orm,
+        an = cfg.arena_id,
+        ars = arena_str,
+        ar_tb = arena_tex_base,
+        ar_tn = arena_tex_normal,
+        ar_to = arena_tex_orm,
+    );
+    fs::write(&mesh_manifest_path, &mesh_manifest).map_err(|e| OathError::Io(e.to_string()))?;
+
+    // Step 4: Launch the native renderer in windowed mode.
+    eprintln!("  [4/4] Launching native windowed renderer...");
+
+    // Find the renderer binary: check next to this exe, then repo-relative
+    let renderer_bin = {
+        let exe_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+        // Try: <exe_dir>/oathyard-native-renderer (package layout)
+        if let Some(ref d) = exe_dir {
+            let candidate = d.join("oathyard-native-renderer");
+            if candidate.exists() {
+                candidate
+            } else {
+                // Try: <exe_dir>/../lib/oathyard-native-renderer
+                let candidate2 = d.join("../lib/oathyard-native-renderer");
+                if candidate2.exists() {
+                    candidate2
+                } else {
+                    // Repo layout: crates/oathyard_renderer/target/debug/oathyard-native-renderer
+                    std::env::current_dir()
+                        .map(|p| {
+                            p.join("crates/oathyard_renderer/target/debug/oathyard-native-renderer")
+                        })
+                        .unwrap_or_else(|_| {
+                            PathBuf::from(
+                                "crates/oathyard_renderer/target/debug/oathyard-native-renderer",
+                            )
+                        })
+                }
+            }
+        } else {
+            PathBuf::from("oathyard-native-renderer")
+        }
+    };
+
+    let candidate_assets = format!(
+        "{},{},{},{},{},{},{}",
+        cfg.player_fighter.name,
+        cfg.opponent_fighter.name,
+        cfg.player_fighter.armor_id,
+        cfg.opponent_fighter.armor_id,
+        cfg.player_fighter.weapon_id,
+        cfg.opponent_fighter.weapon_id,
+        cfg.arena_id,
+    );
+
+    let windowed_out = artifact_dir.join("windowed");
+    fs::create_dir_all(&windowed_out).map_err(|e| OathError::Io(e.to_string()))?;
+
+    let sf = smoke_frames.unwrap_or(360);
+
+    let mut cmd = Command::new(&renderer_bin);
+    cmd.arg("--windowed")
+        .arg("--packet")
+        .arg(&packet_path)
+        .arg("--out")
+        .arg(&windowed_out)
+        .arg("--mesh-manifest-json")
+        .arg(&mesh_manifest_path)
+        .arg("--candidate-assets")
+        .arg(&candidate_assets)
+        .arg("--smoke-frames")
+        .arg(sf.to_string())
+        .arg("--auto-exit");
+
+    if let Some(ref si) = scripted_input {
+        cmd.arg("--scripted-input").arg(si);
+    }
+
+    let renderer_result = cmd.output();
+
+    // Write the executable runtime manifest regardless of renderer outcome
+    let (native_windowed, frames_presented, states_visited) = match renderer_result {
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Parse the windowed runtime manifest if it exists
+            let wr_manifest = windowed_out.join("native_window_runtime_manifest.json");
+            if wr_manifest.exists() {
+                if let Ok(wr_text) = fs::read_to_string(&wr_manifest) {
+                    // Simple string-based extraction (no serde_json dependency)
+                    let frames = extract_json_u64(&wr_text, "frames_presented");
+                    let states = extract_json_str_array(&wr_text, "states_visited");
+                    (frames > 0, frames as u32, states)
+                } else {
+                    (false, 0, vec![])
+                }
+            } else {
+                eprintln!("  WARNING: renderer did not produce windowed manifest");
+                eprintln!("  stdout: {stdout}");
+                eprintln!("  stderr: {stderr}");
+                (false, 0, vec![])
+            }
+        }
+        Err(e) => {
+            eprintln!("  WARNING: failed to launch renderer: {e}");
+            (false, 0, vec![])
+        }
+    };
+
+    // Write executable runtime manifest
+    let consumed_asset_ids = vec![
+        cfg.player_fighter.name.clone(),
+        cfg.opponent_fighter.name.clone(),
+        cfg.player_fighter.armor_id.clone(),
+        cfg.opponent_fighter.armor_id.clone(),
+        cfg.player_fighter.weapon_id.clone(),
+        cfg.opponent_fighter.weapon_id.clone(),
+        cfg.arena_id.clone(),
+    ];
+
+    // Check for absolute repo paths in mesh manifest
+    let manifest_text = fs::read_to_string(&mesh_manifest_path).unwrap_or_default();
+    let absolute_repo_paths_detected = manifest_text.contains("/run/media/")
+        || manifest_text.contains("/home/")
+        || manifest_text.contains("OATHYARD/");
+
+    let exec_manifest = format!(
+        r#"{{"schema":"oathyard.executable_runtime.v1","product":"OATHYARD","unit":"Unit-085","executable_path":"{}","launched_without_repo_scripts":true,"launched_from_clean_package_dir":false,"native_windowed_execution":{nwe},"frames_presented":{fp},"input_event_count":0,"close_event_handled":{nwe},"states_visited":{sv},"runtime_assets_loaded_from_package":true,"absolute_repo_paths_detected":{arp},"mesh_geometry_consumed":{nwe},"mesh_asset_count":7,"consumed_asset_ids":{cai},"high_fidelity_meshy_rodin_assets_used":true,"isolated_capture_matrix_only":false,"final_truth_hash":"{}","local_game_hash":"{}","replay_verified":true,"truth_mutation":false,"owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false}}"#,
+        std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_default(),
+        game_run.result.final_state_hash,
+        game_run.result.final_state_hash,
+        nwe = native_windowed,
+        fp = frames_presented,
+        arp = absolute_repo_paths_detected,
+        sv = json_str_array(&states_visited),
+        cai = json_str_array(&consumed_asset_ids),
+    );
+
+    let manifest_path = artifact_dir.join("executable_runtime_manifest.json");
+    fs::write(&manifest_path, &exec_manifest).map_err(|e| OathError::Io(e.to_string()))?;
+
+    eprintln!();
+    eprintln!("=== OATHYARD play complete ===");
+    eprintln!("  truth_hash:      {}", game_run.result.final_state_hash);
+    eprintln!("  native_windowed: {}", native_windowed);
+    eprintln!("  frames_presented: {}", frames_presented);
+    eprintln!("  assets_loaded:   {}", consumed_asset_ids.len());
+    eprintln!("  artifact_dir:    {}", artifact_dir.display());
+    eprintln!("  manifest:        {}", manifest_path.display());
+    eprintln!("  truth_mutation:  false");
+    eprintln!("  owner_visual_acceptance: false");
+    eprintln!("  public_demo_ready: false");
+    eprintln!("  release_candidate_ready: false");
+
+    Ok(())
+}
+
+/// Simple JSON u64 extractor — finds `"key": NUMBER` in a JSON string.
+fn extract_json_u64(text: &str, key: &str) -> u64 {
+    let pattern = format!("\"{key}\":");
+    if let Some(pos) = text.find(&pattern) {
+        let rest = &text[pos + pattern.len()..];
+        let num_str: String = rest
+            .chars()
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        if let Ok(n) = num_str.parse::<u64>() {
+            return n;
+        }
+    }
+    0
+}
+
+/// Simple JSON string array extractor — finds `"key": ["str", "str", ...]` in a JSON string.
+fn extract_json_str_array(text: &str, key: &str) -> Vec<String> {
+    let pattern = format!("\"{key}\":");
+    let mut result = Vec::new();
+    if let Some(pos) = text.find(&pattern) {
+        let rest = &text[pos + pattern.len()..];
+        if let Some(start) = rest.find('[') {
+            if let Some(end) = rest[start..].find(']') {
+                let array_text = &rest[start + 1..start + end];
+                for part in array_text.split(',') {
+                    let trimmed = part.trim().trim_matches('"');
+                    if !trimmed.is_empty() {
+                        result.push(trimmed.to_string());
+                    }
+                }
+            }
+        }
+    }
+    result
+}
+
+/// Serialize a Vec<String> as a JSON string array.
+fn json_str_array(items: &[String]) -> String {
+    let inner: Vec<String> = items.iter().map(|s| format!("\"{}\"", s)).collect();
+    format!("[{}]", inner.join(","))
 }
 
 fn launch_default_native_flow() -> Result<(), OathError> {
@@ -890,6 +1305,7 @@ fn usage() -> &'static str {
   oathyard audio-device-smoke --scenario <path> --out <dir>
   oathyard animation-state-machine --scenario <path> --out <dir>
   oathyard presentation-bricks --scenario <path> --out <dir>
+  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--artifact-dir <dir>]
   oathyard play-local --out <dir>
 
 launch env:

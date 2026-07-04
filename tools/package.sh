@@ -31,6 +31,10 @@ mkdir -p \
   "$package_root/share/applications"
 
 cp target/debug/oathyard "$package_root/bin/oathyard"
+# Unit-085: Include the native renderer binary so `oathyard play` works from package
+if [[ -x crates/oathyard_renderer/target/debug/oathyard-native-renderer ]]; then
+  cp crates/oathyard_renderer/target/debug/oathyard-native-renderer "$package_root/bin/oathyard-native-renderer"
+fi
 cp README.md AGENTS.md ACCEPTANCE_MAP.md LICENSE "$package_root/"
 cp -R docs/design "$package_root/docs/"
 cp -R docs/decisions "$package_root/docs/"
@@ -46,6 +50,11 @@ cp -R assets/source/model_candidates "$package_root/assets_src/"
 cp assets/runtime_manifest.json assets/asset_provenance_report.md assets/asset_validation_report.md assets/gltf_validation_report.md "$package_root/assets/"
 cp assets/manifests/presentation_manifest.json assets/manifests/production_visual_manifest.json assets/manifests/production_candidate_visual_manifest.json "$package_root/assets/"
 cp content/oathyard_content.manifest "$package_root/content/"
+# Unit-085: Include content/input for scripted playtest from package
+if [[ -d content/input ]]; then
+  mkdir -p "$package_root/content/input"
+  cp content/input/*.json "$package_root/content/input/" 2>/dev/null || true
+fi
 cp -R examples/duels "$package_root/examples/"
 cp packaging/linux/io.oathyard.OATHYARD.desktop "$package_root/share/applications/"
 cp packaging/linux/README.md "$package_root/docs/packaging/linux-desktop-metadata.md"

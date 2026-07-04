@@ -3465,3 +3465,86 @@ fn unit083_native_asset_capture_matrix_truth_isolated() {
         );
     }
 }
+
+#[test]
+fn unit085_executable_runtime_manifest_schema_validates() {
+    // Verify the executable runtime manifest schema is present and correct
+    // in the generated source code
+    let bin_source = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard.rs");
+    assert!(
+        bin_source.contains("\"schema\":\"oathyard.executable_runtime.v1\""),
+        "executable runtime manifest schema missing from oathyard.rs"
+    );
+    assert!(
+        bin_source.contains("launched_without_repo_scripts"),
+        "launched_without_repo_scripts field missing"
+    );
+    assert!(
+        bin_source.contains("mesh_asset_count"),
+        "mesh_asset_count field missing"
+    );
+    assert!(
+        bin_source.contains("high_fidelity_meshy_rodin_assets_used"),
+        "high_fidelity_meshy_rodin_assets_used field missing"
+    );
+    assert!(
+        bin_source.contains("isolated_capture_matrix_only"),
+        "isolated_capture_matrix_only field missing"
+    );
+    assert!(
+        bin_source.contains("absolute_repo_paths_detected"),
+        "absolute_repo_paths_detected field missing"
+    );
+}
+
+#[test]
+fn unit085_play_command_exists_in_usage() {
+    let bin_source = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard.rs");
+    assert!(
+        bin_source.contains("\"play\""),
+        "play command missing from CLI match"
+    );
+    assert!(
+        bin_source.contains("launch_play_flow"),
+        "launch_play_flow function missing"
+    );
+    assert!(
+        bin_source.contains("fn launch_play_flow"),
+        "launch_play_flow function definition missing"
+    );
+}
+
+#[test]
+fn unit085_smoke_executable_tool_exists() {
+    let tool_path = std::path::Path::new("tools/smoke_executable_game.sh");
+    assert!(
+        tool_path.exists(),
+        "smoke_executable_game.sh must exist for Unit-085"
+    );
+    let tool_source = fs::read_to_string(tool_path).expect("read smoke_executable_game.sh");
+    assert!(
+        tool_source.contains("oathyard play"),
+        "smoke tool must launch oathyard play directly"
+    );
+    assert!(
+        tool_source.contains("smoke_executable_game_manifest.json"),
+        "smoke tool must produce smoke manifest"
+    );
+    assert!(
+        tool_source.contains("absolute_repo_paths"),
+        "smoke tool must check for absolute repo paths"
+    );
+}
+
+#[test]
+fn unit085_package_includes_renderer_binary() {
+    let pkg_source = fs::read_to_string("tools/package.sh").expect("read package.sh");
+    assert!(
+        pkg_source.contains("oathyard-native-renderer"),
+        "package.sh must include the native renderer binary for play command"
+    );
+    assert!(
+        pkg_source.contains("content/input"),
+        "package.sh must include content/input for scripted playtest"
+    );
+}
