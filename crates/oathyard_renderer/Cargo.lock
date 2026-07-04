@@ -1347,6 +1347,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "wgpu",
+ "wgpu-types",
  "winit",
 ]
 
