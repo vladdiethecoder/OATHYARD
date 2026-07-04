@@ -234,23 +234,47 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // opponent crimson
         },
-        // Generic material_type branches for non-seed meshes
-        id if id.contains("longsword") => MeshMaterial {
+        // Generic material_type branches for the full local Meshy/Rodin candidate family.
+        id if id.contains("saltreach_duelist")
+            || id.contains("oathyard_writ")
+            || id.contains("chainbreaker")
+            || id.contains("reed_sentinel")
+            || id.contains("gate_shield")
+            || id.contains("bruiser_oath") => MeshMaterial {
+            material_type: 4.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: if id.contains("opponent_") { 0.76 } else { 0.84 },
+            tint_g: if id.contains("opponent_") { 0.38 } else { 0.58 },
+            tint_b: if id.contains("opponent_") { 0.28 } else { 0.36 },
+            tint_a: 1.0,
+        },
+        id if id.contains("gambeson")
+            || id.contains("mail_hauberk")
+            || id.contains("heavy_plate")
+            || id.contains("lamellar")
+            || id.contains("fencer_light")
+            || id.contains("bruiser_padded_plate") => MeshMaterial {
+            material_type: 2.0,
+            _pad: [0.0, 0.0, 0.0],
+            tint_r: if id.contains("opponent_") { 0.62 } else { 0.82 },
+            tint_g: if id.contains("opponent_") { 0.36 } else { 0.56 },
+            tint_b: if id.contains("opponent_") { 0.30 } else { 0.38 },
+            tint_a: 1.0,
+        },
+        id if id.contains("longsword")
+            || id.contains("curved_sword")
+            || id.contains("bearded_axe")
+            || id.contains("ash_spear")
+            || id.contains("round_shield")
+            || id.contains("iron_maul")
+            || id.contains("arming_sword")
+            || id.contains("billhook") => MeshMaterial {
             material_type: 0.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.85, tint_g: 0.83, tint_b: 0.90, tint_a: 1.0,
         },
-        id if id.contains("gambeson") => MeshMaterial {
-            material_type: 1.0,
-            _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.70, tint_g: 0.44, tint_b: 0.24, tint_a: 1.0,
-        },
-        id if id.contains("fighter") => MeshMaterial {
-            material_type: 4.0,
-            _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.80, tint_g: 0.48, tint_b: 0.32, tint_a: 1.0,
-        },
-        id if id.contains("witness_stone") => MeshMaterial {
+        id if id.contains("witness_stone")
+            || id.contains("oathyard_verdict_ring") => MeshMaterial {
             material_type: 3.0,
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.48, tint_g: 0.42, tint_b: 0.38, tint_a: 1.0,
@@ -829,6 +853,38 @@ fn load_runtime_mesh_with_clip(spec: &RuntimeMeshSpec, clip_id: &str) -> Result<
             }
         }
     }
+    let mut mesh_texcoords: Vec<[f32; 2]> = Vec::new();
+    let texcoord_json = data
+        .get("texcoords")
+        .or_else(|| data.get("uvs"))
+        .and_then(Value::as_array);
+    if let Some(texcoords_json) = texcoord_json {
+        for uv_val in texcoords_json {
+            if let Some(uv_arr) = uv_val.as_array() {
+                if uv_arr.len() >= 2 {
+                    mesh_texcoords.push([
+                        uv_arr[0].as_f64().unwrap_or(0.0) as f32,
+                        uv_arr[1].as_f64().unwrap_or(0.0) as f32,
+                    ]);
+                }
+            }
+        }
+    }
+    let mut mesh_material_colors: Vec<[f32; 3]> = Vec::new();
+    if let Some(colors_json) = data.get("material_colors").and_then(Value::as_array) {
+        for color_val in colors_json {
+            if let Some(color_arr) = color_val.as_array() {
+                if color_arr.len() >= 3 {
+                    mesh_material_colors.push([
+                        color_arr[0].as_f64().unwrap_or(1.0) as f32,
+                        color_arr[1].as_f64().unwrap_or(1.0) as f32,
+                        color_arr[2].as_f64().unwrap_or(1.0) as f32,
+                    ]);
+                }
+            }
+        }
+    }
+
     // Unit-068: Apply CPU-side skinning deformation from glTF animation data
     if mesh_normals.len() == positions.len() && !clip_id.is_empty() {
         let _ = apply_skinned_deformation(&mut positions, &mut mesh_normals, &data, clip_id);
@@ -877,15 +933,27 @@ fn load_runtime_mesh_with_clip(spec: &RuntimeMeshSpec, clip_id: &str) -> Result<
                 position: [transformed[0], transformed[1] * 1.55, transformed[2]],
                 // Unit-062: Stable object-space box-projection material coordinates.
                 // Replace noisy triplanar with per-asset scaled object-space coords.
-                material_uv: [
-                    wrap01(local[0] * 0.58 + 0.21),
-                    wrap01(local[1] * 0.58 + 0.21),
-                ],
-                color: [
-                    base_color[0] + 0.05 * local[2].abs().min(1.0),
-                    base_color[1] + 0.05 * local[1].abs().min(1.0),
-                    base_color[2] + 0.05 * local[0].abs().min(1.0),
-                ],
+                material_uv: if vi < mesh_texcoords.len() {
+                    [wrap01(mesh_texcoords[vi][0]), wrap01(mesh_texcoords[vi][1])]
+                } else {
+                    [
+                        wrap01(local[0] * 0.58 + 0.21),
+                        wrap01(local[1] * 0.58 + 0.21),
+                    ]
+                },
+                color: if vi < mesh_material_colors.len() {
+                    [
+                        (mesh_material_colors[vi][0] + 0.04 * local[2].abs().min(1.0)).min(1.25),
+                        (mesh_material_colors[vi][1] + 0.04 * local[1].abs().min(1.0)).min(1.25),
+                        (mesh_material_colors[vi][2] + 0.04 * local[0].abs().min(1.0)).min(1.25),
+                    ]
+                } else {
+                    [
+                        base_color[0] + 0.05 * local[2].abs().min(1.0),
+                        base_color[1] + 0.05 * local[1].abs().min(1.0),
+                        base_color[2] + 0.05 * local[0].abs().min(1.0),
+                    ]
+                },
                 // Normals: use source normals if available (set later), otherwise computed.
                 normal: if vi < mesh_normals.len() { mesh_normals[vi] } else { [0.0, 0.0, 0.0] },
             }
@@ -1641,6 +1709,42 @@ struct GpuMeshResource {
     _orm_texture: wgpu::Texture,
 }
 
+fn depth_stencil_state(depth_write_enabled: bool) -> wgpu::DepthStencilState {
+    wgpu::DepthStencilState {
+        format: wgpu::TextureFormat::Depth32Float,
+        depth_write_enabled: Some(depth_write_enabled),
+        depth_compare: if depth_write_enabled {
+            Some(wgpu::CompareFunction::LessEqual)
+        } else {
+            Some(wgpu::CompareFunction::Always)
+        },
+        stencil: wgpu::StencilState::default(),
+        bias: wgpu::DepthBiasState::default(),
+    }
+}
+
+fn create_depth_texture(
+    device: &wgpu::Device,
+    width: u32,
+    height: u32,
+    label: &'static str,
+) -> wgpu::Texture {
+    device.create_texture(&wgpu::TextureDescriptor {
+        label: Some(label),
+        size: wgpu::Extent3d {
+            width: width.max(1),
+            height: height.max(1),
+            depth_or_array_layers: 1,
+        },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Depth32Float,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        view_formats: &[],
+    })
+}
+
 fn load_png_rgba(path: &Path) -> Result<RuntimeTextureImage, String> {
     let file = fs::File::open(path).map_err(|error| format!("open png {}: {error}", path.display()))?;
     let decoder = png::Decoder::new(BufReader::new(file));
@@ -1779,6 +1883,13 @@ async fn render_wgpu_frame(
         view_formats: &[],
     });
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+    let depth_texture = create_depth_texture(
+        &device,
+        WIDTH,
+        HEIGHT,
+        "oathyard production render depth target",
+    );
+    let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     let uniform_bytes = seed
         .iter()
@@ -1950,7 +2061,7 @@ async fn render_wgpu_frame(
             buffers: &[],
         },
         primitive: wgpu::PrimitiveState::default(),
-        depth_stencil: None,
+        depth_stencil: Some(depth_stencil_state(false)),
         multisample: wgpu::MultisampleState::default(),
         fragment: Some(wgpu::FragmentState {
             module: &shader,
@@ -1989,7 +2100,7 @@ async fn render_wgpu_frame(
                 cull_mode: None,
                 ..Default::default()
             },
-            depth_stencil: None,
+            depth_stencil: Some(depth_stencil_state(true)),
             multisample: wgpu::MultisampleState::default(),
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -2152,7 +2263,14 @@ async fn render_wgpu_frame(
                 },
                 depth_slice: None,
             })],
-            depth_stencil_attachment: None,
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: &depth_view,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: wgpu::StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
             occlusion_query_set: None,
             timestamp_writes: None,
             multiview_mask: None,

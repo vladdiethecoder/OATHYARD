@@ -2,4 +2,4 @@
 set -euo pipefail
 
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-exec "$script_dir/performance_benchmark.sh" "$@"
+exec python3 "$script_dir/performance_benchmark.py" "$@"

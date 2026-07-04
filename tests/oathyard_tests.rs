@@ -1463,12 +1463,45 @@ fn final_acceptance_manifest_indexes_required_evidence_artifacts() {
     assert!(final_acceptance.contains("generated_asset_quarantine_manifest.json"));
     assert!(final_acceptance.contains("generated_asset_production_unblock_matrix.json"));
     assert!(final_acceptance.contains("generated_asset_production_unblock_matrix.md"));
+    assert!(final_acceptance
+        .contains("run_step runtime_asset_sets ./tools/render_runtime_asset_sets.sh"));
+    assert!(final_acceptance.contains(
+        "OATHYARD_PRODUCTION_RENDERER_MANIFEST=\"$out/runtime_asset_sets/production_renderer_manifest.json\""
+    ));
     assert!(final_acceptance.contains("high_fidelity_capture_matrix.json"));
+    assert!(final_acceptance.contains("runtime_asset_sets/runtime_asset_sets_render_manifest.json"));
+    assert!(final_acceptance.contains("runtime_asset_sets/production_renderer_manifest.json"));
     assert!(final_acceptance.contains("visual_benchmark_report.md"));
     assert!(final_acceptance.contains("visual_gap_list.md"));
     assert!(final_acceptance.contains("oathyard-linux-x86_64.tar"));
     assert!(final_acceptance.contains("public_demo_ready':False"));
     assert!(final_acceptance.contains("release_candidate_ready':False"));
+}
+
+#[test]
+fn unit081_runtime_asset_set_candidate_lane_feeds_visual_gates_without_readiness_claims() {
+    let hifi_tool = fs::read_to_string("tools/capture_high_fidelity_screens.sh")
+        .expect("missing high fidelity capture tool");
+    let gap_tool =
+        fs::read_to_string("tools/visual_gap_audit.sh").expect("missing visual gap audit tool");
+    let benchmark_tool =
+        fs::read_to_string("tools/visual_benchmark.sh").expect("missing visual benchmark tool");
+    let visual_qa = fs::read_to_string("tools/visual_qa.sh").expect("missing visual QA tool");
+
+    assert!(hifi_tool.contains("runtime_asset_set_candidate_native_3d_capture"));
+    assert!(hifi_tool.contains("runtime_asset_set_candidate_capture_count"));
+    assert!(hifi_tool.contains("mesh_geometry_consumed"));
+    assert!(hifi_tool.contains("production_renderer_asset_set_*.png"));
+    assert!(hifi_tool.contains("'production_renderer_complete': False"));
+    assert!(hifi_tool.contains("'owner_visual_acceptance': False"));
+    assert!(hifi_tool.contains("'public_demo_ready': False"));
+    assert!(hifi_tool.contains("'release_candidate_ready': False"));
+    assert!(gap_tool.contains("OATHYARD_HIGH_FIDELITY_SCREEN_MANIFEST"));
+    assert!(gap_tool.contains("runtime_asset_set_candidate_capture_count"));
+    assert!(benchmark_tool.contains("runtime_asset_set_candidate_capture_count"));
+    assert!(benchmark_tool.contains("candidate evidence only"));
+    assert!(visual_qa.contains("current_dir.rglob(\"*.png\")"));
+    assert!(visual_qa.contains("discovered_png_file_count"));
 }
 
 #[test]
@@ -2230,10 +2263,14 @@ fn visual_benchmark_integrates_high_fidelity_capture_matrix_into_gap_list() {
 fn performance_benchmark_handles_blocked_native_3d_manifest_without_traceback() {
     let perf_tool =
         fs::read_to_string("tools/performance_benchmark.py").expect("performance benchmark tool");
+    let perf_wrapper =
+        fs::read_to_string("tools/perf_benchmark.sh").expect("perf benchmark wrapper");
 
     assert!(perf_tool.contains("blocked_pending_native_3d_renderer_capture"));
     assert!(perf_tool.contains("native_render_status"));
     assert!(perf_tool.contains("render_manifest.get(\"playback_loop\", {})"));
+    assert!(perf_wrapper.contains("python3 \"$script_dir/performance_benchmark.py\""));
+    assert!(!perf_wrapper.contains("performance_benchmark.sh"));
 }
 
 #[test]

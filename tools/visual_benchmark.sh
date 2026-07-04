@@ -36,9 +36,10 @@ if capture_matrix:
 required_capture_slot_count = int(capture_matrix_data.get('required_capture_slot_count', 0) or 0)
 missing_native_capture_count = int(capture_matrix_data.get('missing_native_capture_count', 0) or 0)
 current_native_capture_count = int(capture_matrix_data.get('current_native_capture_count', 0) or 0)
+runtime_asset_set_candidate_capture_count = int(capture_matrix_data.get('runtime_asset_set_candidate_capture_count', 0) or 0)
 production_seed_native_capture_count = int(capture_matrix_data.get('production_seed_native_capture_count', 0) or 0)
 sections = [
-    ('current_oathyard_captures', 'FAIL', 'Current native-renderer evidence is absent or blocked; standalone fallback captures are excluded from the current visual benchmark surface.' + (f' Production seed progress: {production_seed_native_capture_count} source-approved native 3D captures exist but are not production-ready.' if production_seed_native_capture_count > 0 else '')),
+    ('current_oathyard_captures', 'FAIL', 'Current native-renderer evidence is absent or blocked; standalone fallback captures are excluded from the current visual benchmark surface.' + (f' Runtime asset-set progress: {runtime_asset_set_candidate_capture_count} coherent local Meshy/Rodin native 3D captures exist but are candidate evidence only.' if runtime_asset_set_candidate_capture_count > 0 else '') + (f' Production seed progress: {production_seed_native_capture_count} source-approved native 3D captures exist but are not production-ready.' if production_seed_native_capture_count > 0 else '')),
     ('elden_ring_atmosphere_world_detail_goals', 'FAIL', 'No production renderer, GI/reflection solution, high-quality shadows, cinematic atmosphere, weather/wetness, large-scale dark-fantasy environment richness, or material-depth evidence exists.'),
     ('for_honor_melee_readability_goals','FAIL','Current fighters/weapons are candidate/procedural structural assets; no source-approved high-fidelity DCC production characters, armor/weapon identity, visceral contact response, or best-of-five presentation packet exists.'),
     ('original_art_ip_safety_check', 'PASS', 'Docs/canon define benchmark references as quality bars only and prohibit copying third-party names, assets, silhouettes, UI, lore, animations, music, textures, or proprietary mechanics. Production asset provenance remains absent.'),
@@ -63,6 +64,7 @@ manifest = {
     'required_capture_slot_count': required_capture_slot_count,
     'missing_native_capture_count': missing_native_capture_count,
     'current_native_capture_count': current_native_capture_count,
+    'runtime_asset_set_candidate_capture_count': runtime_asset_set_candidate_capture_count,
     'production_seed_native_capture_count': production_seed_native_capture_count,
     'native_3d_visual_evidence_required': True,
     'fallback_visual_substitutes_allowed': False,
@@ -91,6 +93,7 @@ report = [
     f'- Source capture matrix: `{capture_matrix.as_posix() if capture_matrix else "missing"}`',
     f'- Required high-fidelity capture slots: `{required_capture_slot_count}`',
     f'- Current native capture slots: `{current_native_capture_count}`',
+    f'- Runtime asset-set candidate captures: `{runtime_asset_set_candidate_capture_count}`',
     f'- Production seed native capture slots: `{production_seed_native_capture_count}`',
     f'- Missing native capture slots: `{missing_native_capture_count}`',
     '- Fallback visual substitutes: `forbidden`', '',
@@ -117,6 +120,7 @@ gap_lines = [
     '',
     f'- Required high-fidelity capture slots: `{required_capture_slot_count}`',
     f'- Current native capture slots: `{current_native_capture_count}`',
+    f'- Runtime asset-set candidate captures: `{runtime_asset_set_candidate_capture_count}`',
     f'- Production seed native capture slots: `{production_seed_native_capture_count}`',
     f'- Missing native capture slots: `{missing_native_capture_count}`',
     '- Fallback visual substitutes: `forbidden`',

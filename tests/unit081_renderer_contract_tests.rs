@@ -136,3 +136,133 @@ fn unit081_renderer_binds_explicit_texture_paths_before_material_validation_fall
         ],
     );
 }
+
+#[test]
+fn unit081_mesh_shader_samples_bound_material_textures_and_depths_meshes() {
+    let shader_path = "crates/oathyard_renderer/src/verdict_ring.wgsl";
+    let shader = fs::read_to_string(shader_path).expect("read renderer shader");
+
+    assert_contains_all(
+        &shader,
+        shader_path,
+        &[
+            "@location(4) material_uv: vec2<f32>",
+            "out.material_uv = input.material_uv",
+            "textureSample(base_color_texture, material_sampler, input.material_uv)",
+            "textureSample(normal_texture, material_sampler, input.material_uv)",
+            "textureSample(orm_texture, material_sampler, input.material_uv)",
+            "candidate texture sample now drives visible asset identity",
+            "material_identity = clamp(input.color * 1.12",
+            "class_tint = mix(tint, material_identity",
+            "let clip_z = clamp((view_z - near) / 12.0, 0.0, 1.0)",
+        ],
+    );
+
+    let renderer_path = "crates/oathyard_renderer/src/main.rs";
+    let renderer = fs::read_to_string(renderer_path).expect("read native renderer main");
+    assert_contains_all(
+        &renderer,
+        renderer_path,
+        &[
+            "fn depth_stencil_state(depth_write_enabled: bool)",
+            "wgpu::TextureFormat::Depth32Float",
+            "fn create_depth_texture(",
+            "oathyard production render depth target",
+            "depth_stencil: Some(depth_stencil_state(true))",
+            "RenderPassDepthStencilAttachment",
+            ".get(\"texcoords\")",
+            "wrap01(mesh_texcoords[vi][0])",
+            "material_colors",
+            "mesh_material_colors",
+        ],
+    );
+}
+
+#[test]
+fn unit081_runtime_asset_sets_stage_coherent_local_meshy_rodin_bundles() {
+    let generator_path = "tools/generate_runtime_asset_sets.py";
+    let generator = fs::read_to_string(generator_path).expect("read asset-set generator");
+    assert_contains_all(
+        &generator,
+        generator_path,
+        &[
+            "saltreach_writ_judgement",
+            "chainbreaker_gate_clash",
+            "reed_bruiser_trial",
+            "oathyard_writ",
+            "chainbreaker",
+            "gate_shield",
+            "reed_sentinel",
+            "bruiser_oath",
+            "mail_hauberk",
+            "heavy_plate",
+            "lamellar",
+            "bruiser_padded_plate",
+            "bearded_axe",
+            "round_shield",
+            "ash_spear",
+            "billhook",
+            "source-approved runtime texture paths; no mesh may omit base/normal/ORM",
+            "TEXCOORD_0",
+            "NORMAL",
+            "baseColorFactor",
+            "positions",
+            "normals",
+            "texcoords",
+            "material_colors",
+            "\"truth_mutation\": False",
+        ],
+    );
+
+    let wrapper_path = "tools/render_runtime_asset_sets.sh";
+    let wrapper = fs::read_to_string(wrapper_path).expect("read asset-set render wrapper");
+    assert_contains_all(
+        &wrapper,
+        wrapper_path,
+        &[
+            "tools/generate_runtime_asset_sets.py",
+            "--mesh-manifest-json",
+            "--camera-mode \"pre_contact_frame\"",
+            "production_renderer_asset_set_${set_id}_1920x1080",
+            "runtime_asset_sets_render_manifest.json",
+            "production_renderer_manifest.json",
+            "runtime_asset_set_candidate_native_3d_capture",
+            "mesh_geometry_consumed",
+            "mesh_asset_ids",
+            "truth_mutation",
+        ],
+    );
+}
+
+#[test]
+fn unit081_material_classifier_covers_full_local_asset_family() {
+    let renderer_path = "crates/oathyard_renderer/src/main.rs";
+    let renderer = fs::read_to_string(renderer_path).expect("read native renderer main");
+    assert_contains_all(
+        &renderer,
+        renderer_path,
+        &[
+            "full local Meshy/Rodin candidate family",
+            "saltreach_duelist",
+            "oathyard_writ",
+            "chainbreaker",
+            "reed_sentinel",
+            "gate_shield",
+            "bruiser_oath",
+            "mail_hauberk",
+            "heavy_plate",
+            "lamellar",
+            "fencer_light",
+            "bruiser_padded_plate",
+            "curved_sword",
+            "bearded_axe",
+            "ash_spear",
+            "round_shield",
+            "iron_maul",
+            "arming_sword",
+            "billhook",
+            "oathyard_verdict_ring",
+            "training_yard",
+        ],
+    );
+}

@@ -268,6 +268,7 @@ baseline_environment = baseline.get("environment", {})
 # --- Discover current captures ---
 
 current_captures = {}
+discovered_png_file_count = 0
 
 # Method 1: captures.json manifest
 captures_manifest = current_dir / "captures.json"
@@ -296,7 +297,8 @@ if captures_manifest.is_file():
 
 # Method 2: scan PNG files
 if not current_captures:
-    png_files = sorted(current_dir.glob("*.png")) if current_dir.is_dir() else []
+    png_files = sorted(current_dir.rglob("*.png")) if current_dir.is_dir() else []
+    discovered_png_file_count = len(png_files)
     
     prod_manifest = current_dir / "production_renderer_manifest.json"
     prod_manifest_data = {}
@@ -526,6 +528,7 @@ manifest = {
     "baseline_candidate_pending_review": baseline.get("candidate_baseline_pending_review", True),
     "current_captures_dir": str(current_dir),
     "current_capture_count": len(current_captures),
+    "discovered_png_file_count": discovered_png_file_count,
     "required_role_count": len(REQUIRED_ROLES),
     "roles_present": sum(1 for r in role_results if r["status"] in ("present", "issues")),
     "roles_missing": sum(1 for r in role_results if r["status"] == "missing"),
@@ -565,6 +568,7 @@ md_lines = [
     f"Status: {'PASSED' if passed else 'FAILED'}" + (" (report-only mode)" if report_only else ""),
     "",
     f"- Required roles: `{len(REQUIRED_ROLES)}`",
+    f"- Discovered PNG files: `{manifest['discovered_png_file_count']}`",
     f"- Roles present: `{manifest['roles_present']}`",
     f"- Roles missing: `{manifest['roles_missing']}`",
     f"- Failures: `{len(failures)}`",

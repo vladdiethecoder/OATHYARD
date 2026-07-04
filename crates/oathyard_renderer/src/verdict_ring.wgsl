@@ -60,6 +60,7 @@ struct MeshVertexOut {
     @location(1) color: vec3<f32>,
     @location(2) shade: f32,
     @location(3) normal: vec3<f32>,
+    @location(4) material_uv: vec2<f32>,
 }
 
 @group(1) @binding(0)
@@ -535,11 +536,13 @@ fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     let clip_y = view_y * proj_scale;
 
     var out: MeshVertexOut;
-    out.position = vec4<f32>(clip_x, clip_y, 0.0, 1.0);
+    let clip_z = clamp((view_z - near) / 12.0, 0.0, 1.0);
+    out.position = vec4<f32>(clip_x, clip_y, clip_z, 1.0);
     out.world_pos = world_pos;
     out.color = input.color;
     out.shade = clamp(0.54 + view_z * 0.25 + abs(world_pos.y) * 0.12, 0.22, 1.35);
     out.normal = input.normal;
+    out.material_uv = input.material_uv;
     return out;
 }
 
@@ -553,8 +556,22 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // Was: cross(dpdx, dpdy) which produced unstable/faceted shading.
     let n = normalize(input.normal);
 
-    // Procedural PBR base
-    let base = procedural_pbr(input.world_pos, n, mat_type, tint);
+    // Unit-081: sample the Meshy/Rodin candidate material maps that the Rust
+    // renderer already binds. Earlier evidence only proved texture-binding
+    // metadata; this makes the asset maps affect visible pixels.
+    let sampled_base = textureSample(base_color_texture, material_sampler, input.material_uv).rgb;
+    let sampled_normal = textureSample(normal_texture, material_sampler, input.material_uv).rgb;
+    let sampled_orm = textureSample(orm_texture, material_sampler, input.material_uv).rgb;
+
+    // Procedural PBR remains a deterministic fallback/detail layer; the local
+    // candidate texture sample now drives visible asset identity.
+    let procedural_base = procedural_pbr(input.world_pos, n, mat_type, tint);
+    let normal_detail = clamp(length(sampled_normal - vec3<f32>(0.5)) * 0.85, 0.0, 0.22);
+    let map_contrast = clamp((sampled_base - vec3<f32>(0.5)) * 1.65 + vec3<f32>(0.5), vec3<f32>(0.02), vec3<f32>(1.18));
+    let material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22));
+    let class_tint = mix(tint, material_identity, vec3<f32>(0.68));
+    let texture_base = map_contrast * class_tint * 1.20;
+    let base = mix(procedural_base, texture_base, 0.86 + normal_detail * 0.45);
 
     // Lighting
     let key = normalize(vec3<f32>(-0.48, 0.88, 0.30));
@@ -564,9 +581,11 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
 
     // Unit-062: Softer shading for seed meshes — reduce contrast between lit
     // and shadowed faces on high-vertex-count geometry-only meshes.
+    let texture_ao = clamp(sampled_orm.r, 0.30, 1.0);
+    let texture_roughness = clamp(sampled_orm.g, 0.12, 1.0);
     let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
-    let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion;
-    let color = base * (0.48 + diffuse * 1.30 + fill_light) * ao * input.shade;
+    let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion * texture_ao;
+    let color = base * (0.54 + diffuse * 1.38 + fill_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
@@ -582,7 +601,7 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // Unit-054 RI-02: Enhanced specular response with material-dependent power.
     // Metals get sharper highlights; non-metals get broader, softer highlights.
     let metal_factor = select(0.0, 1.0, mat_type < 0.5);
-    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.15, 0.55, metal_factor);
+    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.12, 0.62, metal_factor) * (1.12 - texture_roughness * 0.42);
     let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
 
     let final_color = tone_map(color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution);

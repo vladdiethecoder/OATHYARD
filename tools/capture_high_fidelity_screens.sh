@@ -163,6 +163,10 @@ if can_ingest_native_captures:
     for capture in renderer_data.get('captures', []) or []:
         capture_id = str(capture.get('capture_id', ''))
         capture_classification = str(capture.get('capture_classification', ''))
+        # Runtime asset-set candidate captures are validated below as candidate evidence;
+        # they do not fill required high-fidelity production capture slots.
+        if capture_classification == 'runtime_asset_set_candidate_native_3d_capture':
+            continue
         # Production seed captures are tracked separately and do not map to required matrix slots
         if capture_id.startswith('production_seed_') or capture_classification == 'production_seed_native_3d_capture':
             if capture.get('native_3d_capture') is not True:
@@ -242,6 +246,57 @@ if can_ingest_native_captures:
         })
 current_native_capture_count = sum(1 for row in capture_rows if row['status'] == 'native_3d_capture_present')
 candidate_native_capture_count = sum(1 for row in capture_rows if row['status'] == 'candidate_native_3d_capture_not_production_complete')
+runtime_asset_set_candidate_captures = []
+if can_ingest_native_captures:
+    for capture in renderer_data.get('captures', []) or []:
+        if str(capture.get('capture_classification', '')) != 'runtime_asset_set_candidate_native_3d_capture':
+            continue
+        capture_id = str(capture.get('capture_id', ''))
+        capture_file = str(capture.get('capture_file') or capture.get('file') or '')
+        if capture.get('native_3d_capture') is not True:
+            failures.append(f'{capture_id}: runtime asset-set native_3d_capture is not true')
+            continue
+        if capture.get('truth_mutation') is not False:
+            failures.append(f'{capture_id}: runtime asset-set truth_mutation is not false')
+            continue
+        if capture.get('mesh_geometry_consumed') is not True or int(capture.get('mesh_asset_count', 0) or 0) <= 0:
+            failures.append(f'{capture_id}: runtime asset-set capture lacks mesh consumption evidence')
+            continue
+        if not capture_file:
+            failures.append(f'{capture_id}: runtime asset-set capture_file missing')
+            continue
+        try:
+            capture_path = renderer_capture_path(capture_file)
+            width, height = png_dimensions(capture_path)
+        except Exception as exc:
+            failures.append(f'{capture_id}: invalid runtime asset-set PNG capture evidence: {exc}')
+            continue
+        if not capture_path.is_file():
+            failures.append(f'{capture_id}: runtime asset-set capture file missing: {capture_path}')
+            continue
+        if capture_path.suffix.lower() != '.png' or not capture_path.name.startswith('production_renderer_asset_set_'):
+            failures.append(f'{capture_id}: runtime asset-set capture file is not a production_renderer_asset_set_*.png native evidence file')
+            continue
+        if width < 1920 or height < 1080:
+            failures.append(f'{capture_id}: runtime asset-set capture resolution {width}x{height} below required 1920x1080')
+            continue
+        runtime_asset_set_candidate_captures.append({
+            'capture_id': capture_id,
+            'asset_set_id': str(capture.get('asset_set_id', '')),
+            'capture_file': display_path(capture_path),
+            'capture_file_sha256': sha256(capture_path),
+            'renderer_backend_id': str(capture.get('renderer_backend_id', '')),
+            'quality_preset': str(capture.get('quality_preset', '')),
+            'camera_mode': str(capture.get('camera_mode', '')),
+            'mesh_asset_count': int(capture.get('mesh_asset_count', 0) or 0),
+            'mesh_asset_ids': capture.get('mesh_asset_ids', []),
+            'truth_mutation': False,
+            'production_renderer_complete': False,
+            'owner_visual_acceptance': False,
+            'public_demo_ready': False,
+            'release_candidate_ready': False,
+        })
+runtime_asset_set_candidate_capture_count = len(runtime_asset_set_candidate_captures)
 # Count production seed captures from the renderer manifest (tracked separately from required matrix slots)
 production_seed_native_capture_count = 0
 if can_ingest_native_captures:
@@ -261,6 +316,7 @@ capture_matrix = {
     'required_capture_slot_count': len(capture_rows),
     'current_native_capture_count': current_native_capture_count,
     'candidate_native_capture_count': candidate_native_capture_count,
+    'runtime_asset_set_candidate_capture_count': runtime_asset_set_candidate_capture_count,
     'production_seed_native_capture_count': production_seed_native_capture_count,
     'production_ready_native_capture_count': current_native_capture_count,
     'missing_native_capture_count': missing_capture_count,
@@ -278,6 +334,7 @@ capture_matrix = {
         for group_id, label, count in capture_groups
     ],
     'captures': capture_rows,
+    'runtime_asset_set_candidate_captures': runtime_asset_set_candidate_captures,
 }
 (out / 'high_fidelity_capture_matrix.json').write_text(json.dumps(capture_matrix, indent=2, sort_keys=True) + '\n', encoding='utf-8')
 matrix_report = [
@@ -289,6 +346,7 @@ matrix_report = [
     f"- Required capture slots: `{len(capture_rows)}`",
     f"- Current native capture count: `{current_native_capture_count}`",
     f"- Candidate native capture count: `{candidate_native_capture_count}`",
+    f"- Runtime asset-set candidate capture count: `{runtime_asset_set_candidate_capture_count}`",
     f"- Production seed native capture count: `{production_seed_native_capture_count}`",
     f"- Missing native capture count: `{missing_capture_count}`",
     '- Minimum native resolution: `1920x1080`',
@@ -309,6 +367,7 @@ manifest = {
     'passed': not failures,
     'capture_count': current_native_capture_count,
     'candidate_native_capture_count': candidate_native_capture_count,
+    'runtime_asset_set_candidate_capture_count': runtime_asset_set_candidate_capture_count,
     'production_seed_native_capture_count': production_seed_native_capture_count,
     'required_capture_matrix': (out / 'high_fidelity_capture_matrix.json').as_posix(),
     'production_renderer_manifest': display_path(renderer_manifest),

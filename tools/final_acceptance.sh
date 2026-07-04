@@ -38,9 +38,10 @@ run_step cross_platform_verify ./tools/cross_platform_verify.sh --out "$out/cros
 run_step performance_benchmark ./tools/perf_benchmark.sh "$out/perf"
 run_step package ./tools/package.sh
 run_step package_smoke ./tools/smoke_package.sh artifacts/package/oathyard-linux-x86_64.tar
-run_step visual_gap_audit ./tools/visual_gap_audit.sh "$out/visual_gap"
-run_step capture_high_fidelity_screens ./tools/capture_high_fidelity_screens.sh "$out/high_fidelity_screens"
-run_step visual_qa ./tools/visual_qa.sh "$out/visual_qa" --report-only
+run_step runtime_asset_sets ./tools/render_runtime_asset_sets.sh examples/duels/basic_oathyard.duel "$out/runtime_asset_sets"
+run_step capture_high_fidelity_screens env OATHYARD_PRODUCTION_RENDERER_MANIFEST="$out/runtime_asset_sets/production_renderer_manifest.json" OATHYARD_PRODUCTION_RENDERER_ROOT="$out/runtime_asset_sets" ./tools/capture_high_fidelity_screens.sh "$out/high_fidelity_screens"
+run_step visual_gap_audit env OATHYARD_PRODUCTION_RENDERER_MANIFEST="$out/runtime_asset_sets/production_renderer_manifest.json" OATHYARD_HIGH_FIDELITY_SCREEN_MANIFEST="$out/high_fidelity_screens/high_fidelity_screen_manifest.json" ./tools/visual_gap_audit.sh "$out/visual_gap"
+run_step visual_qa ./tools/visual_qa.sh "$out/visual_qa" --current "$out/runtime_asset_sets/rendered_sets" --report-only
 run_step visual_benchmark ./tools/visual_benchmark.sh "$out/visual_review"
 
 python3 - "$out" "$summary_tsv" <<'PY'
@@ -75,6 +76,8 @@ artifact_specs = [
     ('generated_asset_production_unblock_matrix_md', out / 'asset_audit/generated_asset_production_unblock_matrix.md'),
     ('high_fidelity_capture_matrix_json', out / 'high_fidelity_screens/high_fidelity_capture_matrix.json'),
     ('high_fidelity_capture_matrix_md', out / 'high_fidelity_screens/high_fidelity_capture_matrix.md'),
+    ('runtime_asset_sets_manifest', out / 'runtime_asset_sets/runtime_asset_sets_render_manifest.json'),
+    ('runtime_asset_sets_renderer_manifest', out / 'runtime_asset_sets/production_renderer_manifest.json'),
     ('visual_benchmark_report', out / 'visual_review/visual_benchmark_report.md'),
     ('visual_qa_report', out / 'visual_qa/visual_qa_report.json'),
     ('visual_gap_list', out / 'visual_review/visual_gap_list.md'),

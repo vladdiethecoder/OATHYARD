@@ -6,16 +6,33 @@ mkdir -p "$out"
 
 python3 - "$out" <<'PY'
 import json
+import os
 import sys
 from pathlib import Path
 out = Path(sys.argv[1])
 root = Path.cwd()
+
+def first_existing(paths):
+    for path in paths:
+        if path.is_file():
+            return path
+    return paths[0]
+
 required = {
-    'renderer_manifest': root / 'artifacts/production_renderer/latest/production_renderer_manifest.json',
-    'capture_manifest': root / 'artifacts/high_fidelity_screens/latest/high_fidelity_screen_manifest.json',
+    'renderer_manifest': first_existing([
+        Path(os.environ.get('OATHYARD_PRODUCTION_RENDERER_MANIFEST', '')),
+        out.parent / 'runtime_asset_sets' / 'production_renderer_manifest.json',
+        root / 'artifacts/production_renderer/latest/production_renderer_manifest.json',
+    ]),
+    'capture_manifest': first_existing([
+        Path(os.environ.get('OATHYARD_HIGH_FIDELITY_SCREEN_MANIFEST', '')),
+        out.parent / 'high_fidelity_screens' / 'high_fidelity_screen_manifest.json',
+        root / 'artifacts/high_fidelity_screens/latest/high_fidelity_screen_manifest.json',
+    ]),
     'production_asset_manifest': root / 'assets/manifests/production_visual_manifest.json',
 }
 failures = []
+parsed = {}
 for key, path in required.items():
     if not path.is_file():
         failures.append(f'missing production evidence file: {path}')
@@ -25,11 +42,13 @@ for key, path in required.items():
     except Exception as exc:
         failures.append(f'{path} is not valid JSON: {exc}')
         continue
+    parsed[key] = data
     if data.get('truth_mutation') is not False:
         failures.append(f'{path} does not prove truth_mutation false')
     if data.get('production_renderer_complete') is not True and key != 'capture_manifest':
         failures.append(f'{path} does not prove production_renderer_complete true')
 passed = not failures
+runtime_asset_set_candidate_capture_count = int(parsed.get('capture_manifest', {}).get('runtime_asset_set_candidate_capture_count', 0) or 0)
 manifest = {
     'schema': 'oathyard.visual_gap_audit.v2',
     'tool': 'tools/visual_gap_audit.sh',
@@ -38,6 +57,7 @@ manifest = {
     'native_3d_visual_evidence_required': True,
     'production_renderer_complete': False,
     'visual_qa_integrated': True,
+    'runtime_asset_set_candidate_capture_count': runtime_asset_set_candidate_capture_count,
     'owner_visual_acceptance': False,
     'public_demo_ready': False,
     'release_candidate_ready': False,
@@ -47,7 +67,7 @@ manifest = {
 }
 (out / 'visual_gap_audit.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8')
 (out / 'failed_visual_gap_checks.txt').write_text('none\n' if passed else '\n'.join(failures) + '\n', encoding='utf-8')
-report = ['# OATHYARD Visual Gap Audit', '', f"Status: {'PASSED' if passed else 'BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE'}", '', '- Required evidence: native 3D renderer captures only.', '- Standalone generated visual substitutes: `forbidden`', '- Production renderer complete: `false`', '- Owner visual acceptance: `false`', '- Public demo ready: `false`', '- Release candidate ready: `false`']
+report = ['# OATHYARD Visual Gap Audit', '', f"Status: {'PASSED' if passed else 'BLOCKED_PENDING_NATIVE_3D_RENDERER_CAPTURE'}", '', '- Required evidence: native 3D renderer captures only.', '- Runtime asset-set candidate captures: `' + str(runtime_asset_set_candidate_capture_count) + '`', '- Standalone generated visual substitutes: `forbidden`', '- Production renderer complete: `false`', '- Owner visual acceptance: `false`', '- Public demo ready: `false`', '- Release candidate ready: `false`']
 if failures:
     report.extend(['', '## Failures'] + [f'- {f}' for f in failures])
 (out / 'visual_gap_audit_report.md').write_text('\n'.join(report) + '\n', encoding='utf-8')
