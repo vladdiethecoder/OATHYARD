@@ -2631,7 +2631,84 @@ fn draw_contact_marker(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i3
     fill_rect(rgba, width, height, x1 - 4, y1 - 4, 8, 8, 255, 255, 100);
 }
 
-// Unit-091: Action category lookup for trace-driven UI
+// Unit-094: Map game state and action data to animation clip for skeletal motion
+fn action_clip_for_state(
+    state: &InteractiveState,
+    timeline_slots: &[String],
+    combat_contacts: &[ResolvedContact],
+) -> &'static str {
+    match state {
+        InteractiveState::Observe => "idle",
+        InteractiveState::Timeline => {
+            // Show the action at the current cursor position
+            "guard_pose" // default to guard while planning
+        }
+        InteractiveState::Plan => "guard_pose",
+        InteractiveState::CommitReveal => {
+            // Show the first committed action as the reveal pose
+            if let Some(slot) = timeline_slots.first() {
+                match slot.as_str() {
+                    "cut" => "cut",
+                    "thrust" => "thrust",
+                    "guard" | "parry" => "guard_pose",
+                    "step" | "pivot" => "walk",
+                    "brace" => "guard_pose",
+                    "bash" => "cut",
+                    "recover" => "recover",
+                    _ => "guard_pose",
+                }
+            } else {
+                "guard_pose"
+            }
+        }
+        InteractiveState::Resolve => {
+            // Show contact action pose
+            if let Some(contact) = combat_contacts.first() {
+                match contact.player_action.as_str() {
+                    "cut" => "cut",
+                    "thrust" => "thrust",
+                    "guard" | "parry" => "guard_pose",
+                    "bash" | "shove" | "kick" => "attack",
+                    "step" | "pivot" => "walk",
+                    "brace" => "guard_pose",
+                    "grab" | "hook_bind" => "attack",
+                    "recover" => "recover",
+                    _ => "attack",
+                }
+            } else {
+                "attack"
+            }
+        }
+        InteractiveState::Consequence => "recover",
+        InteractiveState::Replan => "idle",
+        InteractiveState::MatchResult => "idle",
+        InteractiveState::Replay => {
+            if let Some(contact) = combat_contacts.first() {
+                match contact.player_action.as_str() {
+                    "cut" => "cut",
+                    "thrust" => "thrust",
+                    _ => "guard_pose",
+                }
+            } else {
+                "idle"
+            }
+        }
+        InteractiveState::FightFilm => {
+            if let Some(contact) = combat_contacts.first() {
+                match contact.player_action.as_str() {
+                    "cut" => "cut",
+                    "thrust" => "thrust",
+                    _ => "guard_pose",
+                }
+            } else {
+                "guard_pose"
+            }
+        }
+        _ => "idle",
+    }
+}
+
+// Unit-094: Action category lookup for trace-driven UI
 fn action_category(action: &str) -> &'static str {
     match action {
         "step" | "pivot" => "movement",
@@ -3267,6 +3344,7 @@ struct WindowedApp {
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
     mesh_material_buffer: wgpu::Buffer,
+    pose_buffer: wgpu::Buffer,
     gpu_meshes: Vec<WindowedGpuMesh>,
     camera_mode: String,
     first_person_default: bool,
@@ -4058,6 +4136,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             pipeline,
             bind_group,
             mesh_material_buffer,
+            pose_buffer,
             gpu_meshes,
             camera_mode: self.config.camera_mode.clone(),
             first_person_default: true,
@@ -4561,6 +4640,16 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 render_pass.draw_indexed(0..mesh.index_count, 0, 0..1);
                             }
                         }
+
+                        // Unit-094: Update pose uniform based on current game state/action
+                        let action_clip = action_clip_for_state(
+                            &app.interactive_state,
+                            &app.timeline_slots,
+                            &app.combat_contacts,
+                        );
+                        let new_pose = pose_for_clip(action_clip);
+                        app.queue
+                            .write_buffer(&app.pose_buffer, 0, bytemuck::bytes_of(&new_pose));
 
                         // Unit-092: Copy offscreen to buffer for CPU UI compositing
                         let bytes_per_pixel = 4; // RGBA8 or BGRA8

@@ -1,0 +1,41 @@
+{
+  "schema": "oathyard.action_motion_map.v1",
+  "unit": "Unit-094",
+  "description": "Maps each combat action to its runtime skeletal/procedural motion presentation in the native executable.",
+  "truth_mutation": false,
+  "presentation_only": true,
+  "pose_system": "procedural_pose_uniform",
+  "bone_indices": {
+    "0": "root",
+    "1": "spine",
+    "2": "head",
+    "3": "right_arm",
+    "4": "left_arm",
+    "5": "right_leg",
+    "6": "left_leg"
+  },
+  "actions": [
+    {"id": "step", "clip": "walk", "status": "procedural_pose", "body_motion": "leg_displacement", "weapon_motion": "weapon_maintained", "truth_mutation": false},
+    {"id": "pivot", "clip": "walk", "status": "procedural_pose", "body_motion": "torso_rotation", "weapon_motion": "weapon_arc", "truth_mutation": false},
+    {"id": "guard", "clip": "guard_pose", "status": "procedural_pose", "body_motion": "arms_raised_centered", "weapon_motion": "weapon_vertical_block", "truth_mutation": false},
+    {"id": "parry", "clip": "guard_pose", "status": "procedural_pose", "body_motion": "arms_deflecting", "weapon_motion": "weapon_diagonal_deflect", "truth_mutation": false},
+    {"id": "cut", "clip": "cut", "status": "procedural_pose", "body_motion": "arm_swing_torso_twist", "weapon_motion": "weapon_edge_arc", "truth_mutation": false},
+    {"id": "thrust", "clip": "thrust", "status": "procedural_pose", "body_motion": "arms_forward_lunge", "weapon_motion": "weapon_point_extend", "truth_mutation": false},
+    {"id": "brace", "clip": "guard_pose", "status": "procedural_pose", "body_motion": "stance_lowered_weight_back", "weapon_motion": "weapon_braced", "truth_mutation": false},
+    {"id": "bash", "clip": "attack", "status": "procedural_pose", "body_motion": "arm_swing_forward", "weapon_motion": "weapon_shield_lead", "truth_mutation": false},
+    {"id": "hook_bind", "clip": "attack", "status": "procedural_pose", "body_motion": "arms_cross_reach", "weapon_motion": "weapon_hook_control", "truth_mutation": false},
+    {"id": "grab", "clip": "attack", "status": "procedural_pose", "body_motion": "arms_lunge_reach", "weapon_motion": "weapon_lowered", "truth_mutation": false},
+    {"id": "shove", "clip": "attack", "status": "procedural_pose", "body_motion": "arms_push_forward", "weapon_motion": "weapon_one_hand", "truth_mutation": false},
+    {"id": "kick", "clip": "attack", "status": "procedural_pose", "body_motion": "leg_strike_forward", "weapon_motion": "weapon_guard_maintained", "truth_mutation": false},
+    {"id": "recover", "clip": "recover", "status": "procedural_pose", "body_motion": "arms_settling_spine_recenter", "weapon_motion": "weapon_rest_position", "truth_mutation": false}
+  ],
+  "motion_phases": ["anticipation", "contact", "follow_through"],
+  "fight_film_sequence": ["reveal", "anticipation", "contact", "follow_through", "consequence"],
+  "weapon_continuity": "weapon_mesh_transforms_with_fighter_via_pose_uniform_bone_3_and_4_offsets",
+  "armor_continuity": "armor_mesh_transforms_with_fighter_via_shared_pose_buffer",
+  "distinct_pairs": {
+    "cut_vs_thrust": "cut uses arm swing + torso twist + downward motion; thrust uses forward extension + lunge",
+    "guard_vs_brace": "guard raises weapon vertically centered; brace lowers stance with weight back",
+    "recover_vs_idle": "recover has settling arm motion; idle has minimal breathing offset"
+  }
+}

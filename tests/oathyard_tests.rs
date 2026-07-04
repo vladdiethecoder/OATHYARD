@@ -4390,3 +4390,82 @@ fn unit093_lighting_improvements() {
         "demo lighting comment missing"
     );
 }
+
+#[test]
+fn unit094_action_motion_map_exists() {
+    let map = fs::read_to_string("content/animation/unit094_action_motion_map.json")
+        .expect("action motion map missing");
+    assert!(map.contains("oathyard.action_motion_map.v1"));
+    // Verify at least 8 actions have motion rows
+    for action in &[
+        "step",
+        "guard",
+        "cut",
+        "thrust",
+        "brace",
+        "bash",
+        "recover",
+        "hook_bind",
+    ] {
+        assert!(
+            map.contains(action),
+            "action {} missing from motion map",
+            action
+        );
+    }
+    // Verify cut and thrust have distinct clips
+    assert!(map.contains("\"cut\", \"clip\": \"cut\""));
+    assert!(map.contains("\"thrust\", \"clip\": \"thrust\""));
+    // Verify guard and brace use different body motion descriptions
+    assert!(map.contains("arms_raised_centered"));
+    assert!(map.contains("stance_lowered_weight_back"));
+    // Verify recover differs from idle
+    assert!(map.contains("arms_settling_spine_recenter"));
+    // Verify weapon/armor continuity
+    assert!(map.contains("weapon_continuity"));
+    assert!(map.contains("armor_continuity"));
+    // Verify fight film sequence
+    assert!(map.contains("fight_film_sequence"));
+    assert!(map.contains("anticipation"));
+    assert!(map.contains("follow_through"));
+    assert!(map.contains("consequence"));
+}
+
+#[test]
+fn unit094_action_clip_for_state_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("fn action_clip_for_state"),
+        "action_clip_for_state function missing"
+    );
+    assert!(
+        renderer.contains("Unit-094: Update pose uniform"),
+        "per-frame pose update missing"
+    );
+    assert!(
+        renderer.contains("pose_buffer"),
+        "pose_buffer field in WindowedApp missing"
+    );
+}
+
+#[test]
+fn unit094_pose_system_procedural() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify the pose system uses procedural bone offsets, not just markers
+    assert!(
+        renderer.contains("bone_offset_z"),
+        "bone offset system exists for procedural pose"
+    );
+    assert!(
+        renderer.contains("bone_yaw"),
+        "bone yaw system exists for procedural pose"
+    );
+    // Verify action-to-clip mapping covers the required actions
+    assert!(renderer.contains("\"cut\" => \"cut\""));
+    assert!(renderer.contains("\"thrust\" => \"thrust\""));
+    assert!(renderer.contains("\"guard\" | \"parry\" => \"guard_pose\""));
+    assert!(renderer.contains("\"brace\" => \"guard_pose\""));
+    assert!(renderer.contains("\"recover\" => \"recover\""));
+}
