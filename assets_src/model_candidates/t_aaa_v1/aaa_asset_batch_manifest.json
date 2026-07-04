@@ -1,0 +1,65 @@
+{
+  "schema": "oathyard.aaa_asset_batch.v1",
+  "unit": "Unit-095",
+  "date": "2026-07-04",
+  "source": "Meshy AI text-to-3D (Meshy 6/latest)",
+  "credits_consumed": 90,
+  "credits_remaining": 2910,
+  "assets": [
+    {
+      "id": "duelist_gold",
+      "class": "fighter",
+      "task_id": "019f2f34-665b-747a-b18c-0b14aa387f47",
+      "preview_task_id": "019f2f31-3fb4-76a0-ac8a-b2224835da79",
+      "prompt": "Dark fantasy medieval duelist warrior in ornate leather and steel armor, guard stance, quilted gambeson under steel breastplate, longsword two-handed guard. Lean athletic build. Original design.",
+      "file": "assets_src/model_candidates/t_aaa_v1/fighters/duelist_gold.glb",
+      "file_size_mb": 60.8,
+      "textures": ["4K base_color", "4K normal", "4K metallic", "4K roughness", "4K emission"],
+      "formats": ["glb", "fbx"],
+      "pbr": true,
+      "hd_texture": true,
+      "license_status": "owner_approved_internal_project_use",
+      "production_ready_visual": false,
+      "owner_visual_acceptance": false
+    },
+    {
+      "id": "heavy_crimson",
+      "class": "fighter",
+      "task_id": "019f2f3b-7732-7894-bfbb-ff8aded40bd5",
+      "preview_task_id": "019f2f34-9106-747d-9206-6d6f8eee1335",
+      "prompt": "Dark fantasy heavy infantry warrior in full plate armor with crimson surcoat over chainmail. Great helm, steel gauntlets, heavy greaves. Broad powerful build. Original design.",
+      "file": "assets_src/model_candidates/t_aaa_v1/fighters/heavy_crimson.glb",
+      "file_size_mb": 56.1,
+      "textures": ["4K base_color", "4K normal", "4K metallic", "4K roughness", "4K emission"],
+      "formats": ["glb", "fbx"],
+      "pbr": true,
+      "hd_texture": true,
+      "license_status": "owner_approved_internal_project_use",
+      "production_ready_visual": false,
+      "owner_visual_acceptance": false
+    },
+    {
+      "id": "verdict_ring_aaa",
+      "class": "arena",
+      "task_id": "019f2f49-e306-7af2-bb0c-f253983ebf31",
+      "preview_task_id": "019f2f48-5015-7aac-a03c-9e836f7f7ce3",
+      "prompt": "Dark fantasy stone combat arena ring, circular fighting platform with carved floor patterns.",
+      "file": "assets_src/model_candidates/t_aaa_v1/arenas/verdict_ring_aaa.glb",
+      "file_size_mb": 57.5,
+      "textures": ["4K base_color", "4K normal", "4K metallic", "4K roughness", "4K emission"],
+      "formats": ["glb"],
+      "pbr": true,
+      "hd_texture": true,
+      "license_status": "owner_approved_internal_project_use",
+      "production_ready_visual": false,
+      "owner_visual_acceptance": false
+    }
+  ],
+  "next_steps": [
+    "Convert AAA GLBs to runtime mesh JSON format",
+    "Wire AAA assets into mesh manifest and local game pipeline",
+    "Verify AAA asset rendering in native executable",
+    "Generate weapons and armor if needed"
+  ],
+  "truth_mutation": false
+}
