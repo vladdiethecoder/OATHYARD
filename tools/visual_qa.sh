@@ -51,6 +51,37 @@ current="${current:-artifacts/production_renderer/latest/render}"
 
 mkdir -p "$out" "$out/diffs"
 
+unit082_matrix="${OATHYARD_UNIT082_CAPTURE_MATRIX_MANIFEST:-}"
+unit083_matrix="${OATHYARD_UNIT083_NATIVE_ASSET_CAPTURE_MATRIX:-}"
+if [[ -z "$unit083_matrix" && -f "$out/../native_asset_capture_matrix/native_asset_capture_matrix_manifest.json" ]]; then
+  unit083_matrix="$out/../native_asset_capture_matrix/native_asset_capture_matrix_manifest.json"
+fi
+if [[ -n "$unit083_matrix" && -f "$unit083_matrix" ]]; then
+  set +e
+  python3 tools/unit083_native_asset_matrix.py validate --mode qa --out "$out" --matrix "$unit083_matrix"
+  rc=$?
+  set -e
+  if [[ "$report_only" == true ]]; then
+    echo "visual QA report-only: Unit-083 asset matrix failures recorded but exit 0"
+    exit 0
+  fi
+  exit "$rc"
+fi
+if [[ -z "$unit082_matrix" && -f "$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json" ]]; then
+  unit082_matrix="$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json"
+fi
+if [[ -n "$unit082_matrix" && -f "$unit082_matrix" ]]; then
+  set +e
+  python3 tools/unit082_visual_evidence.py validate-capture-matrix --mode qa --out "$out" --matrix "$unit082_matrix"
+  rc=$?
+  set -e
+  if [[ "$report_only" == true ]]; then
+    echo "visual QA report-only: failures recorded but exit 0"
+    exit 0
+  fi
+  exit "$rc"
+fi
+
 python3 - "$out" "$baseline" "$current" "$update_baseline" "$report_only" "$strict" <<'PYEOF'
 import json
 import hashlib

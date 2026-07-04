@@ -233,11 +233,12 @@ def stages_for_asset(asset, quarantine_entry):
         asset.get("texture_resolutions", ""),
         asset.get("required_art_pass", ""),
     ]
+    native_capture_present = asset.get("native_production_renderer_capture_present") is True
     if "uv" in joined or "material" in joined or "texture" in joined or "tangent" in joined or any("missing" in str(field).lower() or "unverified" in str(field).lower() for field in material_fields):
         stages.append("material_texture_uv_completion")
     if rig_truth_contact_stage_needed(asset, blockers):
         stages.append("rig_truth_contact_profile_validation")
-    if "capture" in joined or "renderer" in joined or "engine" in joined or not manifest.get("in_engine_visual_ready"):
+    if not native_capture_present and ("capture" in joined or "renderer" in joined or "engine" in joined or not manifest.get("in_engine_visual_ready")):
         stages.append("native_renderer_capture_matrix")
     stages.append("owner_visual_acceptance")
     deduped = []

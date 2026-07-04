@@ -1040,10 +1040,14 @@ def validate(emit_report: bool = True) -> dict:
         checks.append(check("provenance_repo_owned", provenance_ok, str(entry.get("provenance", "")), asset_id))
         if not provenance_ok:
             failures.append(f"{asset_id}: provenance must be repo_owned_original_procedural_model_candidate")
-        license_ok = bool(entry.get("license_status")) and "pending_project_license_review" in str(entry.get("license_status"))
+        license_status = str(entry.get("license_status", ""))
+        license_ok = bool(entry.get("license_status")) and (
+            "owner_approved_internal_project_use" in license_status
+            or "pending_project_license_review" in license_status
+        )
         checks.append(check("license_status_recorded", license_ok, str(entry.get("license_status", "")), asset_id))
         if not license_ok:
-            failures.append(f"{asset_id}: license_status missing or malformed")
+            failures.append(f"{asset_id}: license_status missing or unsupported")
 
         for hash_field in ["source_candidate_gltf_hash", "source_candidate_bin_hash"]:
             rel_field = hash_field.replace("_hash", "")

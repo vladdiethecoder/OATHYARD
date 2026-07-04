@@ -10,6 +10,7 @@ set -euo pipefail
 #   - every required game state is visited
 #   - plan_cycles >= 2
 #   - local_playable_game_ready=true in the canonical game_flow_manifest.json
+#   - local-game loadout is rendered with source-approved Meshy/Rodin runtime meshes
 #   - replay verify via ./target/debug/oathyard replay --replay replay.json
 #   - no SVG/PPM/browser/HTML output appears (visual evidence must be native-3D)
 
@@ -80,6 +81,39 @@ PY
         exit 1
     fi
 done
+
+# Step 6: the local working-game path must consume the actual source-approved
+# Meshy/Rodin runtime meshes for the game-selected loadout, not only isolated
+# asset-matrix captures.
+if [[ ! -f "$out/local_game_asset_consumption_manifest.json" ]]; then
+    echo "working_game_smoke FAIL: local_game_asset_consumption_manifest.json missing" >&2
+    exit 1
+fi
+python3 - "$out/local_game_asset_consumption_manifest.json" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
+required = {
+    'saltreach_duelist',
+    'oathyard_writ',
+    'longsword',
+    'arming_sword',
+    'gambeson',
+    'mail_hauberk',
+    'oathyard_verdict_ring',
+}
+consumed = set(manifest.get('source_asset_ids_consumed', []))
+missing = sorted(required - consumed)
+if missing:
+    raise SystemExit(f'missing local-game Meshy/Rodin source assets: {missing}; consumed={sorted(consumed)}')
+if manifest.get('isolated_capture_matrix_only') is not False:
+    raise SystemExit('local-game asset consumption is still isolated-capture-matrix-only')
+if manifest.get('mesh_asset_count', 0) < 7 or manifest.get('mesh_geometry_consumed') is not True:
+    raise SystemExit(f"invalid mesh consumption fields: count={manifest.get('mesh_asset_count')} consumed={manifest.get('mesh_geometry_consumed')}")
+for forbidden in ('truth_mutation', 'owner_visual_acceptance', 'public_demo_ready', 'release_candidate_ready'):
+    if manifest.get(forbidden) is not False:
+        raise SystemExit(f'{forbidden} must remain false')
+PY
 
 echo "=== working_game_smoke PASSED ==="
 echo "final_state_hash=$expected"

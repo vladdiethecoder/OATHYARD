@@ -932,12 +932,12 @@ fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
         .output()
         .expect("run generated asset audit");
     assert!(
-        !audit.status.success(),
-        "generated asset audit must stay fail-closed while assets are candidate/license-pending\nstdout:\n{}\nstderr:\n{}",
+        audit.status.success(),
+        "generated asset audit should pass source-approved/local-evidence checks while keeping production quarantine active\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&audit.stdout),
         String::from_utf8_lossy(&audit.stderr)
     );
-    assert_eq!(audit.status.code(), Some(1));
+    assert_eq!(audit.status.code(), Some(0));
 
     let quarantine_manifest =
         fs::read_to_string(out.join("generated_asset_quarantine_manifest.json"))
@@ -965,13 +965,16 @@ fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
     assert!(quarantine_manifest.contains("\"owner_visual_accepted\": false"));
     assert!(quarantine_manifest.contains("\"public_demo_visual_ready\": false"));
     assert!(quarantine_manifest.contains("\"release_candidate_ready\": false"));
-    assert!(quarantine_manifest.contains("\"generated_asset_audit_rc\": 1"));
+    assert!(quarantine_manifest.contains("\"generated_asset_audit_rc\": 0"));
     assert!(quarantine_manifest.contains("\"quarantined_asset_count\": 22"));
-    assert!(quarantine_manifest.contains("\"blocked_by_license_or_commercial_use\": 22"));
+    assert!(quarantine_manifest.contains("\"blocked_by_license_or_commercial_use\": 0"));
     assert!(quarantine_manifest.contains("\"acceptance_status_counts\""));
-    assert!(quarantine_manifest.contains("\"candidate\": 22"));
+    assert!(quarantine_manifest.contains("\"source-approved\": 22"));
     assert!(quarantine_manifest.contains("\"quarantined_assets\""));
-    assert!(quarantine_manifest.contains("license_or_project_license_pending"));
+    assert!(
+        quarantine_manifest.contains("capture_backend_is_software_candidate_not_production_engine")
+    );
+    assert!(!quarantine_manifest.contains("license_or_project_license_pending"));
     assert!(!quarantine_manifest.contains("external_dcc_validation_missing"));
     assert!(!quarantine_manifest.contains("topology_manifold_boundary_edges_present"));
     assert!(!quarantine_manifest.contains("external_khronos_gltf_validation_missing"));
@@ -987,7 +990,7 @@ fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
     assert!(unblock_matrix.contains("\"quarantined_asset_count\": 22"));
     assert!(unblock_matrix.contains("\"blocked_asset_count\": 22"));
     assert!(unblock_matrix.contains("\"required_unblock_stage_count\": 7"));
-    assert!(unblock_matrix.contains("\"license_and_commercial_clearance\": 22"));
+    assert!(unblock_matrix.contains("\"license_and_commercial_clearance\": 0"));
     assert!(unblock_matrix.contains("\"dcc_or_openusd_source_authoring\": 0"));
     assert!(unblock_matrix.contains("\"external_geometry_validation\": 0"));
     assert!(unblock_matrix.contains("\"material_texture_uv_completion\": 0"));
@@ -1108,7 +1111,8 @@ fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
         "assets/source/model_candidates/t_73291be5/armor/bruiser_padded_plate.source.usda"
     )
     .is_file());
-    assert!(unblock_matrix.contains("license_or_project_license_pending"));
+    assert!(unblock_matrix.contains("capture_backend_is_software_candidate_not_production_engine"));
+    assert!(!unblock_matrix.contains("license_or_project_license_pending"));
     assert!(unblock_report.contains("Status: FAIL-CLOSED"));
     assert!(unblock_report.contains("Required production unblock stages: `7`"));
     for required_field in [
@@ -1154,11 +1158,11 @@ fn generated_asset_audit_emits_fail_closed_candidate_quarantine_manifest() {
     assert!(generated_audit_csv.starts_with("asset_id,asset_class,"));
     assert!(generated_audit_csv.contains("license_terms_status"));
     assert!(blocked_asset_evidence.contains("# OATHYARD Blocked Generated Asset Evidence"));
-    assert!(blocked_asset_evidence.contains("license_or_project_license_pending"));
+    assert!(!blocked_asset_evidence.contains("license_or_project_license_pending"));
     assert!(blocked_asset_evidence.contains("native production renderer capture evidence missing"));
     assert!(asset_state_summary.contains("# OATHYARD Generated Asset State Summary"));
     assert!(asset_state_summary.contains("candidate_only: `22`"));
-    assert!(asset_state_summary.contains("license_pending: `22`"));
+    assert!(asset_state_summary.contains("license_pending: `0`"));
     assert!(asset_state_summary.contains("production_ready: `0`"));
     for latest_path in [
         "artifacts/asset_audit/latest/generated_asset_audit.json",
@@ -3245,4 +3249,219 @@ fn unit080_first_player_playtest_truth_isolated() {
     assert!(source.contains("owner_visual_acceptance\": false"));
     assert!(source.contains("public_demo_ready\": false"));
     assert!(source.contains("release_candidate_ready\": false"));
+}
+
+#[test]
+fn unit082_production_visual_evidence_closure_truth_isolated() {
+    let slots = std::fs::read_to_string("content/high_fidelity_capture_slots.json")
+        .expect("Unit-082 slot manifest missing");
+    assert!(slots.contains("\"schema\": \"oathyard.high_fidelity_capture_slots.v1\""));
+    assert!(slots.contains("\"slot_count\": 56"));
+    assert!(slots.contains("\"fallback_visual_substitutes_allowed\": false"));
+    assert!(slots.contains("\"truth_mutation\": false"));
+    assert!(slots.contains("\"owner_visual_acceptance\": false"));
+    assert!(slots.contains("boot_main_menu"));
+    assert!(slots.contains("contact_frame"));
+    assert!(slots.contains("fight_film_replay_camera_shot"));
+
+    let render = std::fs::read_to_string("tools/render_high_fidelity_capture_matrix.sh")
+        .expect("Unit-082 render tool missing");
+    assert!(render.contains("oathyard-native-renderer"));
+    assert!(render.contains("tools/run_duel.sh"));
+    assert!(render.contains("tools/replay_verify.sh"));
+    assert!(render.contains("--mesh-manifest-json"));
+    assert!(render.contains("production_renderer_${slot_id}_1920x1080.png"));
+    assert!(render.contains("high_fidelity_capture_matrix_manifest.json"));
+    assert!(render.contains("'truth_mutation': False"));
+
+    let validator = std::fs::read_to_string("tools/unit082_visual_evidence.py")
+        .expect("Unit-082 validator missing");
+    assert!(validator.contains("EXPECTED_SLOT_COUNT = 56"));
+    assert!(validator.contains("missing current-run slot"));
+    assert!(validator.contains("forbidden visual format"));
+    assert!(validator.contains("black/blank"));
+    assert!(validator.contains("material/texture metadata missing"));
+    assert!(validator.contains("lighting metadata missing"));
+    assert!(validator.contains("required mesh classes missing"));
+    assert!(validator.contains("owner_visual_acceptance"));
+    assert!(validator.contains("public_demo_ready"));
+    assert!(validator.contains("release_candidate_ready"));
+    assert!(validator.contains("f17c8f76b9dfae86"));
+
+    let hifi = std::fs::read_to_string("tools/capture_high_fidelity_screens.sh")
+        .expect("high fidelity gate missing");
+    let visual_qa = std::fs::read_to_string("tools/visual_qa.sh").expect("visual qa missing");
+    let visual_gap =
+        std::fs::read_to_string("tools/visual_gap_audit.sh").expect("visual gap missing");
+    let visual_benchmark =
+        std::fs::read_to_string("tools/visual_benchmark.sh").expect("visual benchmark missing");
+    let final_acceptance =
+        std::fs::read_to_string("tools/final_acceptance.sh").expect("final acceptance missing");
+    for script in [
+        &hifi,
+        &visual_qa,
+        &visual_gap,
+        &visual_benchmark,
+        &final_acceptance,
+    ] {
+        assert!(script.contains("OATHYARD_UNIT082_CAPTURE_MATRIX_MANIFEST"));
+    }
+    assert!(final_acceptance.contains("run_step high_fidelity_capture_matrix"));
+    assert!(final_acceptance.contains("final_acceptance_steps.tsv"));
+
+    let license_audit = std::fs::read_to_string("tools/license_metadata_drift_audit.py")
+        .expect("license metadata drift audit missing");
+    assert!(license_audit.contains("owner_approved_internal_project_use"));
+    assert!(license_audit.contains("source_approved_for_project_use"));
+    assert!(license_audit.contains("production_ready_visual"));
+    assert!(license_audit.contains("store_readiness"));
+
+    let root_selection = std::fs::read_to_string("tools/artifact_root_selection.py")
+        .expect("artifact root selection tool missing");
+    assert!(root_selection.contains("20260704T010739Z_unit081_high_fidelity_gameplay_demo"));
+    assert!(root_selection.contains("20260704T031326Z_unit081_final_gates_after_perf_fix"));
+    assert!(root_selection.contains("wrapper_rc_does_not_imply_child_success"));
+
+    let source = std::fs::read_to_string(
+        "assets_src/model_candidates/t_73291be5/fighters/saltreach_duelist.model_source.json",
+    )
+    .expect("saltreach metadata missing");
+    assert!(source.contains("\"license_status\": \"owner_approved_internal_project_use\""));
+    assert!(source.contains("\"source_approved_for_project_use\": true"));
+    assert!(source.contains("\"production_ready_visual\": false"));
+    assert!(source.contains("\"owner_visual_acceptance\": false"));
+    assert!(source.contains("\"public_demo_ready\": false"));
+    assert!(source.contains("\"release_candidate_ready\": false"));
+    assert!(
+        !source.contains("repo_owned_original_internal_candidate_pending_project_license_review")
+    );
+}
+
+#[test]
+fn unit083_native_asset_capture_matrix_truth_isolated() {
+    let capture = std::fs::read_to_string("tools/capture_native_asset_matrix.sh")
+        .expect("Unit-083 capture wrapper missing");
+    assert!(capture.contains("tools/unit083_native_asset_matrix.py capture"));
+
+    let tool = std::fs::read_to_string("tools/unit083_native_asset_matrix.py")
+        .expect("Unit-083 native asset matrix tool missing");
+    assert!(tool.contains("SCHEMA = \"oathyard.native_asset_capture_matrix.v1\""));
+    assert!(tool.contains("BACKEND_ID = \"oathyard-native-wgpu-production-v1\""));
+    assert!(tool.contains("EXPECTED_ASSETS = ["));
+    assert!(tool.contains("asset_count_expected"));
+    assert!(tool.contains("asset_count_attempted"));
+    assert!(tool.contains("asset_count_captured"));
+    assert!(tool.contains("software_candidate_blocker_closed_count"));
+    assert!(tool.contains("mesh_geometry_consumed"));
+    assert!(tool.contains("material_texture_binding"));
+    assert!(tool.contains("renderer_backend_id"));
+    assert!(tool.contains("black/blank PNG"));
+    assert!(tool.contains("wrong renderer backend"));
+    assert!(tool.contains("production_ready cannot be true from native capture alone"));
+    assert!(tool.contains("forbidden visual substitute suffix"));
+    assert!(tool.contains("owner_visual_acceptance"));
+    assert!(tool.contains("public_demo_ready"));
+    assert!(tool.contains("release_candidate_ready"));
+    assert!(tool.contains("truth_mutation"));
+    assert!(tool.contains("f17c8f76b9dfae86"));
+
+    let audit = std::fs::read_to_string("tools/audit_rodin_assets.sh")
+        .expect("Rodin/generated asset audit missing");
+    assert!(audit.contains("OATHYARD_UNIT083_NATIVE_ASSET_CAPTURE_MATRIX"));
+    assert!(audit.contains("native_production_renderer_capture_present"));
+    assert!(audit.contains("owner_visual_acceptance_false"));
+    assert!(audit.contains("capture_backend_is_software_candidate_not_production_engine"));
+
+    let generated_audit = std::fs::read_to_string("tools/audit_generated_assets.sh")
+        .expect("generated asset audit missing");
+    assert!(generated_audit.contains("native_capture_present"));
+    assert!(generated_audit.contains("native_renderer_capture_matrix"));
+    assert!(generated_audit.contains("owner_visual_acceptance"));
+
+    let local_game =
+        std::fs::read_to_string("src/local_game.rs").expect("local game source missing");
+    assert!(local_game.contains("saltreach_duelist"));
+    assert!(local_game.contains("oathyard_writ"));
+    assert!(local_game.contains("arming_sword"));
+    assert!(local_game.contains("mail_hauberk"));
+    assert!(local_game.contains("oathyard_verdict_ring"));
+    assert!(!local_game.contains("writ_sentinel"));
+
+    let play_local =
+        std::fs::read_to_string("tools/play_local_game.sh").expect("local game launcher missing");
+    assert!(play_local.contains("tools/render_local_game_assets.sh"));
+    assert!(play_local.contains("local_game_asset_consumption_manifest.json"));
+    let local_asset_tool = std::fs::read_to_string("tools/render_local_game_assets.sh")
+        .expect("local game asset consumption tool missing");
+    assert!(local_asset_tool.contains("oathyard.local_game_asset_consumption.v1"));
+    assert!(local_asset_tool.contains("isolated_capture_matrix_only"));
+    assert!(local_asset_tool.contains("uses_source_approved_meshy_rodin_assets"));
+    assert!(local_asset_tool.contains("unit083_local_game_generated_asset_consumption"));
+    assert!(local_asset_tool.contains("source_asset_ids_consumed"));
+
+    let working_smoke =
+        std::fs::read_to_string("tools/working_game_smoke.sh").expect("working game smoke missing");
+    assert!(working_smoke.contains("saltreach_duelist"));
+    assert!(working_smoke.contains("oathyard_writ"));
+    assert!(working_smoke.contains("isolated_capture_matrix_only"));
+
+    let final_acceptance =
+        std::fs::read_to_string("tools/final_acceptance.sh").expect("final acceptance missing");
+    assert!(final_acceptance.contains("run_step working_game_smoke"));
+    assert!(final_acceptance.contains("working_game_local_asset_consumption_manifest"));
+
+    for path in [
+        "tools/visual_qa.sh",
+        "tools/visual_gap_audit.sh",
+        "tools/visual_benchmark.sh",
+        "tools/final_acceptance.sh",
+    ] {
+        let script = std::fs::read_to_string(path).expect("Unit-083 visual gate missing");
+        assert!(
+            script.contains("OATHYARD_UNIT083_NATIVE_ASSET_CAPTURE_MATRIX"),
+            "{path} does not consume Unit-083 native asset matrix"
+        );
+    }
+
+    let out =
+        std::path::Path::new("target/tmp/oathyard_unit083_native_asset_capture_matrix_selftest");
+    if out.exists() {
+        std::fs::remove_dir_all(out).expect("clear old Unit-083 selftest output");
+    }
+    let selftest = Command::new("python3")
+        .args([
+            "tools/unit083_native_asset_matrix.py",
+            "selftest",
+            out.to_str().expect("selftest path"),
+        ])
+        .output()
+        .expect("run Unit-083 selftest");
+    assert!(
+        selftest.status.success(),
+        "Unit-083 selftest should validate schema failures without native capture hardware\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&selftest.stdout),
+        String::from_utf8_lossy(&selftest.stderr)
+    );
+    let selftest_json =
+        std::fs::read_to_string(out.join("unit083_native_asset_capture_matrix_selftest.json"))
+            .expect("Unit-083 selftest manifest");
+    assert!(selftest_json.contains("\"passed\": true"));
+    for case in [
+        "missing_asset_row",
+        "missing_png",
+        "black_blank_png",
+        "wrong_backend",
+        "mesh_geometry_false",
+        "material_missing",
+        "stale_not_current",
+        "production_ready_true",
+        "owner_flag_true",
+        "truth_mutation_true",
+        "forbidden_svg",
+    ] {
+        assert!(
+            selftest_json.contains(case),
+            "missing Unit-083 selftest case {case}"
+        );
+    }
 }

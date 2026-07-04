@@ -240,21 +240,22 @@ impl Default for LocalGameConfig {
             scenario_id: "unit057_local_duel".to_string(),
             player_fighter: FighterSpec {
                 seat: 0,
-                name: "fighter_mannequin".to_string(),
+                name: "saltreach_duelist".to_string(),
                 weapon_id: "longsword".to_string(),
                 armor_id: "gambeson".to_string(),
             },
             opponent_fighter: FighterSpec {
                 seat: 1,
-                name: "writ_sentinel".to_string(),
-                weapon_id: "ash_spear".to_string(),
+                name: "oathyard_writ".to_string(),
+                weapon_id: "arming_sword".to_string(),
                 armor_id: "mail_hauberk".to_string(),
             },
             player_policy: AiPolicyStyle::Balanced,
             opponent_policy: AiPolicyStyle::ReachPressure,
-            arena_id: "training_yard".to_string(),
+            arena_id: "oathyard_verdict_ring".to_string(),
             min_plan_cycles: 3,
-            loadout_id: "longsword_gambeson".to_string(),
+            loadout_id: "saltreach_longsword_gambeson_vs_oathyard_writ_arming_sword_mail"
+                .to_string(),
         }
     }
 }

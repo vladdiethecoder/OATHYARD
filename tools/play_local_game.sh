@@ -35,6 +35,12 @@ fi
 # Truth is never mutated; replay is verified against final hash.
 ./target/debug/oathyard play-local --out "$out" | tee "$out/play_local_stdout.log"
 
+# Step 2b: render the exact local-game loadout with source-approved Meshy/Rodin
+# runtime meshes through the native production renderer. The game-flow manifest
+# names the loadout; this render proves the game-facing path consumes those
+# assets rather than only proving isolated asset-matrix captures.
+./tools/render_local_game_assets.sh "$out" "$out/native_asset_runtime" | tee "$out/local_game_asset_consumption_stdout.log"
+
 # Step 3: require artifacts.
 required=(
     game_flow_manifest.json
@@ -48,6 +54,10 @@ required=(
     consequence_cause_chain_report.md
     replay_verification_report.md
     duel_report.md
+    local_game_asset_consumption_manifest.json
+    native_asset_runtime/local_game_asset_consumption_manifest.json
+    native_asset_runtime/render/production_renderer_manifest.json
+    native_asset_runtime/render/production_renderer_unit083_local_game_generated_asset_consumption_1920x1080.png
 )
 missing=0
 for f in "${required[@]}"; do

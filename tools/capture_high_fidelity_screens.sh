@@ -4,6 +4,15 @@ set -euo pipefail
 out="${1:-artifacts/high_fidelity_screens/latest}"
 mkdir -p "$out"
 
+unit082_matrix="${OATHYARD_UNIT082_CAPTURE_MATRIX_MANIFEST:-}"
+if [[ -z "$unit082_matrix" && -f "$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json" ]]; then
+  unit082_matrix="$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json"
+fi
+if [[ -n "$unit082_matrix" && -f "$unit082_matrix" ]]; then
+  python3 tools/unit082_visual_evidence.py validate-capture-matrix --mode hifi --out "$out" --matrix "$unit082_matrix"
+  exit $?
+fi
+
 python3 - "$out" <<'PY'
 import hashlib
 import json

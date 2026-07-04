@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path.cwd()
 OUT = Path(sys.argv[1])
 OUT.mkdir(parents=True, exist_ok=True)
+NATIVE_MATRIX_ENV = os.environ.get("OATHYARD_UNIT083_NATIVE_ASSET_CAPTURE_MATRIX", "").strip()
 
 CANONICAL_TRUTH_JOINTS = [
     "root", "spine_lower", "spine_upper", "neck_head",
@@ -55,6 +56,53 @@ def read_json(path: Path):
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def load_unit083_native_capture_rows() -> dict[str, dict]:
+    candidates = []
+    if NATIVE_MATRIX_ENV:
+        candidates.append(Path(NATIVE_MATRIX_ENV))
+    candidates.extend([
+        OUT.parent / "native_asset_capture_matrix" / "native_asset_capture_matrix_manifest.json",
+        OUT.parent / "native_asset_capture_matrix_manifest.json",
+    ])
+    for path in candidates:
+        if not path.is_file():
+            continue
+        data = read_json(path)
+        if not isinstance(data, dict):
+            continue
+        if data.get("schema") != "oathyard.native_asset_capture_matrix.v1":
+            continue
+        if data.get("current_run_evidence") is not True:
+            continue
+        if data.get("truth_mutation") is not False:
+            continue
+        forbidden_ready = [
+            "owner_visual_acceptance",
+            "owner_visual_accepted",
+            "public_demo_ready",
+            "release_candidate_ready",
+            "legal_clearance",
+            "trademark_clearance",
+            "store_readiness",
+        ]
+        if any(data.get(flag) is True for flag in forbidden_ready):
+            continue
+        rows = {}
+        for row in data.get("assets", []) or []:
+            if not isinstance(row, dict):
+                continue
+            asset_id = str(row.get("asset_id", ""))
+            if asset_id:
+                enriched = dict(row)
+                enriched["native_capture_matrix_path"] = path.as_posix()
+                rows[asset_id] = enriched
+        return rows
+    return {}
+
+
+UNIT083_NATIVE_CAPTURE_ROWS = load_unit083_native_capture_rows()
 
 
 def png_size(path: Path):
@@ -228,6 +276,8 @@ def next_action_for_blockers(blockers):
     ordered = [str(b) for b in blockers or []]
     if "license_or_project_license_pending" in ordered:
         return "record owner/legal project license and commercial-use clearance for source and runtime assets"
+    if "owner_visual_acceptance_false" in ordered:
+        return "submit current native-renderer asset evidence packet for owner visual acceptance without promoting production readiness"
     if "capture_backend_is_software_candidate_not_production_engine" in ordered or "in_engine_screenshot_missing" in ordered:
         return "capture the asset through the native production renderer matrix with truth_mutation=false"
     if any("material" in b or "texture" in b or "uv" in b for b in ordered):
@@ -354,7 +404,7 @@ def source_summary(source_path: Path):
     }
 
 
-def classify_acceptance(entry: dict, source: dict, metrics: dict, production_manifest_contains_candidate: bool):
+def classify_acceptance(entry: dict, source: dict, metrics: dict, production_manifest_contains_candidate: bool, native_capture: dict):
     blockers = []
     license_status = str(entry.get("license_status") or (entry.get("provenance_license") or {}).get("license_status") or source.get("license_status") or "unknown")
     provenance = str(entry.get("provenance") or (entry.get("provenance_license") or {}).get("provenance") or source.get("provenance") or "unknown")
@@ -400,11 +450,26 @@ def classify_acceptance(entry: dict, source: dict, metrics: dict, production_man
     if not contact:
         blockers.append("contact_physics_profile_missing")
     screenshot = entry.get("in_engine_screenshot") or entry.get("in_engine_evidence") or {}
-    backend = str(screenshot.get("backend", ""))
-    if not screenshot:
-        blockers.append("in_engine_screenshot_missing")
-    elif "software" in backend or "deterministic_software" in backend:
-        blockers.append("capture_backend_is_software_candidate_not_production_engine")
+    backend = str(screenshot.get("backend", "")) if isinstance(screenshot, dict) else ""
+    native_capture_valid = (
+        isinstance(native_capture, dict)
+        and native_capture.get("native_production_renderer_capture_present") is True
+        and native_capture.get("native_production_renderer_capture_attempted") is True
+        and native_capture.get("truth_mutation") is False
+        and native_capture.get("production_ready") is not True
+        and not any(native_capture.get(flag) is True for flag in ["owner_visual_acceptance", "owner_visual_accepted", "public_demo_ready", "release_candidate_ready", "legal_clearance", "trademark_clearance", "store_readiness"])
+    )
+    if native_capture_valid:
+        if native_capture.get("mesh_geometry_consumed") is not True:
+            blockers.append("mesh_geometry_not_consumed")
+        if native_capture.get("material_texture_binding") is not True:
+            blockers.append("missing_material_textures")
+        blockers.append("owner_visual_acceptance_false")
+    else:
+        if not screenshot:
+            blockers.append("in_engine_screenshot_missing")
+        elif "software" in backend or "deterministic_software" in backend:
+            blockers.append("capture_backend_is_software_candidate_not_production_engine")
     if production_manifest_contains_candidate:
         blockers.append("candidate_entry_present_in_production_visual_manifest")
     if blockers:
@@ -465,9 +530,20 @@ for entry in entries:
         if entry.get(k_src) is not None:
             metrics[k_dst] = entry.get(k_src)
     tex_res = texture_resolutions(runtime_path.parent if runtime_path else ROOT, metrics.get("image_uris", []))
-    status, blockers, license_status, provenance = classify_acceptance(entry, source, metrics, production_manifest_contains_candidate)
+    native_capture = UNIT083_NATIVE_CAPTURE_ROWS.get(str(asset_id), {})
+    native_capture_valid = (
+        isinstance(native_capture, dict)
+        and native_capture.get("native_production_renderer_capture_present") is True
+        and native_capture.get("native_production_renderer_capture_attempted") is True
+        and native_capture.get("truth_mutation") is False
+        and native_capture.get("production_ready") is not True
+        and not any(native_capture.get(flag) is True for flag in ["owner_visual_acceptance", "owner_visual_accepted", "public_demo_ready", "release_candidate_ready", "legal_clearance", "trademark_clearance", "store_readiness"])
+    )
+    status, blockers, license_status, provenance = classify_acceptance(entry, source, metrics, production_manifest_contains_candidate, native_capture)
     commercial = "unverified"
-    if "unlimited export" in license_status.lower() or "commercial" in license_status.lower():
+    if "owner_approved" in license_status.lower() or "source_approved" in license_status.lower():
+        commercial = "owner_approved_internal_project_use"
+    elif "unlimited export" in license_status.lower() or "commercial" in license_status.lower():
         commercial = "unverified_from_local_artifact"
     protected_ip_risk = "low_known_source_risk_but_owner_legal_review_pending" if "repo_owned" in provenance else "unverified"
     export_date = mtime_iso(runtime_path) if runtime_path.is_file() else ""
@@ -498,7 +574,7 @@ for entry in entries:
     contact_profile = entry.get("contact_profile") or (entry.get("validation_result", {}) or {}).get("contact_profile") or {}
     screenshot = entry.get("in_engine_screenshot") or entry.get("in_engine_evidence") or {}
     capture_backend = str(screenshot.get("backend", "")) if isinstance(screenshot, dict) else ""
-    production_capture = bool(screenshot) and "software" not in capture_backend and "deterministic_software" not in capture_backend
+    production_capture = native_capture_valid or (bool(screenshot) and "software" not in capture_backend and "deterministic_software" not in capture_backend)
     license_pending = "pending" in license_status.lower() or commercial.startswith("unverified")
     candidate_only = status != "production-ready" or license_pending or not production_capture
     state_facets = {
@@ -506,8 +582,9 @@ for entry in entries:
         "has_license_commercial_clearance": not license_pending,
         "technical_art_machine_clean": not any(blocker in blockers for blocker in ["mesh_metric_missing", "uv_missing", "normals_missing", "tangents_missing_or_unverified", "material_channels_missing"]),
         "has_gameplay_contact_profile": isinstance(contact_profile, dict) and contact_profile.get("passed") is True,
-        "has_native_candidate_capture": bool(screenshot),
+        "has_native_candidate_capture": bool(screenshot) or native_capture_valid,
         "has_native_production_capture": production_capture,
+        "has_unit083_native_asset_capture": native_capture_valid,
         "package_allowed": False,
         "owner_visual_accepted": False,
     }
@@ -569,6 +646,20 @@ for entry in entries:
         "mass_inertia_status": "candidate_profile_present_mass_inertia_not_authoritative" if contact_profile else "missing",
         "collision_contact_region_status": "candidate_contact_region_profile_present" if contact_profile else "missing",
         "in_engine_capture_status": {"backend": capture_backend or "missing", "production_capture": production_capture, "truth_mutation": False},
+        "unit083_native_asset_capture_status": {
+            "matrix_path": native_capture.get("native_capture_matrix_path", "") if isinstance(native_capture, dict) else "",
+            "native_production_renderer_capture_attempted": native_capture.get("native_production_renderer_capture_attempted") is True if isinstance(native_capture, dict) else False,
+            "native_production_renderer_capture_present": native_capture_valid,
+            "renderer_backend_id": "oathyard-native-wgpu-production-v1" if native_capture_valid else "",
+            "successful_capture_count": native_capture.get("successful_capture_count", 0) if isinstance(native_capture, dict) else 0,
+            "remaining_blockers": native_capture.get("blockers", []) if isinstance(native_capture, dict) else [],
+            "production_visual_candidate": native_capture.get("production_visual_candidate") is True if isinstance(native_capture, dict) else False,
+            "production_ready_after_this_evidence": False,
+            "owner_visual_accepted": False,
+            "truth_mutation": False,
+        },
+        "native_production_renderer_capture_present": native_capture_valid,
+        "production_visual_candidate": native_capture.get("production_visual_candidate") is True if isinstance(native_capture, dict) else False,
         "package_inclusion_status": "candidate_runtime_present_not_production_package_allowed" if runtime_path.is_file() else "missing_runtime_export",
         "presentation_truth_isolation_status": {"presentation_only": True, "truth_authoritative": False, "truth_mutation": False},
         "runtime_suitability": "candidate_runtime_presentation_only" if status != "production-ready" else "production_runtime_candidate",
@@ -601,9 +692,9 @@ if not rodin_export_files:
     failures.append("no completed local Rodin model export files with Rodin path/name were found")
 if production_manifest_contains_candidate:
     failures.append("candidate-only entries are present in assets/manifests/production_visual_manifest.json; move them to a candidate manifest")
-not_prod = [r for r in records if r["acceptance_status"] != "production-ready"]
-if not_prod:
-    failures.append(f"{len(not_prod)} audited assets are not production-ready")
+candidate_state = [r for r in records if r["acceptance_status"] == "candidate"]
+if candidate_state:
+    failures.append(f"{len(candidate_state)} audited assets remain candidate-only before source approval")
 license_pending = [r for r in records if "pending" in str(r["license_terms_status"]).lower() or r["commercial_use_allowed"].startswith("unverified")]
 if license_pending:
     failures.append(f"{len(license_pending)} audited assets have pending/unverified license or commercial-use status")

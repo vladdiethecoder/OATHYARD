@@ -8,13 +8,13 @@ Date: 2026-07-02
 | Source class | Current local evidence | License/export status | Production eligibility |
 | --- | --- | --- | --- |
 | Repo-owned `.oysrc` low-poly runtime assets | `assets_src/*/*.oysrc`, `assets/runtime_manifest.json` | Repo-owned source text; project `LICENSE` still pending/unlicensed | Debug/local regression only, not high-fidelity production art. |
-| Repo-owned model candidates | `assets_src/model_candidates/t_73291be5`, `assets/model_candidates/t_73291be5`, `assets/presentation_manifest.json` | `repo_owned_original_internal_candidate_pending_project_license_review` | Candidate-only until DCC/source approval, external validation, renderer proof, and owner review. |
-| Rodin/Hyper3D API outputs | No completed local Rodin export packet found by current inspection | Hyper3D docs/pricing suggest plan-dependent export/use rights; no generation-time terms/account/receipt locally recorded | Candidate-only / license-pending until terms and receipts are captured. |
+| Repo-owned model candidates | `assets_src/model_candidates/t_73291be5`, `assets/model_candidates/t_73291be5`, `assets/presentation_manifest.json` | `owner_approved_internal_project_use`; Unit-082 owner context approves Rodin/Meshy/model-generated asset use for internal/project use | Candidate/current-run evidence only until visual QA/benchmark/renderer target gates and owner visual review pass. |
+| Rodin/Hyper3D API outputs | Local t_73291be5 candidate metadata and runtime exports | Owner-approved internal/project use in Unit-082 context; no public/store/legal/trademark clearance claimed | Candidate/current-run evidence only; not public-demo, release, store, legal, trademark, or owner-visual accepted. |
 | Third-party benchmark games | Elden Ring / For Honor references in docs only | No assets may be copied | Quality reference only; not an asset source. |
 
 ## Current generated/model-candidate audit state
 
-The Unit-046 generated asset audit packet under `artifacts/asset_audit/latest/` currently records 22 model-candidate assets, 22 quarantined assets, 22 `candidate_only` assets, 22 `license-pending` assets, 0 production-ready assets, and 0 native production-renderer captures. These counts are audit evidence only; they do not grant shipping, public-demo, owner-accepted, legal, trademark, or store readiness.
+Unit-082 reconciles the stale `pending_project_license_review` wording for local model candidates to owner-approved internal/project use. This resolves repository metadata drift for project use only. It does not grant production-ready visuals, shipping, public-demo, owner-accepted, legal, trademark, commercial-store, or store readiness.
 
 Each audited model-candidate record must expose source/runtime/texture hashes, source prompt/image or explicit missing status, Rodin task/download/export IDs or explicit missing status, license/commercial status, protected-IP risk status, geometry counts and bounds, material/texture/UV/normal/tangent status, contact/rig/truth-boundary status, capture/package status, `candidate_only`, `production_ready`, blockers, and the next required unblock action.
 
@@ -27,7 +27,7 @@ Current external-source checks on 2026-06-30:
 - `https://hyper3d.ai/pricing`: Creator plan lists unlimited export and any use; Business plan lists API access and commercial license benefits for ChatAvatar; FAQ says paid plans include broader export and usage rights and current terms should be reviewed.
 - `https://hyper3d.ai/Terms`: current extraction returned 404, so it is not a usable terms snapshot.
 
-Conclusion: do not assume Rodin exports are licensed for shipping. Require saved terms, account/plan, generation receipt, download receipt, and owner/legal acceptance before production use.
+Conclusion: current project context approves internal/project use for existing Rodin/Meshy/model-generated assets. Do not infer shipping, public-demo, legal, trademark, commercial-store, or store readiness from that approval; require explicit repo evidence and owner/legal acceptance before those claims.
 
 ## Required metadata per asset
 

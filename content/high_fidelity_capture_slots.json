@@ -1,0 +1,2483 @@
+{
+  "fallback_visual_substitutes_allowed": false,
+  "native_3d_visual_evidence_required": true,
+  "owner_visual_acceptance": false,
+  "public_demo_ready": false,
+  "release_candidate_ready": false,
+  "schema": "oathyard.high_fidelity_capture_slots.v1",
+  "slot_count": 56,
+  "slots": [
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "boot_main_menu",
+      "description": "Boot/main menu",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "boot_main_menu",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "title_menu",
+      "slot_id": "boot_main_menu"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "settings_accessibility",
+      "description": "Settings/accessibility/help",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "settings_accessibility",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "settings_help",
+      "slot_id": "settings_accessibility"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "fighter_select",
+      "description": "Fighter select",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "fighter_select",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "fighter_select",
+      "slot_id": "fighter_select"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "loadout_select",
+      "description": "Loadout select",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "loadout_select",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "loadout_select",
+      "slot_id": "loadout_select"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "arena_select",
+      "description": "Arena select",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "arena_select",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "arena_select",
+      "slot_id": "arena_select"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "oathyard_verdict_ring_establishing",
+      "description": "Verdict-ring establishing",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "oathyard_verdict_ring_establishing",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "oathyard_verdict_ring_establishing"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "oathyard_arena_candidate_01",
+      "description": "Arena candidate",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "oathyard_arena_candidate_01",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "oathyard_arena_candidate_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "training_yard_establishing",
+      "description": "Training-yard establishing",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "training_yard_establishing",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "training_yard_establishing"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "fighter_closeup_01",
+      "description": "Fighter closeup 01",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "fighter_closeup_01",
+      "description": "Fighter closeup 02",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_02"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "fighter_closeup_01",
+      "description": "Fighter closeup 03",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_03"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "fighter_closeup_04",
+      "description": "Fighter closeup 04",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_04"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "fighter_closeup_05",
+      "description": "Fighter closeup 05",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_05"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "fighter_closeup_06",
+      "description": "Fighter closeup 06",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "fighter_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "fighter_closeup_06"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "armor_loadout_family_closeup_01",
+      "description": "Armor family closeup",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_family_closeup_01",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_family_closeup_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "armor_loadout_family_closeup_01",
+      "description": "Armor/loadout family closeup 01",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "armor_loadout_family_closeup_01",
+      "description": "Armor/loadout family closeup 02",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_02"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "armor_loadout_family_closeup_01",
+      "description": "Armor/loadout family closeup 03",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_03"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "armor_loadout_family_closeup_04",
+      "description": "Armor/loadout family closeup 04",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_04"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "armor_loadout_family_closeup_05",
+      "description": "Armor/loadout family closeup 05",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_05"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "armor_loadout_family_closeup_06",
+      "description": "Armor/loadout family closeup 06",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "armor_loadout_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "armor_loadout_family_closeup_06"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "weapon_family_closeup_01",
+      "description": "Weapon family closeup 01",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "weapon_family_closeup_01",
+      "description": "Weapon family closeup 02",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_02"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "weapon_family_closeup_01",
+      "description": "Weapon family closeup 03",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_03"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "weapon_family_closeup_04",
+      "description": "Weapon family closeup 04",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_04"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "weapon_family_closeup_05",
+      "description": "Weapon family closeup 05",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_05"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "weapon_family_closeup_06",
+      "description": "Weapon family closeup 06",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_06"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "weapon_family_closeup_07",
+      "description": "Weapon family closeup 07",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_07"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "weapon_family_closeup_08",
+      "description": "Weapon family closeup 08",
+      "game_state_or_capture_role": "hero_high_fidelity_gameplay_frame",
+      "group_id": "weapon_family_closeup",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "minimal_hud",
+      "slot_id": "weapon_family_closeup_08"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "gameplay_distance_fighter_weapon_01",
+      "description": "Gameplay fighter/weapon distance",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_weapon_01",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_weapon_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "gameplay_distance_fighter_loadout_family_01",
+      "description": "Gameplay fighter/loadout distance 01",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "gameplay_distance_fighter_loadout_family_01",
+      "description": "Gameplay fighter/loadout distance 02",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_02"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "gameplay_distance_fighter_loadout_family_01",
+      "description": "Gameplay fighter/loadout distance 03",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_03"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "gameplay_distance_fighter_loadout_family_04",
+      "description": "Gameplay fighter/loadout distance 04",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_04"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "gameplay_distance_fighter_loadout_family_05",
+      "description": "Gameplay fighter/loadout distance 05",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_05"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "gameplay_distance_fighter_loadout_family_06",
+      "description": "Gameplay fighter/loadout distance 06",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_fighter_loadout_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_fighter_loadout_family_06"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "gameplay_distance_weapon_family_01",
+      "description": "Gameplay weapon family distance 01",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "gameplay_distance_weapon_family_01",
+      "description": "Gameplay weapon family distance 02",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_02"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "gameplay_distance_weapon_family_01",
+      "description": "Gameplay weapon family distance 03",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_03"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "gameplay_distance_weapon_family_04",
+      "description": "Gameplay weapon family distance 04",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_04"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "gameplay_distance_weapon_family_05",
+      "description": "Gameplay weapon family distance 05",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_05"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "gameplay_distance_weapon_family_06",
+      "description": "Gameplay weapon family distance 06",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_06"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "gameplay_distance_weapon_family_07",
+      "description": "Gameplay weapon family distance 07",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_07"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "gameplay_distance_weapon_family_08",
+      "description": "Gameplay weapon family distance 08",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "gameplay_distance_weapon_family",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "gameplay_distance_weapon_family_08"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "planning_timeline",
+      "description": "Planning timeline",
+      "game_state_or_capture_role": "timeline_planning",
+      "group_id": "planning_timeline",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "timeline_editor",
+      "slot_id": "planning_timeline"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "pre_contact_frame",
+      "description": "Pre-contact combat frame",
+      "game_state_or_capture_role": "commit_reveal",
+      "group_id": "pre_contact_frame",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "pre_contact_frame"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "contact_frame",
+      "description": "Contact frame",
+      "game_state_or_capture_role": "contact",
+      "group_id": "contact_frame",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "contact_frame"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "material_armor_damage_frame",
+      "description": "Material/armor response frame",
+      "game_state_or_capture_role": "consequence",
+      "group_id": "material_armor_damage_frame",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "consequence_hud",
+      "slot_id": "material_armor_damage_frame"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "injury_capability_consequence_frame",
+      "description": "Injury/capability consequence frame",
+      "game_state_or_capture_role": "consequence",
+      "group_id": "injury_capability_consequence_frame",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "consequence_hud",
+      "slot_id": "injury_capability_consequence_frame"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "recovery_replan_frame",
+      "description": "Recovery/re-plan frame",
+      "game_state_or_capture_role": "replan",
+      "group_id": "recovery_replan_frame",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "timeline_editor",
+      "slot_id": "recovery_replan_frame"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "first_person_combat_view",
+      "description": "First-person combat view",
+      "game_state_or_capture_role": "observe_first_person",
+      "group_id": "first_person_combat_view",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "first_person_combat_view"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "third_person_combat_view",
+      "description": "Third-person combat view",
+      "game_state_or_capture_role": "observe_third_person",
+      "group_id": "third_person_combat_view",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "combat_hud",
+      "slot_id": "third_person_combat_view"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "fight_film_candidate_shot_01",
+      "description": "Candidate fight-film camera",
+      "game_state_or_capture_role": "fight_film",
+      "group_id": "fight_film_candidate_shot_01",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "fight_film_hud",
+      "slot_id": "fight_film_candidate_shot_01"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "reed_bruiser_trial",
+      "camera": "fight_film_replay_camera_shot",
+      "description": "Fight-film/replay camera",
+      "game_state_or_capture_role": "fight_film",
+      "group_id": "fight_film_replay_camera_shot",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "fight_film_hud",
+      "slot_id": "fight_film_replay_camera_shot"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "saltreach_writ_judgement",
+      "camera": "replay_verification_ui_or_packet_view",
+      "description": "Replay verification UI/packet view",
+      "game_state_or_capture_role": "replay",
+      "group_id": "replay_verification_ui_or_packet_view",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "replay_browser",
+      "slot_id": "replay_verification_ui_or_packet_view"
+    },
+    {
+      "allowed_blockers": [
+        "owner_visual_acceptance_false",
+        "public_demo_ready_false",
+        "release_candidate_ready_false",
+        "production_renderer_complete_false_until_visual_qa_benchmark_renderer_target_pass"
+      ],
+      "asset_set_id": "chainbreaker_gate_clash",
+      "camera": "performance_debug_overlay",
+      "description": "Performance/debug overlay separated from player HUD",
+      "game_state_or_capture_role": "menus_select_settings_help",
+      "group_id": "performance_debug_overlay",
+      "minimum_visual_readability_criteria": [
+        "non_black_png",
+        "non_blank_png",
+        "readable_actor_or_ui_silhouette",
+        "material_separation_metadata_present"
+      ],
+      "required_assets_or_classes": [
+        "fighter",
+        "weapon",
+        "armor",
+        "arena",
+        "ui_panel"
+      ],
+      "required_lighting_shadow_evidence": [
+        "dynamic_key_fill_rim_lighting",
+        "contact_shadows_ao_equivalent",
+        "fog_atmosphere",
+        "tone_mapping"
+      ],
+      "required_material_texture_evidence": [
+        "base_color_texture",
+        "normal_texture",
+        "orm_texture",
+        "per_vertex_material_identity"
+      ],
+      "required_resolution": [
+        1920,
+        1080
+      ],
+      "required_trace_replay_link": "post_hash_presentation_packet.final_state_hash + replay_json_sha256",
+      "required_ui_state": "debug_overlay",
+      "slot_id": "performance_debug_overlay"
+    }
+  ],
+  "truth_mutation": false,
+  "unit": "Unit-082"
+}

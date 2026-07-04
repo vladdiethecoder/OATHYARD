@@ -15,7 +15,7 @@ root = Path.cwd()
 
 runtime_manifest_path = root / "assets/runtime_manifest.json"
 content_manifest_path = root / "content/oathyard_content.manifest"
-model_source_manifest_path = root / "assets/source/model_candidates/t_73291be5/model_source_manifest.json"
+model_source_manifest_path = root / "assets_src/model_candidates/t_73291be5/model_source_manifest.json"
 provenance_doc_path = root / "assets_src/provenance.md"
 production_manifest_path = root / "assets/manifests/production_visual_manifest.json"
 candidate_manifest_path = root / "assets/manifests/production_candidate_visual_manifest.json"

@@ -4,6 +4,23 @@ set -euo pipefail
 out="${1:-artifacts/visual_review/latest}"
 mkdir -p "$out"
 
+unit082_matrix="${OATHYARD_UNIT082_CAPTURE_MATRIX_MANIFEST:-}"
+unit083_matrix="${OATHYARD_UNIT083_NATIVE_ASSET_CAPTURE_MATRIX:-}"
+if [[ -z "$unit083_matrix" && -f "$out/../native_asset_capture_matrix/native_asset_capture_matrix_manifest.json" ]]; then
+  unit083_matrix="$out/../native_asset_capture_matrix/native_asset_capture_matrix_manifest.json"
+fi
+if [[ -n "$unit083_matrix" && -f "$unit083_matrix" ]]; then
+  python3 tools/unit083_native_asset_matrix.py validate --mode gap --out "$out" --matrix "$unit083_matrix"
+  exit $?
+fi
+if [[ -z "$unit082_matrix" && -f "$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json" ]]; then
+  unit082_matrix="$out/../high_fidelity_capture_matrix/high_fidelity_capture_matrix_manifest.json"
+fi
+if [[ -n "$unit082_matrix" && -f "$unit082_matrix" ]]; then
+  python3 tools/unit082_visual_evidence.py validate-capture-matrix --mode gap --out "$out" --matrix "$unit082_matrix"
+  exit $?
+fi
+
 python3 - "$out" <<'PY'
 import json
 import os
