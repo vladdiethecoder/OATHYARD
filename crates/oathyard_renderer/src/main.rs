@@ -2708,32 +2708,49 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "  TRAINING YARD", 35, 138, 200, 200, 200);
         },
         "planning_timeline" => {
-            draw_panel(rgba, width, height, 20, 70, 550, 310);
-            draw_title_bar(rgba, width, height, 20, 70, 550, "PLAN (PLAYER)");
-            draw_text(rgba, width, height, "ACTION: CUT    | TARGET: TORSO", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "CUE: \\ // (SLASH/ARC)", 35, 128, 255, 200, 80);  // Unit-065: action affordance cue
-            draw_text(rgba, width, height, "DIRECTION: FORWARD", 35, 138, 255, 220, 120);
-            draw_text(rgba, width, height, "TARGET: TORSO", 35, 168, 255, 220, 120);
-            draw_text(rgba, width, height, &format!("BASE COST: 32 FRAMES"), 35, 198, 200, 200, 200);
-            draw_text(rgba, width, height, &format!("CURRENT: 38 FRAMES"), 35, 228, 255, 160, 80);
-            draw_text(rgba, width, height, "BODY: -60 PERMILLE", 35, 258, 200, 150, 150);
-            draw_text(rgba, width, height, "EQUIP: +0", 35, 288, 150, 200, 150);
-            draw_text(rgba, width, height, "STATE: +18 PERMILLE", 35, 318, 200, 180, 120);
-            draw_text(rgba, width, height, "> COMMIT PLAN", 35, 348, 100, 255, 100);
+            draw_panel(rgba, width, height, 20, 70, 550, 380);
+            draw_title_bar(rgba, width, height, 20, 70, 550, "PLAN (INTENT TIMELINE)");
+            // Unit-088: YOMI-style intent card display
+            draw_text(rgba, width, height, "INTENT: CUT > HIGH > HEAD", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "CATEGORY: ATTACK | RANGE: MEASURE", 35, 128, 200, 200, 200);
+            draw_text(rgba, width, height, "GOOD VS: STEP, RECOVER", 35, 148, 100, 255, 100);
+            draw_text(rgba, width, height, "LOSES TO: GUARD, PARRY, BRACE", 35, 168, 255, 100, 100);
+            draw_text(rgba, width, height, "CUE: \\ // (SLASH/ARC)", 35, 188, 255, 200, 80);
+            draw_text(rgba, width, height, &format!("BASE COST: 32 FRAMES"), 35, 218, 200, 200, 200);
+            draw_text(rgba, width, height, &format!("CURRENT: 38 FRAMES"), 35, 248, 255, 160, 80);
+            draw_text(rgba, width, height, "BODY: -60 PERMILLE", 35, 278, 200, 150, 150);
+            draw_text(rgba, width, height, "EQUIP: +0", 35, 308, 150, 200, 150);
+            draw_text(rgba, width, height, "STATE: +18 PERMILLE", 35, 338, 200, 180, 120);
+            draw_text(rgba, width, height, "> COMMIT PLAN (ENTER)", 35, 368, 100, 255, 100);
+            // Action key reference
+            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY", 35, 398, 150, 180, 200);
+            draw_text(rgba, width, height, "5=CUT 6=THRUST 7=BRACE 8=BASH", 35, 418, 150, 180, 200);
+            draw_text(rgba, width, height, "9=HOOK 0=GRAB Q=SHOVE E=KICK", 35, 438, 150, 180, 200);
         },
         "pre_contact_frame" | "pre_contact_frame_seed" => {
-            draw_panel(rgba, width, height, 20, 70, 550, 140);
-            draw_title_bar(rgba, width, height, 20, 70, 550, "COMMIT / REVEAL");
-            draw_text(rgba, width, height, "PLAYER(GOLD): CUT FORWARD TORSO", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "OPPONENT(CRIMSON): GUARD CENTER", 35, 138, 255, 100, 100);
-            draw_text(rgba, width, height, "> SIMULTANEOUS REVEAL", 35, 168, 200, 200, 100);
+            // Unit-088: YOMI-style simultaneous reveal UI
+            draw_panel(rgba, width, height, 20, 70, 600, 220);
+            draw_title_bar(rgba, width, height, 20, 70, 600, "COMMIT / REVEAL");
+            // Intent cards — both sides revealed simultaneously
+            draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "PLAYER(GOLD): CUT > HIGH > HEAD", 35, 138, 255, 220, 60);
+            draw_text(rgba, width, height, "  INTENT: ATTACK - Edge strike threatens recovery", 35, 158, 200, 180, 100);
+            draw_text(rgba, width, height, "OPPONENT(CRIMSON): BRACE > CENTER > TORSO", 35, 188, 255, 80, 40);
+            draw_text(rgba, width, height, "  INTENT: DEFENSE - Resist impact through armor", 35, 208, 200, 120, 120);
+            // Matchup result explanation
+            draw_text(rgba, width, height, "--- MATCHUP ---", 35, 238, 255, 255, 255);
+            draw_text(rgba, width, height, "CUT vs BRACE: Edge meets braced armor", 35, 258, 255, 220, 120);
+            draw_text(rgba, width, height, "RESULT: Partial deflection, blunt transfer", 35, 278, 255, 160, 80);
         },
         "contact_frame" | "contact_frame_seed" => {
-            draw_panel(rgba, width, height, 20, 70, 550, 150);
+            draw_panel(rgba, width, height, 20, 70, 550, 180);
             draw_title_bar(rgba, width, height, 20, 70, 550, "RESOLVE (CONTACT)");
-            draw_text(rgba, width, height, "PLAYER CUT -> OPPONENT GUARD", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "WEAPON: LONGSWORD  |  TARGET: TORSO", 35, 138, 200, 200, 200);
-                        draw_text(rgba, width, height, "> CONSEQUENCE NEXT", 35, 168, 255, 160, 80);
+            // Unit-088: Explain the matchup result
+            draw_text(rgba, width, height, "PLAYER CUT -> OPPONENT BRACE", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "WEAPON: LONGSWORD vs ARMOR: MAIL", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "MATCHUP: Edge meets braced armor", 35, 158, 255, 220, 120);
+            draw_text(rgba, width, height, "> CONSEQUENCE: Blunt transfer through mail", 35, 188, 255, 160, 80);
+            draw_text(rgba, width, height, "> NEXT: Injury/capability result", 35, 208, 200, 200, 100);
             // Unit-065: Contact marker — weapon-to-target impact line (screen-space)
             draw_contact_marker(rgba, width, height, (width as i32)/2 - 60, (height as i32)/4 + 20, (width as i32)/2 + 40, (height as i32)/4 + 10);
             draw_text(rgba, width, height, "IMPACT -> TORSO", (width as i32)/2 - 40, (height as i32)/4 + 30, 255, 160, 80);
@@ -2760,17 +2777,27 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "> RE-PLAN ACTION", 35, 168, 100, 255, 100);
         },
         "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => {
-            draw_panel(rgba, width, height, 20, 70, 500, 100);
-            draw_title_bar(rgba, width, height, 20, 70, 500, "FIGHT FILM");
-            draw_text(rgba, width, height, "CAMERA: VERDICT RING ORBIT", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "TRACE-LINKED: YES", 35, 138, 150, 255, 150);
+            draw_panel(rgba, width, height, 20, 70, 600, 200);
+            draw_title_bar(rgba, width, height, 20, 70, 600, "FIGHT FILM (INTENT REVIEW)");
+            // Unit-088: Fight-film explains the mind-game, not just animation
+            draw_text(rgba, width, height, "KEY MOMENT: Simultaneous reveal", 35, 108, 255, 220, 120);
+            draw_text(rgba, width, height, "PLAYER: CUT (attack) vs OPP: BRACE (defense)", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "WHY: Player bet on edge damage", 35, 158, 200, 180, 100);
+            draw_text(rgba, width, height, "READ: Opponent braced correctly", 35, 178, 255, 160, 80);
+            draw_text(rgba, width, height, "RESULT: Partial deflection, tempo lost", 35, 198, 255, 100, 100);
+            draw_text(rgba, width, height, "BETTER PLAY: THRUST or BASH vs brace", 35, 228, 100, 255, 100);
+            draw_text(rgba, width, height, "CAMERA: VERDICT RING ORBIT", 35, 258, 255, 220, 120);
+            draw_text(rgba, width, height, "TRACE-LINKED: YES", 35, 278, 150, 255, 150);
         },
         "replay_verification_ui_or_packet_view" => {
-            draw_panel(rgba, width, height, 20, 70, 500, 120);
-            draw_title_bar(rgba, width, height, 20, 70, 500, "REPLAY");
+            draw_panel(rgba, width, height, 20, 70, 550, 180);
+            draw_title_bar(rgba, width, height, 20, 70, 550, "REPLAY (INTENT VERIFIED)");
             draw_text(rgba, width, height, "VERIFIED: YES", 35, 108, 150, 255, 150);
             draw_text(rgba, width, height, &format!("HASH {}...", &short_hash[..12]), 35, 138, 200, 200, 200);
             draw_text(rgba, width, height, "SCHEMA: OATHYARD.REPLAY.V1", 35, 168, 200, 200, 200);
+            // Unit-088: Replay explains the intent decisions
+            draw_text(rgba, width, height, "INTENT TRACE:", 35, 198, 255, 220, 120);
+            draw_text(rgba, width, height, "T0: CUT vs BRACE -> blunt transfer", 35, 218, 200, 180, 100);
         },
         "settings_accessibility" => {
             draw_panel(rgba, width, height, 20, 70, 500, 200);

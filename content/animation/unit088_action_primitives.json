@@ -1,0 +1,24 @@
+{
+  "schema": "oathyard.action_primitives.v1",
+  "product": "OATHYARD",
+  "unit": "Unit-088",
+  "description": "MotionBricks-inspired local deterministic action presentation primitives. Each primitive defines presentation phases for a combat intent action. These are local, repository-owned, deterministic metadata — not NVIDIA/cloud MotionBricks integration.",
+  "truth_mutation": false,
+  "presentation_only": true,
+  "primitive_count": 13,
+  "primitives": [
+    {"id": "prim_step", "action_id": "step", "pose_source": "locomotion_forward", "phases": {"anticipation": "weight_shift_back", "contact": "foot_plant_forward", "recover": "settle_neutral"}, "weapon_cue": "weapon_lowered", "camera_cue": "subtle_pan", "vfx_cue": "dust_kick", "truth_mutation": false},
+    {"id": "prim_pivot", "action_id": "pivot", "pose_source": "torso_rotation", "phases": {"anticipation": "hip_load", "contact": "rotation_90deg", "recover": "recenter"}, "weapon_cue": "weapon_trails_arc", "camera_cue": "orbit_micro", "vfx_cue": "none", "truth_mutation": false},
+    {"id": "prim_guard", "action_id": "guard", "pose_source": "guard_high", "phases": {"anticipation": "raise_arms", "contact": "block_hold", "recover": "maintain_guard"}, "weapon_cue": "weapon_vertical", "camera_cue": "hold", "vfx_cue": "spark_on_block", "truth_mutation": false},
+    {"id": "prim_parry", "action_id": "parry", "pose_source": "deflect_diagonal", "phases": {"anticipation": "read_timing", "contact": "deflect_snap", "recover": "riposte_ready"}, "weapon_cue": "weapon_deflect_arc", "camera_cue": "quick_zoom", "vfx_cue": "spark_burst", "truth_mutation": false},
+    {"id": "prim_cut", "action_id": "cut", "pose_source": "cut_high_to_low", "phases": {"anticipation": "raise_weapon", "contact": "edge_strike_arc", "recover": "follow_through"}, "weapon_cue": "weapon_edge_trail", "camera_cue": "impact_zoom", "vfx_cue": "impact_flash", "truth_mutation": false},
+    {"id": "prim_thrust", "action_id": "thrust", "pose_source": "thrust_forward", "phases": {"anticipation": "coil_weight", "contact": "point_extend", "recover": "withdraw"}, "weapon_cue": "weapon_point_lead", "camera_cue": "push_in", "vfx_cue": "impact_flash", "truth_mutation": false},
+    {"id": "prim_brace", "action_id": "brace", "pose_source": "stance_wide_low", "phases": {"anticipation": "drop_weight", "contact": "absorb_hold", "recover": "push_up"}, "weapon_cue": "weapon_braced", "camera_cue": "hold", "vfx_cue": "dust_on_impact", "truth_mutation": false},
+    {"id": "prim_bash", "action_id": "bash", "pose_source": "shield_bash_forward", "phases": {"anticipation": "coil_back", "contact": "shield_strike", "recover": "stagger_recover"}, "weapon_cue": "shield_lead", "camera_cue": "impact_shake", "vfx_cue": "impact_burst", "truth_mutation": false},
+    {"id": "prim_hook_bind", "action_id": "hook_bind", "pose_source": "bind_weapon_control", "phases": {"anticipation": "reach_cross", "contact": "hook_trap", "recover": "lever_control"}, "weapon_cue": "weapon_hook_arc", "camera_cue": "close_up", "vfx_cue": "metal_scrape", "truth_mutation": false},
+    {"id": "prim_grab", "action_id": "grab", "pose_source": "grapple_reach", "phases": {"anticipation": "lunge_reach", "contact": "grasp_control", "recover": "pull_off_balance"}, "weapon_cue": "weapon_dropped_low", "camera_cue": "close_up", "vfx_cue": "none", "truth_mutation": false},
+    {"id": "prim_shove", "action_id": "shove", "pose_source": "push_double_hand", "phases": {"anticipation": "plant_feet", "contact": "push_displace", "recover": "reset_arms"}, "weapon_cue": "weapon_one_hand", "camera_cue": "impact_push", "vfx_cue": "dust_burst", "truth_mutation": false},
+    {"id": "prim_kick", "action_id": "kick", "pose_source": "front_kick", "phases": {"anticipation": "weight_shift_back", "contact": "foot_strike_forward", "recover": "plant_recover"}, "weapon_cue": "weapon_guard_maintained", "camera_cue": "low_angle", "vfx_cue": "impact_burst", "truth_mutation": false},
+    {"id": "prim_recover", "action_id": "recover", "pose_source": "reset_neutral", "phases": {"anticipation": "breathe_reset", "contact": "posture_align", "recover": "ready_stance"}, "weapon_cue": "weapon_rest", "camera_cue": "pull_back", "vfx_cue": "none", "truth_mutation": false}
+  ]
+}

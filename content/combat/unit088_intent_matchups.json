@@ -1,0 +1,129 @@
+{
+  "schema": "oathyard.intent_matchups.v1",
+  "product": "OATHYARD",
+  "unit": "Unit-088",
+  "truth_mutation": false,
+  "description": "YOMI-style matchup relationships for player understanding. These are explanation/education overlays derived from the canonical action labels and physical profiles, not a separate truth system.",
+  "matchup_rules": [
+    {
+      "attacker": "guard",
+      "defender": "cut",
+      "result": "guard_blunts_edge",
+      "explanation": "Guard absorbs the edge and preserves balance; attacker loses tempo."
+    },
+    {
+      "attacker": "guard",
+      "defender": "thrust",
+      "result": "guard_deflects_point",
+      "explanation": "Guard deflects the thrust line; attacker must reset."
+    },
+    {
+      "attacker": "guard",
+      "defender": "grab",
+      "result": "grab_loses_to_guard_read",
+      "explanation": "Grab telegraphs against a set guard and may be punished."
+    },
+    {
+      "attacker": "guard",
+      "defender": "shove",
+      "result": "shove_disrupts_guard",
+      "explanation": "Shove breaks guard stance and forces a step back."
+    },
+    {
+      "attacker": "guard",
+      "defender": "kick",
+      "result": "kick_breaks_static_guard",
+      "explanation": "Kick punishes the static guard by striking below the weapon."
+    },
+    {
+      "attacker": "cut",
+      "defender": "step",
+      "result": "cut_catches_step",
+      "explanation": "Cut catches a fighter stepping into measure."
+    },
+    {
+      "attacker": "cut",
+      "defender": "recover",
+      "result": "cut_punishes_recovery",
+      "explanation": "Recovery is vulnerable to a committed cut."
+    },
+    {
+      "attacker": "cut",
+      "defender": "brace",
+      "result": "brace_takes_cut_on_armor",
+      "explanation": "Brace absorbs the cut through armor rather than guarding it."
+    },
+    {
+      "attacker": "thrust",
+      "defender": "step",
+      "result": "thrust_punishes_approach",
+      "explanation": "Thrust punishes a fighter stepping into point range."
+    },
+    {
+      "attacker": "thrust",
+      "defender": "pivot",
+      "result": "pivot_evasdes_thrust",
+      "explanation": "Pivot rotates off the thrust line and evades."
+    },
+    {
+      "attacker": "brace",
+      "defender": "bash",
+      "result": "brace_resists_bash",
+      "explanation": "Braced stance absorbs the bash impact."
+    },
+    {
+      "attacker": "brace",
+      "defender": "shove",
+      "result": "brace_resists_shove",
+      "explanation": "Braced stance resists the shove displacement."
+    },
+    {
+      "attacker": "brace",
+      "defender": "cut",
+      "result": "cut_beats_brace_at_measure",
+      "explanation": "A committed cut can overwhelm a brace if the bracing fighter is too slow."
+    },
+    {
+      "attacker": "bash",
+      "defender": "guard",
+      "result": "bash_disrupts_guard",
+      "explanation": "Bash crashes through the guard and staggers the defender."
+    },
+    {
+      "attacker": "bash",
+      "defender": "recover",
+      "result": "bash_punishes_recovery",
+      "explanation": "Bash punishes a recovering fighter who cannot brace in time."
+    },
+    {
+      "attacker": "hook_bind",
+      "defender": "guard",
+      "result": "hook_bind_controls_guard",
+      "explanation": "Hook bind traps the guarding weapon and denies its line."
+    },
+    {
+      "attacker": "grab",
+      "defender": "guard",
+      "result": "grab_bypasses_guard",
+      "explanation": "Grab reaches past the weapon guard to control the limb."
+    },
+    {
+      "attacker": "shove",
+      "defender": "guard",
+      "result": "shove_breaks_guard",
+      "explanation": "Shove displaces the guarding fighter and opens their line."
+    },
+    {
+      "attacker": "kick",
+      "defender": "brace",
+      "result": "kick_vs_brace_trade",
+      "explanation": "Kick and brace trade: the kicker gains space but the bracer holds ground."
+    },
+    {
+      "attacker": "step",
+      "defender": "thrust",
+      "result": "step_evasdes_thrust_if_timed",
+      "explanation": "A well-timed step can evade a thrust, but mistiming invites the point."
+    }
+  ]
+}

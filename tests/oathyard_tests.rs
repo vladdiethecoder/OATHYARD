@@ -3746,3 +3746,135 @@ fn unit087_roster_ui_scripted_input_exists() {
         "script must visit ARENA_SELECT"
     );
 }
+
+#[test]
+fn unit088_intent_action_vocabulary_exists() {
+    let vocab = fs::read_to_string("content/combat/unit088_intent_actions.json")
+        .expect("intent actions manifest missing");
+    assert!(vocab.contains("\"schema\": \"oathyard.intent_actions.v1\""));
+    // Verify all 12 required action ids exist
+    for action_id in &[
+        "step",
+        "pivot",
+        "guard",
+        "cut",
+        "thrust",
+        "brace",
+        "bash",
+        "hook_bind",
+        "grab",
+        "shove",
+        "kick",
+        "recover",
+    ] {
+        let search = format!("\"id\": \"{}\"", action_id);
+        assert!(
+            vocab.contains(&search),
+            "action '{}' missing from intent vocabulary",
+            action_id
+        );
+    }
+    assert!(vocab.contains("truth_mutation"));
+    assert!(vocab.contains("existing_truth_action"));
+}
+
+#[test]
+fn unit088_matchup_table_exists() {
+    let matchups = fs::read_to_string("content/combat/unit088_intent_matchups.json")
+        .expect("matchup table missing");
+    assert!(matchups.contains("\"schema\": \"oathyard.intent_matchups.v1\""));
+    assert!(matchups.contains("guard"));
+    assert!(matchups.contains("cut"));
+    assert!(matchups.contains("brace"));
+    assert!(matchups.contains("explanation"));
+}
+
+#[test]
+fn unit088_action_primitives_exist() {
+    let primitives = fs::read_to_string("content/animation/unit088_action_primitives.json")
+        .expect("action primitives missing");
+    assert!(primitives.contains("\"schema\": \"oathyard.action_primitives.v1\""));
+    assert!(primitives.contains("prim_cut"));
+    assert!(primitives.contains("prim_guard"));
+    assert!(primitives.contains("prim_thrust"));
+    assert!(primitives.contains("prim_brace"));
+    assert!(primitives.contains("anticipation"));
+    assert!(primitives.contains("contact"));
+    assert!(primitives.contains("recover"));
+}
+
+#[test]
+fn unit088_yomi_playtest_script_exists() {
+    let script = fs::read_to_string("content/input/unit088_yomi_intent_playtest.json")
+        .expect("yomi playtest script missing");
+    assert!(script.contains("\"schema\": \"oathyard.windowed_scripted_input.v1\""));
+    assert!(script.contains("place_step"));
+    assert!(script.contains("place_guard"));
+    assert!(script.contains("place_thrust"));
+    assert!(script.contains("place_cut"));
+    assert!(script.contains("place_recover"));
+    assert!(script.contains("COMMIT_REVEAL"));
+    assert!(script.contains("FIGHT_FILM"));
+}
+
+#[test]
+fn unit088_commit_reveal_ui_has_matchup_explanation() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("SIMULTANEOUS REVEAL"),
+        "commit/reveal must have simultaneous reveal text"
+    );
+    assert!(
+        renderer.contains("MATCHUP"),
+        "commit/reveal must show matchup"
+    );
+    assert!(
+        renderer.contains("INTENT: ATTACK"),
+        "commit/reveal must show intent category"
+    );
+    assert!(
+        renderer.contains("INTENT: DEFENSE"),
+        "commit/reveal must show defense intent"
+    );
+}
+
+#[test]
+fn unit088_fight_film_explains_intent() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("INTENT REVIEW"),
+        "fight-film must have intent review"
+    );
+    assert!(
+        renderer.contains("BETTER PLAY"),
+        "fight-film must suggest better play"
+    );
+    assert!(
+        renderer.contains("KEY MOMENT"),
+        "fight-film must highlight key moments"
+    );
+}
+
+#[test]
+fn unit088_planning_timeline_has_intent_card() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("INTENT TIMELINE"),
+        "planning must show intent timeline"
+    );
+    assert!(
+        renderer.contains("GOOD VS"),
+        "planning must show counter relationships"
+    );
+    assert!(
+        renderer.contains("LOSES TO"),
+        "planning must show weakness relationships"
+    );
+    assert!(
+        renderer.contains("CATEGORY: ATTACK"),
+        "planning must show action category"
+    );
+}
