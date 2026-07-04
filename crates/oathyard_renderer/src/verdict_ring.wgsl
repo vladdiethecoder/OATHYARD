@@ -145,8 +145,18 @@ fn scene_sdf(p: vec3<f32>) -> vec4<f32> {
     let witness_left = sd_box(rot_y(p - vec3<f32>(-1.38, -0.34, -0.58), 0.10), vec3<f32>(0.12, 0.28, 0.10));
     let witness_right = sd_box(rot_y(p - vec3<f32>(1.38, -0.34, -0.58), -0.10), vec3<f32>(0.12, 0.28, 0.10));
     let guard = 0.35 + 0.40 * packet.seed.x;
-    let fighter_a = fighter_sdf(p, -1.0, guard);
-    let fighter_b = fighter_sdf(p, 1.0, 1.0 - guard);
+    // Unit-095: Disable SDF fighters when mesh fighters are loaded.
+    // The SDF procedural fighters used fixed colors that masked the
+    // team-colored mesh fighters. When the renderer has loaded runtime
+    // meshes (mesh_asset_count > 0), the SDF fighters are hidden.
+    // The guard variable is still computed for SDF contact spark position.
+    var fighter_a = fighter_sdf(p, -1.0, guard);
+    var fighter_b = fighter_sdf(p, 1.0, 1.0 - guard);
+    // Hide SDF fighters when mesh mode is active (seed.z > 0.5 = mesh mode)
+    if (packet.seed.z > 0.5) {
+        fighter_a = 9999.0;
+        fighter_b = 9999.0;
+    }
     let contact_spark = sd_sphere(p - vec3<f32>(0.02, 0.42, -0.02), 0.08 + packet.seed.y * 0.04);
 
     // Unit-049: UI panels for menu/select/loadout states
@@ -245,7 +255,7 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
 
     // Unit-095: Fighter team-color path — output tint directly, bypass all procedural/texture mixing
     if (material_type > 3.5 && material_type < 4.5) {
-        return tint;
+        return vec3<f32>(tint.r * 2.0, tint.g * 2.0, tint.b * 2.0);  // amplified for visibility
     }
 
     if (material_type < 0.5) {
@@ -584,8 +594,8 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // to override pale candidate textures. For other assets, mix normally.
     let team_tint = select(tint * 1.5, vec3<f32>(1.0), mat_type > 4.5);
     let texture_base = map_contrast * class_tint * team_tint * 1.40;
-    // Unit-095: Fighters use stronger tint dominance to show team colors
-    let fighter_mix = select(0.50, 0.86 + normal_detail * 0.45, mat_type > 4.5);
+    // Unit-095: Fighters use tint ONLY (not texture) for team color identity
+    let fighter_mix = select(0.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
     let base = mix(procedural_base, texture_base, fighter_mix);
 
     // Unit-093: Demo-quality lighting — stronger key/fill/rim separation
@@ -602,7 +612,9 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let texture_roughness = clamp(sampled_orm.g, 0.12, 1.0);
     let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
     let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion * texture_ao;
-    let color = base * (0.54 + diffuse * 1.48 + fill_light + back_light) * ao * input.shade;
+    // Unit-095: Boost ambient for fighters so team colors are visible
+    let fighter_ambient = select(1.8, 1.0, mat_type > 4.5);
+    let color = base * (0.54 + diffuse * 1.48 + fill_light + back_light) * ao * input.shade * fighter_ambient;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);

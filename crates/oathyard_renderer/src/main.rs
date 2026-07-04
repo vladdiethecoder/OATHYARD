@@ -170,7 +170,7 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
     // Unit-062: Seed meshes use clean material path (material_type < -0.5)
     // to bypass procedural noise — Meshy-6 GLBs are geometry-only.
     // Unit-063: player_ prefix = warm tint, opponent_ prefix = cool tint.
-    match asset_id {
+    let result = match asset_id {
         // Player variants (warm skin gold tint)
         id if id == "player_fighter_mannequin" => MeshMaterial {
             material_type: -1.0,
@@ -292,7 +292,8 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             tint_b: 0.54, 
             tint_a: 1.0 
         },
-    }
+    };
+    result
 }
 
 fn camera_for_mode(mode: &str) -> CameraMode {
@@ -451,7 +452,13 @@ fn real_main() -> Result<(), String> {
         .iter()
         .map(|s| load_runtime_mesh_with_clip(s, clip_id_for_capture(&capture_id)))
         .collect::<Result<Vec<_>, _>>()?;
-    let seed = seed_uniforms(&packet_json, &capture_id, &candidate_assets);
+    let mut seed = seed_uniforms(&packet_json, &capture_id, &candidate_assets);
+    // Unit-095: Set seed.z = 1.0 when runtime meshes are loaded.
+    // This tells the SDF shader to hide procedural fighters so the
+    // mesh-rendered team-colored fighters are visible.
+    if !runtime_meshes.is_empty() {
+        seed[2] = 1.0;
+    }
     let mut render = pollster::block_on(render_wgpu_frame(seed, &runtime_meshes, &camera_mode, &capture_id))?;
     let file_stem = capture_file_stem.unwrap_or_else(|| {
         if capture_id == DEFAULT_CAPTURE_FILE_STEM || capture_id == DEFAULT_CAPTURE_FILE_NAME {
@@ -2275,12 +2282,13 @@ async fn render_wgpu_frame(
             timestamp_writes: None,
             multiview_mask: None,
         });
+        // Unit-095: SDF renders scene background; meshes render on top.
+        // SDF fighters are hidden (seed.z=1.0) when meshes are loaded.
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bind_group, &[]);
         pass.draw(0..3, 0..1);
         if let Some((mesh_pipeline, buffers)) = &mesh_resources {
             pass.set_pipeline(mesh_pipeline);
-            // Unit-049: per-mesh material upload via queue.write_buffer before each draw
             for resource in buffers {
                 if let Some(material) = Some(&resource.mesh_material) {
                     let bytes = bytemuck::bytes_of(material);
@@ -3447,7 +3455,11 @@ fn windowed_main() -> Result<(), String> {
     let saltreach_consumed = mesh_assets.iter().any(|m| m.contains("saltreach"));
     let training_yard_consumed = mesh_assets.iter().any(|m| m.contains("training_yard"));
 
-    let seed = seed_uniforms(&packet_json, "windowed_smoke", &config.candidate_assets);
+    let mut seed = seed_uniforms(&packet_json, "windowed_smoke", &config.candidate_assets);
+    // Unit-095: Hide SDF fighters in windowed mode when meshes are loaded
+    if !runtime_meshes.is_empty() {
+        seed[2] = 1.0;
+    }
 
     // Unit-074: Load scripted input if provided
     let scripted_inputs = if let Some(ref si_path) = config.scripted_input_path {
