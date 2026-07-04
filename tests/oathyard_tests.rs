@@ -3548,3 +3548,81 @@ fn unit085_package_includes_renderer_binary() {
         "package.sh must include content/input for scripted playtest"
     );
 }
+
+#[test]
+fn unit086_executable_roster_manifest_validates() {
+    let bin_source = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard.rs");
+    assert!(
+        bin_source.contains("oathyard.executable_roster.v1"),
+        "roster manifest schema missing"
+    );
+    assert!(
+        bin_source.contains("ROSTER_FIGHTERS"),
+        "roster fighters constant missing"
+    );
+    assert!(
+        bin_source.contains("ROSTER_WEAPONS"),
+        "roster weapons constant missing"
+    );
+    assert!(
+        bin_source.contains("ROSTER_ARMOR"),
+        "roster armor constant missing"
+    );
+    assert!(
+        bin_source.contains("ROSTER_ARENAS"),
+        "roster arenas constant missing"
+    );
+    // Verify minimum roster counts: 3 fighters, 3 weapons, 3 armor, 2 arenas
+    assert!(
+        bin_source.contains("\"saltreach_duelist\"")
+            && bin_source.contains("\"oathyard_writ\"")
+            && bin_source.contains("\"bruiser_oath\""),
+        "at least 3 fighters must be in roster"
+    );
+    assert!(
+        bin_source.contains("\"longsword\"")
+            && bin_source.contains("\"arming_sword\"")
+            && bin_source.contains("\"ash_spear\""),
+        "at least 3 weapons must be in roster"
+    );
+    assert!(
+        bin_source.contains("\"gambeson\"")
+            && bin_source.contains("\"mail_hauberk\"")
+            && bin_source.contains("\"heavy_plate\""),
+        "at least 3 armor must be in roster"
+    );
+    assert!(
+        bin_source.contains("\"oathyard_verdict_ring\"")
+            && bin_source.contains("\"training_yard\""),
+        "both arenas must be in roster"
+    );
+}
+
+#[test]
+fn unit086_roster_selection_params_exist() {
+    let bin_source = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard.rs");
+    assert!(
+        bin_source.contains("--player-fighter"),
+        "player-fighter selection param missing"
+    );
+    assert!(
+        bin_source.contains("--opponent-fighter"),
+        "opponent-fighter selection param missing"
+    );
+    assert!(
+        bin_source.contains("--player-weapon"),
+        "player-weapon selection param missing"
+    );
+    assert!(
+        bin_source.contains("--arena"),
+        "arena selection param missing"
+    );
+    assert!(
+        bin_source.contains("RosterSelection"),
+        "RosterSelection struct missing"
+    );
+    assert!(
+        bin_source.contains("--roster-only"),
+        "--roster-only flag missing"
+    );
+}

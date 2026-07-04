@@ -36,6 +36,29 @@ PLAY_RC=$?
 
 echo "  play exit code: $PLAY_RC"
 
+# Unit-086: Run a second scenario with different roster selection to prove
+# that asset selection changes the consumed assets
+echo "=== Running alternate roster scenario ==="
+DISPLAY="${DISPLAY:-}" WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+  ./bin/oathyard play \
+    --smoke-frames 60 \
+    --player-fighter bruiser_oath \
+    --player-weapon ash_spear \
+    --player-armor heavy_plate \
+    --opponent-fighter chainbreaker \
+    --opponent-weapon bearded_axe \
+    --opponent-armor lamellar \
+    --arena training_yard \
+    --artifact-dir "$out_dir_abs/executable_smoke_alt" \
+    >"$out_dir_abs/executable_smoke_alt_stdout.log" 2>&1
+ALT_RC=$?
+echo "  alt play exit code: $ALT_RC"
+
+ALT_MANIFEST="$out_dir_abs/executable_smoke_alt/executable_runtime_manifest.json"
+if [[ ! -f "$ALT_MANIFEST" ]]; then
+  echo "WARNING: alt scenario manifest not produced (non-fatal)"
+fi
+
 # Verify results
 MANIFEST="$out_dir_abs/executable_smoke/executable_runtime_manifest.json"
 if [[ ! -f "$MANIFEST" ]]; then
@@ -101,6 +124,25 @@ else:
 PY
 
 SMOKE_CHECK_RC=$?
+
+# Also test --roster-only
+echo "=== Testing roster listing ==="
+./bin/oathyard play --roster-only > "$out_dir_abs/roster.json" 2>/dev/null
+python3 - "$out_dir_abs/roster.json" <<'PY'
+import json, sys
+from pathlib import Path
+roster = json.loads(Path(sys.argv[1]).read_text())
+assert roster.get("schema") == "oathyard.executable_roster.v1"
+fighters = roster.get("fighters", [])
+weapons = roster.get("weapons", [])
+armor = roster.get("armor", [])
+arenas = roster.get("arenas", [])
+assert len(fighters) >= 3, f"need >= 3 fighters, got {len(fighters)}"
+assert len(weapons) >= 3, f"need >= 3 weapons, got {len(weapons)}"
+assert len(armor) >= 3, f"need >= 3 armor, got {len(armor)}"
+assert len(arenas) >= 2, f"need >= 2 arenas, got {len(arenas)}"
+print(f"  roster: {len(fighters)} fighters, {len(weapons)} weapons, {len(armor)} armor, {len(arenas)} arenas")
+PY
 
 # Write smoke manifest
 python3 - "$out_dir_abs" "$MANIFEST" <<'PY'

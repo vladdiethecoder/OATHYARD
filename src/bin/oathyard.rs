@@ -841,6 +841,15 @@ fn real_main() -> Result<(), OathError> {
             let mut scripted_input: Option<PathBuf> = None;
             let mut smoke_frames: Option<u32> = None;
             let mut artifact_dir: Option<PathBuf> = None;
+            // Unit-086: Roster selection params
+            let mut player_fighter: Option<String> = None;
+            let mut opponent_fighter: Option<String> = None;
+            let mut player_weapon: Option<String> = None;
+            let mut opponent_weapon: Option<String> = None;
+            let mut player_armor: Option<String> = None;
+            let mut opponent_armor: Option<String> = None;
+            let mut arena: Option<String> = None;
+            let mut roster_only: bool = false;
             while let Some(arg) = args.next() {
                 match arg.as_str() {
                     "--out" => {
@@ -864,6 +873,44 @@ fn real_main() -> Result<(), OathError> {
                             OathError::Parse("--artifact-dir requires a path".to_string())
                         })?));
                     }
+                    "--player-fighter" => {
+                        player_fighter = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--player-fighter requires a name".to_string())
+                        })?);
+                    }
+                    "--opponent-fighter" => {
+                        opponent_fighter = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--opponent-fighter requires a name".to_string())
+                        })?);
+                    }
+                    "--player-weapon" => {
+                        player_weapon = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--player-weapon requires a name".to_string())
+                        })?);
+                    }
+                    "--opponent-weapon" => {
+                        opponent_weapon = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--opponent-weapon requires a name".to_string())
+                        })?);
+                    }
+                    "--player-armor" => {
+                        player_armor = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--player-armor requires a name".to_string())
+                        })?);
+                    }
+                    "--opponent-armor" => {
+                        opponent_armor = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--opponent-armor requires a name".to_string())
+                        })?);
+                    }
+                    "--arena" => {
+                        arena = Some(args.next().ok_or_else(|| {
+                            OathError::Parse("--arena requires a name".to_string())
+                        })?);
+                    }
+                    "--roster-only" => {
+                        roster_only = true;
+                    }
                     other => {
                         return Err(OathError::Parse(format!("unknown play argument '{other}'")));
                     }
@@ -871,7 +918,24 @@ fn real_main() -> Result<(), OathError> {
             }
             let artifact_dir =
                 artifact_dir.unwrap_or_else(|| PathBuf::from("artifacts/play/latest"));
-            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir)
+
+            // Unit-086: If --roster-only, print the available roster and exit
+            if roster_only {
+                println!("{}", available_roster_json());
+                return Ok(());
+            }
+
+            let selection = RosterSelection {
+                player_fighter,
+                opponent_fighter,
+                player_weapon,
+                opponent_weapon,
+                player_armor,
+                opponent_armor,
+                arena,
+            };
+
+            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir, selection)
         }
         "--help" | "-h" | "help" => {
             println!("{}", usage());
@@ -882,6 +946,60 @@ fn real_main() -> Result<(), OathError> {
             usage()
         ))),
     }
+}
+
+/// Unit-086: Roster selection from CLI args.
+struct RosterSelection {
+    player_fighter: Option<String>,
+    opponent_fighter: Option<String>,
+    player_weapon: Option<String>,
+    opponent_weapon: Option<String>,
+    player_armor: Option<String>,
+    opponent_armor: Option<String>,
+    arena: Option<String>,
+}
+
+/// Unit-086: The source-approved roster available in the executable.
+const ROSTER_FIGHTERS: &[&str] = &[
+    "saltreach_duelist",
+    "oathyard_writ",
+    "bruiser_oath",
+    "chainbreaker",
+    "gate_shield",
+    "reed_sentinel",
+];
+const ROSTER_WEAPONS: &[&str] = &[
+    "longsword",
+    "arming_sword",
+    "ash_spear",
+    "bearded_axe",
+    "billhook",
+    "curved_sword",
+    "iron_maul",
+    "round_shield",
+];
+const ROSTER_ARMOR: &[&str] = &[
+    "gambeson",
+    "mail_hauberk",
+    "bruiser_padded_plate",
+    "fencer_light",
+    "heavy_plate",
+    "lamellar",
+];
+const ROSTER_ARENAS: &[&str] = &["oathyard_verdict_ring", "training_yard"];
+
+fn available_roster_json() -> String {
+    let fighters: Vec<String> = ROSTER_FIGHTERS.iter().map(|s| format!("\"{s}\"")).collect();
+    let weapons: Vec<String> = ROSTER_WEAPONS.iter().map(|s| format!("\"{s}\"")).collect();
+    let armor: Vec<String> = ROSTER_ARMOR.iter().map(|s| format!("\"{s}\"")).collect();
+    let arenas: Vec<String> = ROSTER_ARENAS.iter().map(|s| format!("\"{s}\"")).collect();
+    format!(
+        r#"{{"schema":"oathyard.executable_roster.v1","fighters":[{}],"weapons":[{}],"armor":[{}],"arenas":[{}]}}"#,
+        fighters.join(","),
+        weapons.join(","),
+        armor.join(","),
+        arenas.join(",")
+    )
 }
 
 /// Unit-085: Direct product executable entry point.
@@ -898,6 +1016,7 @@ fn launch_play_flow(
     scripted_input: Option<PathBuf>,
     smoke_frames: Option<u32>,
     artifact_dir: PathBuf,
+    selection: RosterSelection,
 ) -> Result<(), OathError> {
     use std::process::Command;
 
@@ -908,7 +1027,49 @@ fn launch_play_flow(
 
     // Step 1: Run the deterministic local game to produce truth artifacts.
     eprintln!("  [1/4] Running deterministic local game...");
-    let config = oathyard::LocalGameConfig::default();
+    let mut config = oathyard::LocalGameConfig::default();
+    // Unit-086: Apply roster selection overrides
+    if let Some(ref f) = selection.player_fighter {
+        config.player_fighter.name = f.clone();
+    }
+    if let Some(ref f) = selection.opponent_fighter {
+        config.opponent_fighter.name = f.clone();
+    }
+    if let Some(ref w) = selection.player_weapon {
+        config.player_fighter.weapon_id = w.clone();
+    }
+    if let Some(ref w) = selection.opponent_weapon {
+        config.opponent_fighter.weapon_id = w.clone();
+    }
+    if let Some(ref a) = selection.player_armor {
+        config.player_fighter.armor_id = a.clone();
+    }
+    if let Some(ref a) = selection.opponent_armor {
+        config.opponent_fighter.armor_id = a.clone();
+    }
+    if let Some(ref ar) = selection.arena {
+        config.arena_id = ar.clone();
+    }
+    // Update loadout_id to reflect the actual selection
+    config.loadout_id = format!(
+        "{}_{}_{}_vs_{}_{}_{}",
+        config.player_fighter.name,
+        config.player_fighter.weapon_id,
+        config.player_fighter.armor_id,
+        config.opponent_fighter.name,
+        config.opponent_fighter.weapon_id,
+        config.opponent_fighter.armor_id
+    );
+
+    eprintln!(
+        "        loadout: {} ({}) vs {} ({}) in {}",
+        config.player_fighter.name,
+        config.player_fighter.weapon_id,
+        config.opponent_fighter.name,
+        config.opponent_fighter.weapon_id,
+        config.arena_id
+    );
+
     let game_run = oathyard::write_local_game_artifacts(&out, config)?;
     eprintln!(
         "        hash={} plan_cycles={}",
