@@ -3141,7 +3141,7 @@ fn unit078_combat_resolution_bridge_truth_isolated() {
     assert!(source.contains("guard\", \"guard\") => (\"none\""));
     assert!(source.contains("cut\", \"cut\") => (\"simultaneous\""));
     assert!(source.contains("thrust\", \"thrust\") => (\"double_thrust\""));
-    assert!(source.contains("recover\", _) => (\"recovery_open\""));
+    assert!(source.contains("\"recover\", \"cut\"")); // Unit-090: expanded resolver
     assert!(source.contains("step\", _) | (_, \"step\") => (\"positioning\""));
 
     // Resolution invoked on timeline advance
@@ -4017,4 +4017,104 @@ fn unit089_action_key_reference_shows_all_actions() {
     assert!(renderer.contains("5=CUT 6=THRUST 7=BRACE 8=BASH"));
     assert!(renderer.contains("9=HOOK 0=BIND G=GRAB B=SHOVE"));
     assert!(renderer.contains("K=KICK"));
+}
+
+#[test]
+fn unit090_opponent_concealment_field_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("opponent_intent_revealed"),
+        "opponent_intent_revealed field missing"
+    );
+    // Verify it starts false and is set true when leaving Timeline
+    assert!(
+        renderer.contains("opponent_intent_revealed: false"),
+        "opponent_intent_revealed must initialize false"
+    );
+    assert!(
+        renderer.contains("app.opponent_intent_revealed = true"),
+        "opponent_intent_revealed must be set true on reveal"
+    );
+}
+
+#[test]
+fn unit090_expanded_resolver_covers_all_actions() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify the resolver handles the expanded action set
+    for action in &[
+        "bash",
+        "brace",
+        "hook_bind",
+        "grab",
+        "shove",
+        "kick",
+        "parry",
+    ] {
+        let quoted = format!("\"{}\"", action);
+        assert!(
+            renderer.contains(&quoted),
+            "action '{}' missing from expanded resolver",
+            action
+        );
+    }
+    // Verify expanded opponent policy
+    assert!(
+        renderer.contains(
+            "\"guard\", \"cut\", \"thrust\", \"step\", \"brace\", \"bash\", \"pivot\", \"recover\""
+        ),
+        "expanded opponent policy missing"
+    );
+}
+
+#[test]
+fn unit090_trace_driven_manifest_fields_exist() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("\"player_timeline_slots\""),
+        "player_timeline_slots in manifest missing"
+    );
+    assert!(
+        renderer.contains("\"opponent_timeline_slots\""),
+        "opponent_timeline_slots in manifest missing"
+    );
+    assert!(
+        renderer.contains("\"combat_contacts_trace_driven\""),
+        "combat_contacts_trace_driven in manifest missing"
+    );
+    assert!(
+        renderer.contains("\"match_result_trace_driven\""),
+        "match_result_trace_driven in manifest missing"
+    );
+}
+
+#[test]
+fn unit090_playable_alpha_playtest_exists() {
+    let script = fs::read_to_string("content/input/unit090_playable_duel_alpha_playtest.json")
+        .expect("playable alpha playtest missing");
+    assert!(script.contains("place_step"));
+    assert!(script.contains("place_guard"));
+    assert!(script.contains("place_cut"));
+    assert!(script.contains("place_thrust"));
+    assert!(script.contains("place_brace"));
+    assert!(script.contains("place_bash"));
+    assert!(script.contains("place_hook_bind"));
+    assert!(script.contains("place_grab"));
+    assert!(script.contains("COMMIT"));
+    assert!(script.contains("COMMIT_REVEAL"));
+    assert!(script.contains("FIGHT_FILM"));
+}
+
+#[test]
+fn unit090_dynamic_ui_source_map_exists() {
+    let path = std::path::Path::new(
+        "artifacts/verification/20260704T193646Z_unit090_playable_duel_alpha/dynamic_ui_source_map.json",
+    );
+    assert!(path.exists(), "dynamic_ui_source_map.json must exist");
+    let map = fs::read_to_string(path).expect("read source map");
+    assert!(map.contains("oathyard.dynamic_ui_source_map.v1"));
+    assert!(map.contains("\"trace\""));
+    assert!(map.contains("\"presentation_only\""));
 }

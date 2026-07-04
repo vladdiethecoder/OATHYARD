@@ -3263,6 +3263,9 @@ struct WindowedApp {
     roster_weapon_idx: usize,
     roster_armor_idx: usize,
     roster_arena_idx: usize,
+    // Unit-090: Opponent intent concealment + trace-driven combat state
+    opponent_intent_revealed: bool,
+    current_slot_display: usize,
 }
 
 mod wgpu_mesh {
@@ -3485,8 +3488,11 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
 
 /// Unit-077: Simple opponent AI timeline policy (alternating guard / cut / thrust).
 fn opponent_policy_timeline(slot_count: usize) -> Vec<String> {
-    let actions = ["guard", "cut", "thrust"];
-    (0..slot_count).map(|i| actions[i % actions.len()].to_string()).collect()
+    // Unit-090: Expanded opponent policy uses more of the 13-action roster
+    let actions = ["guard", "cut", "thrust", "step", "brace", "bash", "pivot", "recover"];
+    (0..slot_count)
+        .map(|i| actions[i % actions.len()].to_string())
+        .collect()
 }
 
 /// Unit-078/079: Combat resolution + injury tracking + match outcome.
@@ -3536,17 +3542,122 @@ fn resolve_timeline_combat(
         let pa = &player_slots[i];
         let oa = &opponent_slots[i];
         let (ct, inj, out) = match (pa.as_str(), oa.as_str()) {
+            // Guard matchups
             ("guard", "guard") => ("none", "none", "neutral — both guard"),
             ("guard", "cut") | ("guard", "thrust") => ("blocked", "minor_stamina", "player blocked opponent's strike"),
+            ("guard", "bash") => ("guard_broken", "player_exposed", "opponent bash broke player's guard"),
+            ("guard", "grab") => ("guard_bypassed", "player_exposed", "opponent grab bypassed player's guard"),
+            ("guard", "shove") => ("guard_displaced", "player_exposed", "opponent shove displaced player's guard"),
+            ("guard", "kick") => ("guard_kicked", "player_exposed", "opponent kick punished static guard"),
+            ("guard", "hook_bind") => ("guard_trapped", "minor_stamina", "opponent hook_bind trapped player's weapon"),
+            ("guard", "parry") => ("neutral", "none", "both defend — stalemate"),
+            ("guard", "step") | ("guard", "pivot") => ("positioning", "none", "opponent repositioned — no contact"),
+            ("guard", "brace") => ("neutral", "none", "both defend statically"),
+            ("guard", "recover") => ("neutral", "none", "opponent recovering — no pressure"),
+
             ("cut", "guard") | ("thrust", "guard") => ("strike_blocked", "none", "opponent blocked player's strike"),
+            ("cut", "parry") | ("thrust", "parry") => ("strike_deflected", "player_exposed", "opponent parried — player exposed"),
             ("cut", "cut") => ("simultaneous", "blade_contact_both", "simultaneous cut — both exposed"),
             ("cut", "thrust") => ("thrust_vs_cut", "thrust_penetrates", "opponent thrust slips past player's cut"),
             ("thrust", "cut") => ("cut_vs_thrust", "cut_lands_first", "player cut lands before opponent thrust extends"),
             ("thrust", "thrust") => ("double_thrust", "mutual_impalement", "both thrust — mutual contact"),
-            ("recover", _) => ("recovery_open", "player_exposed", "player recovering — open to next strike"),
-            (_, "recover") => ("opponent_recovery", "opponent_exposed", "opponent recovering — open to next strike"),
+            ("cut", "brace") | ("thrust", "brace") => ("brace_absorbs", "minor_stamina", "opponent brace absorbed the strike"),
+            ("cut", "step") | ("thrust", "step") => ("positioning", "none", "opponent stepped away — no contact"),
+            ("cut", "pivot") | ("thrust", "pivot") => ("miss", "none", "opponent pivoted off the line"),
+            ("cut", "recover") | ("thrust", "recover") => ("clean_hit", "opponent_exposed", "player strike hit recovering opponent"),
+            ("cut", "bash") => ("simultaneous", "blade_contact_both", "cut and bash clash"),
+            ("thrust", "bash") => ("thrust_vs_bash", "opponent_exposed", "thrust reaches past bash"),
+            ("cut", "hook_bind") | ("thrust", "hook_bind") => ("weapon_trapped", "player_exposed", "opponent hook_bind trapped player's weapon"),
+            ("cut", "grab") | ("thrust", "grab") => ("grab_stops_attack", "player_exposed", "opponent grab stopped player's attack"),
+            ("cut", "shove") | ("thrust", "shove") => ("shove_disrupts", "player_exposed", "opponent shove disrupted player's attack"),
+            ("cut", "kick") | ("thrust", "kick") => ("kick_interrupts", "player_exposed", "opponent kick interrupted player's attack"),
+
+            // Defense vs attack (reversed)
+            ("parry", "cut") | ("parry", "thrust") => ("deflected", "opponent_exposed", "player parried — opponent exposed"),
+            ("parry", "guard") => ("neutral", "none", "both defend — stalemate"),
+            ("parry", "bash") => ("parry_breaks", "player_exposed", "bash overwhelms parry"),
+
+            // Brace matchups
+            ("brace", "brace") => ("neutral", "none", "both brace — stalemate"),
+            ("brace", "bash") | ("brace", "shove") | ("brace", "kick") => ("brace_holds", "minor_stamina", "player brace absorbed opponent's force"),
+            ("brace", "cut") | ("brace", "thrust") => ("brace_overwhelmed", "player_exposed", "opponent strike overwhelmed player's brace"),
+            ("brace", "grab") => ("brace_grappled", "player_exposed", "opponent grab controlled bracing player"),
+            ("brace", "step") | ("brace", "pivot") => ("positioning", "none", "opponent repositioned"),
+            ("brace", "recover") => ("neutral", "none", "opponent recovering"),
+            ("brace", "guard") => ("neutral", "none", "both defend"),
+            ("brace", "hook_bind") => ("brace_trapped", "minor_stamina", "opponent hook_bind controlled bracing player"),
+
+            // Bash matchups
+            ("bash", "guard") => ("guard_broken", "opponent_exposed", "player bash broke opponent's guard"),
+            ("bash", "brace") => ("brace_holds", "minor_stamina", "opponent brace absorbed bash"),
+            ("bash", "recover") => ("clean_hit", "opponent_exposed", "player bash punished recovering opponent"),
+            ("bash", "step") | ("bash", "pivot") => ("miss", "none", "opponent evaded bash"),
+            ("bash", "cut") | ("bash", "thrust") => ("simultaneous", "blade_contact_both", "bash and strike clash"),
+            ("bash", "bash") => ("simultaneous", "blade_contact_both", "mutual bash — both staggered"),
+            ("bash", "grab") => ("bash_vs_grab", "blade_contact_both", "bash and grab clash"),
+            ("bash", "shove") => ("bash_vs_shove", "blade_contact_both", "bash and shove trade"),
+            ("bash", "kick") => ("bash_vs_kick", "blade_contact_both", "bash and kick trade"),
+            ("bash", "hook_bind") => ("bash_vs_bind", "minor_stamina", "bash crashes through bind"),
+            ("bash", "parry") => ("bash_overwhelms_parry", "opponent_exposed", "bash overwhelms parry"),
+
+            // Hook_bind matchups
+            ("hook_bind", "guard") => ("guard_trapped", "opponent_exposed", "player hook_bind trapped opponent's weapon"),
+            ("hook_bind", "cut") | ("hook_bind", "thrust") => ("weapon_controlled", "opponent_exposed", "player hook_bind controlled opponent's weapon"),
+            ("hook_bind", "brace") => ("bind_vs_brace", "minor_stamina", "hook_bind vs brace — neutral"),
+            ("hook_bind", "step") | ("hook_bind", "pivot") => ("positioning", "none", "opponent disengaged from bind"),
+            ("hook_bind", "recover") => ("clean_hit", "opponent_exposed", "hook_bind catches recovering opponent"),
+            ("hook_bind", "bash") => ("bind_crashed", "player_exposed", "opponent bash crashed through bind"),
+            ("hook_bind", "grab") => ("bind_vs_grab", "blade_contact_both", "hook_bind and grab contest"),
+            ("hook_bind", "shove") => ("bind_shoved", "player_exposed", "opponent shove broke the bind"),
+            ("hook_bind", "kick") => ("bind_kicked", "player_exposed", "opponent kick punished bind"),
+            ("hook_bind", "hook_bind") => ("mutual_bind", "minor_stamina", "mutual bind — neutral"),
+
+            // Grab matchups
+            ("grab", "guard") => ("guard_bypassed", "opponent_exposed", "player grab bypassed opponent's guard"),
+            ("grab", "brace") => ("brace_grappled", "opponent_exposed", "player grab controlled bracing opponent"),
+            ("grab", "recover") => ("clean_hit", "opponent_exposed", "player grab punished recovering opponent"),
+            ("grab", "step") | ("grab", "pivot") => ("miss", "none", "opponent evaded grab"),
+            ("grab", "cut") | ("grab", "thrust") => ("grab_stopped", "player_exposed", "opponent strike stopped grab"),
+            ("grab", "bash") => ("grab_vs_bash", "blade_contact_both", "grab and bash contest"),
+            ("grab", "shove") => ("grab_vs_shove", "blade_contact_both", "grab and shove contest"),
+            ("grab", "kick") => ("grab_vs_kick", "player_exposed", "opponent kick punished grab attempt"),
+            ("grab", "grab") => ("mutual_grab", "blade_contact_both", "mutual grab — clinch"),
+            ("grab", "hook_bind") => ("grab_vs_bind", "blade_contact_both", "grab and bind contest"),
+
+            // Shove matchups
+            ("shove", "guard") => ("guard_displaced", "opponent_exposed", "player shove displaced opponent's guard"),
+            ("shove", "brace") => ("brace_holds", "minor_stamina", "opponent brace absorbed shove"),
+            ("shove", "recover") => ("clean_hit", "opponent_exposed", "player shove punished recovering opponent"),
+            ("shove", "step") | ("shove", "pivot") => ("miss", "none", "opponent evaded shove"),
+            ("shove", "cut") | ("shove", "thrust") => ("shove_stopped", "player_exposed", "opponent strike stopped shove"),
+            ("shove", "bash") => ("shove_vs_bash", "blade_contact_both", "shove and bash trade"),
+            ("shove", "grab") => ("shove_vs_grab", "blade_contact_both", "shove and grab contest"),
+            ("shove", "kick") => ("shove_vs_kick", "blade_contact_both", "shove and kick trade"),
+            ("shove", "hook_bind") => ("shove_breaks_bind", "opponent_exposed", "shove breaks opponent's bind"),
+            ("shove", "shove") => ("mutual_shove", "blade_contact_both", "mutual shove — both staggered"),
+
+            // Kick matchups
+            ("kick", "guard") => ("guard_kicked", "opponent_exposed", "player kick punished opponent's guard"),
+            ("kick", "brace") => ("brace_holds", "minor_stamina", "opponent brace absorbed kick"),
+            ("kick", "recover") => ("clean_hit", "opponent_exposed", "player kick punished recovering opponent"),
+            ("kick", "step") | ("kick", "pivot") => ("miss", "none", "opponent evaded kick"),
+            ("kick", "cut") | ("kick", "thrust") => ("kick_stopped", "player_exposed", "opponent strike stopped kick"),
+            ("kick", "bash") => ("kick_vs_bash", "blade_contact_both", "kick and bash trade"),
+            ("kick", "grab") => ("kick_vs_grab", "opponent_exposed", "kick punishes grab attempt"),
+            ("kick", "shove") => ("kick_vs_shove", "blade_contact_both", "kick and shove trade"),
+            ("kick", "hook_bind") => ("kick_vs_bind", "opponent_exposed", "kick punishes bind"),
+            ("kick", "kick") => ("mutual_kick", "blade_contact_both", "mutual kick — both staggered"),
+
+            // Movement
             ("step", _) | (_, "step") => ("positioning", "none", "footwork — no contact"),
             ("pivot", _) | (_, "pivot") => ("pivot", "none", "angle change — no contact"),
+
+            // Recovery is vulnerable
+            ("recover", "cut") | ("recover", "thrust") | ("recover", "bash") | ("recover", "grab") | ("recover", "kick") => ("recovery_punished", "player_exposed", "player recovering — opponent struck"),
+            ("recover", _) => ("recovery_safe", "none", "player recovered safely"),
+            (_, "recover") => ("opponent_recovery", "opponent_exposed", "opponent recovering — exposed"),
+
+            // Fallback
             _ => ("unknown", "none", "unresolved"),
         };
         let sev = injury_severity(inj);
@@ -3942,6 +4053,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             roster_weapon_idx: 0,
             roster_armor_idx: 0,
             roster_arena_idx: 0,
+            opponent_intent_revealed: false,
+            current_slot_display: 0,
         });
 
         self.window = Some(window);
@@ -4008,6 +4121,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                     );
                                     app.combat_contacts = contacts;
                                     app.match_result = Some(result);
+                                }
+                                // Unit-090: Reveal opponent intent when entering CommitReveal
+                                if app.interactive_state == InteractiveState::Timeline {
+                                    app.opponent_intent_revealed = true;
                                 }
                                 app.interactive_state = next;
                                 let next_str = next.as_str().to_string();
@@ -4390,6 +4507,9 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         app.queue.submit(std::iter::once(encoder.finish()));
                         surface_tex.present();
                         app.frames_presented += 1;
+
+                        // Unit-090: Update the current slot display from timeline cursor
+                        app.current_slot_display = app.timeline_cursor;
                     }
                     status => {
                         eprintln!("surface status: {:?}", status);
@@ -4417,6 +4537,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 );
                                 app.combat_contacts = contacts;
                                 app.match_result = Some(result);
+                                app.opponent_intent_revealed = true;
                             }
                             let next = app.interactive_state.next();
                             app.interactive_state = next;
@@ -4677,6 +4798,12 @@ fn write_window_manifest(app: &WindowedApp) {
             "available_armor": ROSTER_ARMOR_WINDOWED,
             "available_arenas": ROSTER_ARENAS_WINDOWED,
         },
+        // Unit-090: Opponent intent concealment + trace-driven evidence
+        "opponent_intent_revealed": app.opponent_intent_revealed,
+        "player_timeline_slots": app.timeline_slots,
+        "opponent_timeline_slots": app.opponent_timeline_slots,
+        "combat_contacts_trace_driven": !app.combat_contacts.is_empty(),
+        "match_result_trace_driven": app.match_result.is_some(),
     });
 
     let manifest_path = app.out_dir.join("native_window_runtime_manifest.json");
