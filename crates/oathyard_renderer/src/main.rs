@@ -2631,6 +2631,19 @@ fn draw_contact_marker(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i3
     fill_rect(rgba, width, height, x1 - 4, y1 - 4, 8, 8, 255, 255, 100);
 }
 
+// Unit-091: Action category lookup for trace-driven UI
+fn action_category(action: &str) -> &'static str {
+    match action {
+        "step" | "pivot" => "movement",
+        "guard" | "parry" | "brace" => "defense",
+        "cut" | "thrust" | "bash" | "kick" => "attack",
+        "hook_bind" => "bind",
+        "grab" | "shove" => "grapple",
+        "recover" => "recovery",
+        _ => "unknown",
+    }
+}
+
 fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &str, packet: &Value, candidate_assets: &[String]) {
     let label = state_label(capture_id);
 
@@ -2729,32 +2742,52 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "K=KICK R(RECOV)=F6 RECOVER", 35, 458, 150, 180, 200);
         },
         "pre_contact_frame" | "pre_contact_frame_seed" => {
-            // Unit-088: YOMI-style simultaneous reveal UI
+            // Unit-091: Trace-driven simultaneous reveal UI
+            let cs = packet.get("combat_summary").unwrap_or(&Value::Null);
+            let p_action = cs.get("player_action").and_then(Value::as_str).unwrap_or("cut");
+            let o_action = cs.get("opponent_action").and_then(Value::as_str).unwrap_or("guard");
+            let matchup = cs.get("matchup_explanation").and_then(Value::as_str).unwrap_or("Combat exchange");
+            let p_cat = action_category(p_action);
+            let o_cat = action_category(o_action);
             draw_panel(rgba, width, height, 20, 70, 600, 220);
             draw_title_bar(rgba, width, height, 20, 70, 600, "COMMIT / REVEAL");
-            // Intent cards — both sides revealed simultaneously
             draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 108, 255, 255, 100);
-            draw_text(rgba, width, height, "PLAYER(GOLD): CUT > HIGH > HEAD", 35, 138, 255, 220, 60);
-            draw_text(rgba, width, height, "  INTENT: ATTACK - Edge strike threatens recovery", 35, 158, 200, 180, 100);
-            draw_text(rgba, width, height, "OPPONENT(CRIMSON): BRACE > CENTER > TORSO", 35, 188, 255, 80, 40);
-            draw_text(rgba, width, height, "  INTENT: DEFENSE - Resist impact through armor", 35, 208, 200, 120, 120);
-            // Matchup result explanation
+            let p_line = format!("PLAYER(GOLD): {}", p_action.to_uppercase());
+            draw_text(rgba, width, height, &p_line, 35, 138, 255, 220, 60);
+            let p_cat_line = format!("  INTENT: {}", p_cat.to_uppercase());
+            draw_text(rgba, width, height, &p_cat_line, 35, 158, 200, 180, 100);
+            let o_line = format!("OPPONENT(CRIMSON): {}", o_action.to_uppercase());
+            draw_text(rgba, width, height, &o_line, 35, 188, 255, 80, 40);
+            let o_cat_line = format!("  INTENT: {}", o_cat.to_uppercase());
+            draw_text(rgba, width, height, &o_cat_line, 35, 208, 200, 120, 120);
             draw_text(rgba, width, height, "--- MATCHUP ---", 35, 238, 255, 255, 255);
-            draw_text(rgba, width, height, "CUT vs BRACE: Edge meets braced armor", 35, 258, 255, 220, 120);
-            draw_text(rgba, width, height, "RESULT: Partial deflection, blunt transfer", 35, 278, 255, 160, 80);
+            let matchup_line = format!("{} vs {}: {}", p_action.to_uppercase(), o_action.to_uppercase(), matchup);
+            draw_text(rgba, width, height, &matchup_line, 35, 258, 255, 220, 120);
+            draw_text(rgba, width, height, "RESULT: see resolve phase", 35, 278, 255, 160, 80);
         },
         "contact_frame" | "contact_frame_seed" => {
+            // Unit-091: Trace-driven contact UI
+            let cs = packet.get("combat_summary").unwrap_or(&Value::Null);
+            let p_action = cs.get("player_action").and_then(Value::as_str).unwrap_or("cut");
+            let o_action = cs.get("opponent_action").and_then(Value::as_str).unwrap_or("guard");
+            let material = cs.get("material_result").and_then(Value::as_str).unwrap_or("unknown");
+            let weapon = cs.get("weapon").and_then(Value::as_str).unwrap_or("longsword");
+            let armor = cs.get("armor").and_then(Value::as_str).unwrap_or("mail_hauberk");
+            let target = cs.get("target").and_then(Value::as_str).unwrap_or("torso");
             draw_panel(rgba, width, height, 20, 70, 550, 180);
             draw_title_bar(rgba, width, height, 20, 70, 550, "RESOLVE (CONTACT)");
-            // Unit-088: Explain the matchup result
-            draw_text(rgba, width, height, "PLAYER CUT -> OPPONENT BRACE", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "WEAPON: LONGSWORD vs ARMOR: MAIL", 35, 138, 200, 200, 200);
-            draw_text(rgba, width, height, "MATCHUP: Edge meets braced armor", 35, 158, 255, 220, 120);
-            draw_text(rgba, width, height, "> CONSEQUENCE: Blunt transfer through mail", 35, 188, 255, 160, 80);
+            let action_line = format!("PLAYER {} -> OPPONENT {}", p_action.to_uppercase(), o_action.to_uppercase());
+            draw_text(rgba, width, height, &action_line, 35, 108, 255, 220, 120);
+            let weapon_line = format!("WEAPON: {} vs ARMOR: {}", weapon.to_uppercase(), armor.to_uppercase());
+            draw_text(rgba, width, height, &weapon_line, 35, 138, 200, 200, 200);
+            let material_line = format!("MATERIAL: {}", material);
+            draw_text(rgba, width, height, &material_line, 35, 158, 255, 220, 120);
+            let consequence_line = format!("> TARGET: {}", target.to_uppercase());
+            draw_text(rgba, width, height, &consequence_line, 35, 188, 255, 160, 80);
             draw_text(rgba, width, height, "> NEXT: Injury/capability result", 35, 208, 200, 200, 100);
-            // Unit-065: Contact marker — weapon-to-target impact line (screen-space)
             draw_contact_marker(rgba, width, height, (width as i32)/2 - 60, (height as i32)/4 + 20, (width as i32)/2 + 40, (height as i32)/4 + 10);
-            draw_text(rgba, width, height, "IMPACT -> TORSO", (width as i32)/2 - 40, (height as i32)/4 + 30, 255, 160, 80);
+            let impact_line = format!("IMPACT -> {}", target.to_uppercase());
+            draw_text(rgba, width, height, &impact_line, (width as i32)/2 - 40, (height as i32)/4 + 30, 255, 160, 80);
         },
         "injury_capability_consequence_frame" | "material_armor_damage_frame" => {
             draw_panel(rgba, width, height, 20, 70, 580, 230);
@@ -2778,27 +2811,39 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             draw_text(rgba, width, height, "> RE-PLAN ACTION", 35, 168, 100, 255, 100);
         },
         "fight_film_candidate_shot_01" | "fight_film_replay_camera_shot" => {
+            // Unit-091: Trace-driven fight-film review
+            let cs = packet.get("combat_summary").unwrap_or(&Value::Null);
+            let p_action = cs.get("player_action").and_then(Value::as_str).unwrap_or("cut");
+            let o_action = cs.get("opponent_action").and_then(Value::as_str).unwrap_or("guard");
+            let matchup = cs.get("matchup_explanation").and_then(Value::as_str).unwrap_or("Combat exchange");
+            let material = cs.get("material_result").and_then(Value::as_str).unwrap_or("unknown");
             draw_panel(rgba, width, height, 20, 70, 600, 200);
             draw_title_bar(rgba, width, height, 20, 70, 600, "FIGHT FILM (INTENT REVIEW)");
-            // Unit-088: Fight-film explains the mind-game, not just animation
             draw_text(rgba, width, height, "KEY MOMENT: Simultaneous reveal", 35, 108, 255, 220, 120);
-            draw_text(rgba, width, height, "PLAYER: CUT (attack) vs OPP: BRACE (defense)", 35, 138, 200, 200, 200);
-            draw_text(rgba, width, height, "WHY: Player bet on edge damage", 35, 158, 200, 180, 100);
-            draw_text(rgba, width, height, "READ: Opponent braced correctly", 35, 178, 255, 160, 80);
-            draw_text(rgba, width, height, "RESULT: Partial deflection, tempo lost", 35, 198, 255, 100, 100);
-            draw_text(rgba, width, height, "BETTER PLAY: THRUST or BASH vs brace", 35, 228, 100, 255, 100);
-            draw_text(rgba, width, height, "CAMERA: VERDICT RING ORBIT", 35, 258, 255, 220, 120);
-            draw_text(rgba, width, height, "TRACE-LINKED: YES", 35, 278, 150, 255, 150);
+            let pair_line = format!("PLAYER: {} vs OPP: {}", p_action.to_uppercase(), o_action.to_uppercase());
+            draw_text(rgba, width, height, &pair_line, 35, 138, 200, 200, 200);
+            let why_line = format!("WHY: {}", matchup);
+            draw_text(rgba, width, height, &why_line, 35, 158, 200, 180, 100);
+            let result_line = format!("RESULT: {}", material);
+            draw_text(rgba, width, height, &result_line, 35, 178, 255, 160, 80);
+            draw_text(rgba, width, height, "TRACE-LINKED: YES", 35, 198, 150, 255, 150);
+            draw_text(rgba, width, height, "CAMERA: VERDICT RING ORBIT", 35, 228, 255, 220, 120);
+            draw_text(rgba, width, height, "REPLAY VERIFIED", 35, 258, 150, 255, 150);
         },
         "replay_verification_ui_or_packet_view" => {
+            // Unit-091: Trace-driven replay explanation
+            let cs = packet.get("combat_summary").unwrap_or(&Value::Null);
+            let p_action = cs.get("player_action").and_then(Value::as_str).unwrap_or("cut");
+            let o_action = cs.get("opponent_action").and_then(Value::as_str).unwrap_or("guard");
+            let matchup = cs.get("matchup_explanation").and_then(Value::as_str).unwrap_or("Combat exchange");
             draw_panel(rgba, width, height, 20, 70, 550, 180);
             draw_title_bar(rgba, width, height, 20, 70, 550, "REPLAY (INTENT VERIFIED)");
             draw_text(rgba, width, height, "VERIFIED: YES", 35, 108, 150, 255, 150);
             draw_text(rgba, width, height, &format!("HASH {}...", &short_hash[..12]), 35, 138, 200, 200, 200);
             draw_text(rgba, width, height, "SCHEMA: OATHYARD.REPLAY.V1", 35, 168, 200, 200, 200);
-            // Unit-088: Replay explains the intent decisions
             draw_text(rgba, width, height, "INTENT TRACE:", 35, 198, 255, 220, 120);
-            draw_text(rgba, width, height, "T0: CUT vs BRACE -> blunt transfer", 35, 218, 200, 180, 100);
+            let trace_line = format!("T0: {} vs {} -> {}", p_action.to_uppercase(), o_action.to_uppercase(), matchup);
+            draw_text(rgba, width, height, &trace_line, 35, 218, 200, 180, 100);
         },
         "settings_accessibility" => {
             draw_panel(rgba, width, height, 20, 70, 500, 200);

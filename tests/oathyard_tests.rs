@@ -3830,12 +3830,12 @@ fn unit088_commit_reveal_ui_has_matchup_explanation() {
         "commit/reveal must show matchup"
     );
     assert!(
-        renderer.contains("INTENT: ATTACK"),
+        renderer.contains("INTENT:"),
         "commit/reveal must show intent category"
     );
     assert!(
-        renderer.contains("INTENT: DEFENSE"),
-        "commit/reveal must show defense intent"
+        renderer.contains("action_category"),
+        "commit/reveal must use action_category for trace-driven intent"
     );
 }
 
@@ -3848,8 +3848,8 @@ fn unit088_fight_film_explains_intent() {
         "fight-film must have intent review"
     );
     assert!(
-        renderer.contains("BETTER PLAY"),
-        "fight-film must suggest better play"
+        renderer.contains("WHY:"),
+        "fight-film must explain why (trace-driven)"
     );
     assert!(
         renderer.contains("KEY MOMENT"),
@@ -4117,4 +4117,91 @@ fn unit090_dynamic_ui_source_map_exists() {
     assert!(map.contains("oathyard.dynamic_ui_source_map.v1"));
     assert!(map.contains("\"trace\""));
     assert!(map.contains("\"presentation_only\""));
+}
+
+#[test]
+fn unit091_no_hardcoded_combat_text_in_active_panels() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // These hardcoded representative strings must NOT appear in active combat panels
+    // (they have been replaced with trace-driven data in Unit-091)
+    assert!(
+        !renderer.contains("\"PLAYER(GOLD): CUT > HIGH > HEAD\""),
+        "hardcoded CUT > HIGH > HEAD must be removed from active panels"
+    );
+    assert!(
+        !renderer.contains("\"OPPONENT(CRIMSON): BRACE > CENTER > TORSO\""),
+        "hardcoded BRACE > CENTER > TORSO must be removed"
+    );
+    assert!(
+        !renderer.contains("\"PLAYER CUT -> OPPONENT BRACE\""),
+        "hardcoded PLAYER CUT -> OPPONENT BRACE must be removed"
+    );
+    assert!(
+        !renderer.contains("\"CUT vs BRACE: Edge meets braced armor\""),
+        "hardcoded CUT vs BRACE explanation must be removed"
+    );
+    assert!(
+        !renderer.contains("\"T0: CUT vs BRACE -> blunt transfer\""),
+        "hardcoded replay trace must be removed"
+    );
+    assert!(
+        !renderer.contains("\"BETTER PLAY: THRUST or BASH vs brace\""),
+        "hardcoded BETTER PLAY text must be removed"
+    );
+}
+
+#[test]
+fn unit091_trace_driven_combat_summary_in_packet() {
+    let bin = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard.rs");
+    assert!(
+        bin.contains("extract_combat_summary"),
+        "extract_combat_summary function missing"
+    );
+    assert!(
+        bin.contains("\"combat_summary\""),
+        "combat_summary field missing from packet"
+    );
+    assert!(
+        bin.contains("player_action"),
+        "player_action in combat summary missing"
+    );
+    assert!(
+        bin.contains("opponent_action"),
+        "opponent_action in combat summary missing"
+    );
+    assert!(
+        bin.contains("matchup_explanation"),
+        "matchup_explanation in combat summary missing"
+    );
+}
+
+#[test]
+fn unit091_action_category_lookup_exists() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("fn action_category"),
+        "action_category function missing"
+    );
+    assert!(
+        renderer.contains("combat_summary"),
+        "combat_summary usage in offscreen renderer missing"
+    );
+}
+
+#[test]
+fn unit091_playtest_script_exists() {
+    let script = fs::read_to_string("content/input/unit091_action_visualization_playtest.json")
+        .expect("playtest script missing");
+    assert!(script.contains("place_step"));
+    assert!(script.contains("place_pivot"));
+    assert!(script.contains("place_guard"));
+    assert!(script.contains("place_cut"));
+    assert!(script.contains("place_thrust"));
+    assert!(script.contains("place_brace"));
+    assert!(script.contains("place_bash"));
+    assert!(script.contains("place_hook_bind"));
+    assert!(script.contains("place_grab"));
+    assert!(script.contains("place_recover"));
 }

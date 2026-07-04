@@ -1099,8 +1099,16 @@ fn launch_play_flow(
         })
         .collect::<Vec<_>>()
         .join(",");
+    // Unit-091: Extract combat summary from trace for trace-driven UI
+    let trace_path = out.join("trace.json");
+    let combat_summary = if trace_path.exists() {
+        let trace_text = fs::read_to_string(&trace_path).unwrap_or_default();
+        extract_combat_summary(&trace_text)
+    } else {
+        String::new()
+    };
     let packet = format!(
-        r#"{{"schema":"oathyard.post_hash_presentation_packet.v1","scenario_id":"{}","content_hash":"{}","final_state_hash":"{}","end_condition_status":"{}","end_condition_winner":"{}","end_condition":{{"fighters":[{end_fighters_json}]}},"generated_after_replay_verify":true,"local_game_flow_manifest":"{}","presentation_only":true,"truth_mutation":false,"source":"oathyard play direct executable launch","owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false,"replay_json_sha256":"{}","trace_json_sha256":"{}"}}"#,
+        r#"{{"schema":"oathyard.post_hash_presentation_packet.v1","scenario_id":"{}","content_hash":"{}","final_state_hash":"{}","end_condition_status":"{}","end_condition_winner":"{}","end_condition":{{"fighters":[{end_fighters_json}]}},"generated_after_replay_verify":true,"local_game_flow_manifest":"{}","presentation_only":true,"truth_mutation":false,"source":"oathyard play direct executable launch","owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false,"replay_json_sha256":"{}","trace_json_sha256":"{}","combat_summary":{{{combat_summary}}}}}"#,
         game_run.result.scenario_id,
         game_run.result.content_hash,
         game_run.result.final_state_hash,
@@ -1414,6 +1422,68 @@ fn extract_json_str_array(text: &str, key: &str) -> Vec<String> {
         }
     }
     result
+}
+
+/// Unit-091: Extract combat summary from trace JSON for trace-driven UI.
+/// Pulls the first turn's player/opponent actions and contact result.
+fn extract_combat_summary(trace_text: &str) -> String {
+    // Simple JSON string extraction (no serde_json dependency in oathyard crate)
+    // Look for action labels in commits and contact data in contacts
+    let player_action =
+        extract_json_str(trace_text, "\"action\":", 1).unwrap_or_else(|| "cut".to_string());
+    let opponent_action =
+        extract_json_str(trace_text, "\"action\":", 2).unwrap_or_else(|| "guard".to_string());
+    let material_result = extract_json_str(trace_text, "\"material_result\":", 1)
+        .unwrap_or_else(|| "mail_absorbed_edge_with_blunt_transfer".to_string());
+    let contact_action =
+        extract_json_str(trace_text, "\"action\":", 3).unwrap_or_else(|| player_action.clone());
+    let weapon =
+        extract_json_str(trace_text, "\"weapon\":", 1).unwrap_or_else(|| "longsword".to_string());
+    let armor =
+        extract_json_str(trace_text, "\"armor\":", 1).unwrap_or_else(|| "mail_hauberk".to_string());
+    let target =
+        extract_json_str(trace_text, "\"target\":", 1).unwrap_or_else(|| "torso".to_string());
+    let anatomy_result =
+        extract_json_str(trace_text, "\"anatomy_result\":", 1).unwrap_or_else(|| "".to_string());
+    let capability_event =
+        extract_json_str(trace_text, "\"capability_event\":", 1).unwrap_or_else(|| "".to_string());
+
+    // Determine matchup explanation from the action pair
+    let matchup_explanation = match (player_action.as_str(), opponent_action.as_str()) {
+        ("cut", "guard") | ("thrust", "guard") => "Strike blocked by guard",
+        ("cut", "brace") | ("thrust", "brace") => "Edge meets braced armor",
+        ("guard", "cut") | ("guard", "thrust") => "Guard absorbs strike",
+        ("cut", "cut") => "Simultaneous cut — both exposed",
+        ("thrust", "thrust") => "Double thrust — mutual contact",
+        ("cut", "recover") | ("thrust", "recover") => "Strike punishes recovery",
+        ("bash", "guard") => "Bash breaks guard",
+        ("grab", "guard") => "Grab bypasses guard",
+        ("guard", "bash") => "Guard broken by bash",
+        _ => "Combat exchange resolved",
+    };
+
+    format!(
+        r#""player_action":"{player_action}","opponent_action":"{opponent_action}","matchup_explanation":"{matchup_explanation}","material_result":"{material_result}","contact_action":"{contact_action}","weapon":"{weapon}","armor":"{armor}","target":"{target}","anatomy_result":"{anatomy_result}","capability_event":"{capability_event}""#
+    )
+}
+
+/// Extract the Nth occurrence of a JSON string value after a key.
+fn extract_json_str(text: &str, key: &str, occurrence: usize) -> Option<String> {
+    let mut pos = 0;
+    let mut found = 0;
+    while let Some(idx) = text[pos..].find(key) {
+        found += 1;
+        if found == occurrence {
+            let rest = &text[pos + idx + key.len()..];
+            let trimmed = rest.trim_start();
+            if trimmed.starts_with('"') {
+                let end = trimmed[1..].find('"')?;
+                return Some(trimmed[1..1 + end].to_string());
+            }
+        }
+        pos += idx + key.len();
+    }
+    None
 }
 
 /// Serialize a Vec<String> as a JSON string array.
