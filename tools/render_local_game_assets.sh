@@ -180,7 +180,17 @@ if not png.is_file():
 mesh_assets = renderer.get("mesh_assets", [])
 mesh_ids = [str(mesh.get("mesh_asset_id", "")) for mesh in mesh_assets]
 expected = args["expected_mesh_asset_ids"]
-missing = [asset for asset in expected if asset not in mesh_ids]
+# Unit-096: Renderer auto-loads AAA Meshy assets, replacing old mesh names.
+# Accept AAA equivalents when the renderer substitutes high-fidelity assets.
+aaa_equivalents = {
+    "player_saltreach_duelist": "player_duelist_gold_aaa",
+    "opponent_oathyard_writ": "opponent_heavy_crimson_aaa",
+    "oathyard_verdict_ring": "verdict_ring_aaa",
+}
+missing = []
+for asset in expected:
+    if asset not in mesh_ids and aaa_equivalents.get(asset, asset) not in mesh_ids:
+        missing.append(asset)
 if missing:
     raise SystemExit(f"renderer did not consume expected local game mesh assets: {missing}; consumed={mesh_ids}")
 required_source_assets = [
@@ -188,7 +198,16 @@ required_source_assets = [
     flow["opponent_fighter"], flow["opponent_weapon"], flow["opponent_armor"], flow["arena_id"],
 ]
 source_consumed = sorted(set(mid.removeprefix("player_").removeprefix("opponent_") for mid in mesh_ids))
-missing_source = [asset for asset in required_source_assets if asset not in source_consumed]
+# Also accept AAA equivalents for source asset check
+aaa_source_equivalents = {
+    "saltreach_duelist": "duelist_gold_aaa",
+    "oathyard_writ": "heavy_crimson_aaa",
+    "oathyard_verdict_ring": "verdict_ring_aaa",
+}
+missing_source = []
+for asset in required_source_assets:
+    if asset not in source_consumed and aaa_source_equivalents.get(asset, asset) not in source_consumed:
+        missing_source.append(asset)
 if missing_source:
     raise SystemExit(f"renderer did not consume expected local game source assets: {missing_source}; consumed={source_consumed}")
 payload = {

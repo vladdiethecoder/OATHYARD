@@ -493,8 +493,11 @@ fn real_main() -> Result<(), String> {
         .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
         .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
     if aaa_manifest.exists() {
-        // Remove ALL old non-AAA meshes — AAA assets replace them
-        mesh_specs.clear();
+        // Unit-096: Replace old fighters/arena with AAA, keep weapons/armor
+        mesh_specs.retain(|s| {
+            let cls = infer_mesh_asset_class(&s.mesh_asset_id);
+            cls == "weapon" || cls == "armor"
+        });
         mesh_specs.extend(load_runtime_mesh_manifest(&aaa_manifest)?);
     }
     let runtime_meshes = mesh_specs
@@ -3522,8 +3525,11 @@ fn windowed_main() -> Result<(), String> {
         .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
         .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
     if aaa_manifest.exists() {
-        // Remove ALL old non-AAA meshes — AAA assets replace them
-        mesh_specs.clear();
+        // Unit-096: Replace old fighters/arena with AAA, keep weapons/armor
+        mesh_specs.retain(|s| {
+            let cls = infer_mesh_asset_class(&s.mesh_asset_id);
+            cls == "weapon" || cls == "armor"
+        });
         mesh_specs.extend(load_runtime_mesh_manifest(&aaa_manifest)?);
     }
     let runtime_meshes = mesh_specs

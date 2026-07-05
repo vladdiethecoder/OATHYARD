@@ -1284,7 +1284,7 @@ fn launch_play_flow(
     let windowed_out = artifact_dir.join("windowed");
     fs::create_dir_all(&windowed_out).map_err(|e| OathError::Io(e.to_string()))?;
 
-    let sf = smoke_frames.unwrap_or(360);
+    let sf = smoke_frames.unwrap_or(600);
 
     let mut cmd = Command::new(&renderer_bin);
     cmd.arg("--windowed")
