@@ -4378,15 +4378,15 @@ fn unit093_lighting_improvements() {
     let shader =
         fs::read_to_string("crates/oathyard_renderer/src/verdict_ring.wgsl").expect("read shader");
     assert!(
-        shader.contains("back_light"),
-        "back light missing from demo lighting"
+        shader.contains("Unit-101: Balanced half-Lambert lighting"),
+        "half-Lambert lighting missing"
     );
     assert!(
-        shader.contains("Unit-098: Subtle fresnel"),
-        "fresnel lighting missing"
+        shader.contains("Unit-101: Team-colored rim band"),
+        "team rim lighting missing"
     );
     assert!(
-        shader.contains("Unit-098: Balanced 3-point lighting"),
+        shader.contains("Unit-101: Balanced ambient + half-Lambert diffuse"),
         "balanced lighting missing"
     );
 }

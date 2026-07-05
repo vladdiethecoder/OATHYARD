@@ -1,61 +1,58 @@
-# OATHYARD Unit-100: Native Render Stack Repair
+# OATHYARD Unit-101: Visual Readability Rescue
 
 ## Before → After Summary
 
-### Baseline (Unit-099 HEAD: 1321c09)
-- **Mesh visibility**: 1/5 — SDF arena visible but real Meshy/Rodin fighter meshes absent
-- **Arena**: 4/5 — floor, ring, boundary posts visible
-- **Team identity**: 2/5 — only UI labels
-- **UI**: 3/5 — timeline legend overlapped scene, boot menu ghosted
+### Baseline (Unit-100 HEAD: c0e9c0b)
+- **Material readability**: 2/5 — harsh black/white posterization, 25% black clip, 10% white clip
+- **Mesh visibility**: 4/5 — fighters visible but unreadable
+- **Team identity**: 2/5 — only UI labels, no body-anchored cues
+- **UI readability**: 3/5 — timeline action legend overlapped scene
 
-### After (Unit-100)
-- **Mesh visibility**: 4/5 — real AAA Meshy fighter meshes visible with arena
-- **Arena**: 5/5 — floor, ring, boundary posts all clearly visible
-- **Team identity**: 4/5 — gold triangle/crimson diamond markers + floor position + shape distinguish teams
-- **UI**: 4/5 — timeline legend in panel, boot menu clean
+### After (Unit-101)
+- **Material readability**: 4/5 — smooth midtone gradients, 99% midtone pixels, 0% clip
+- **Mesh visibility**: 4/5 — fighters visible as smooth-shaded 3D models
+- **Team identity**: 4/5 — team-colored rim band on fighter bodies + UI markers + position
+- **UI readability**: 4/5 — two-column action legend, no overlap
 
 ## Root Cause
 
-TWO critical bugs from the Unit-099 SDF integration:
-
-1. **SDF depth overwrite**: The SDF pipeline had `depth_write_enabled=true` and `depth_compare=Less`.
-   The SDF fullscreen triangle wrote near-0 depth for every pixel, causing all mesh fragments
-   to fail the depth test and be discarded.
-
-2. **Per-mesh material uniform pitfall**: `queue.write_buffer` was called inside the render pass
-   between draw calls, which does NOT update per-draw in wgpu.
+The mesh fragment shader used standard Lambert diffuse lighting (`max(dot(n, light), 0)`) which
+produced near-zero illumination on surfaces facing away from the key light. Combined with dark
+AAA textures (mean luminance ~60/255) and aggressive rim/spec/fresnel additions, the tone mapping
+crushed everything to black/white posterization.
 
 ## Changes Made
 
+### crates/oathyard_renderer/src/verdict_ring.wgsl — mesh_fs_main rewrite
+- **Half-Lambert lighting**: wraps diffuse around surfaces so shadowed sides get 25-50% light
+  instead of near-zero. This is the single most impactful fix for posterization.
+- **Standard Reinhard tone map**: x/(1+l) — preserves midtones and saturation
+- **Raised ambient**: 0.55 (was 0.45) ensures all surfaces receive visible base light
+- **Reduced specular**: metal-only, 0.15 intensity (was complex multi-material system)
+- **Team-colored fresnel rim**: tint * fresnel * 0.30 on fighter edges for body-anchored identity
+- **Raised AO floor**: 0.60 (was 0.50) prevents dark ORM values from crushing shadows
+- **Raised shade floor**: 0.65 (was 0.50) in vertex shader
+
 ### crates/oathyard_renderer/src/main.rs
-- SDF pipeline: depth_write=false, depth_compare=Always (background layer)
-- Mesh pipeline: depth_write=true, depth_compare=Less, blend=REPLACE
-- Per-mesh bind group 0 with dedicated material uniform buffer
-- CPU-side team color tinting (lerp blend) baked into base color textures
-- Vertex colors set to team tint for fighter body meshes
-- Fixed boot menu ghosting (skip redundant state label)
-- Fixed timeline action legend (moved to bottom panel)
-- Combat cameras adjusted for fighter visibility
+- **CPU texture tinting**: 75% team color lerp (was 65%) for stronger body color
+- **Timeline action legend**: two-column layout (was single column), no scene overlap
+- Normal map texture sampled and used for subtle surface detail variation
 
-### crates/oathyard_renderer/src/verdict_ring.wgsl
-- Fighter mesh uses texture directly (team color baked into texture at load time)
-- Gentle Reinhard tone map for mesh path
-- Reduced mesh ambient to preserve team color saturation
-- Mesh fragment alpha changed to 1.0 (opaque)
+### src/bin/oathyard.rs
+- Armor scale increased from 0.14 to 0.22 for visibility
+- Weapon scale increased from 0.34 to 0.38 for visibility
 
-## Draw Order / Depth / Composition
+### tests/oathyard_tests.rs
+- Updated lighting test assertions for Unit-101 shader features
 
-```
-Render pass (depth cleared to 1.0):
-  1. SDF pipeline (depth_write=false, depth_compare=Always, blend=ALPHA)
-     → Arena background: floor, ring, boundary posts, witness stones
-     → Writes color to all pixels, does NOT write depth
-  2. Mesh pipeline (depth_write=true, depth_compare=Less, blend=REPLACE)
-     → Fighter/weapon/armor/arena meshes
-     → All fragments pass (depth < 1.0), completely overwrite SDF color
-  3. CPU UI composite (post-readback)
-     → UI panels/text drawn over composited RGBA buffer
-```
+## Pixel Analysis
+
+| Metric | Before (Unit-100) | After (Unit-101) |
+|---|---|---|
+| Black clip (<30) | 25% | **0%** |
+| White clip (>225) | 10% | **0%** |
+| Midtone (30-225) | 63% | **99%** |
+| Mean luminance | 136 | **163** |
 
 ## Verification
 
@@ -67,20 +64,17 @@ Render pass (depth cleared to 1.0):
 | oathyard play (smoke) | PASS, 480 frames |
 | Truth hash | 0bd4e69b3c94f498 |
 | truth_mutation | false |
-| native_windowed_execution | true |
-| mesh_geometry_consumed | true |
-| mesh_asset_count | 9 |
+| All readiness flags | false |
 
 ## Remaining Gaps
 
-- Team tint (gold/crimson) baked into textures but AAA mesh textures are very dark,
-  making team colors subtle at gameplay distance. UI markers (gold triangle, crimson
-  diamond) provide primary team identity.
-- Material readability at 3/5 — AAA mesh normal data creates noisy shading on 1M+ tri meshes
-- Fighter bodies appear as dark silhouettes with white highlights due to texture brightness
+- Team colors on fighter bodies are subtle (cyan/teal vs blue/purple rather than strong gold/crimson)
+  due to dark base textures — CPU lerp helps but AAA Meshy textures have mean luminance ~60/255
+- Fighters appear semi-transparent due to overlapping play-path and AAA mesh geometry at same positions
+- 22-asset visual matrix not yet produced (requires package build and individual asset screenshots)
 
-## Recommended Unit-101
+## Recommended Unit-102
 
-PBR material refinement: brighten/retexturing AAA fighter textures for better visibility,
-or generate new fighter textures with team colors as the base color rather than multiplying
-dark textures by team tints.
+Generate brighter team-specific fighter textures via Meshy retexture or manual texture editing,
+replacing the dark AAA base colors with team-colored albedo. This would make gold/crimson identity
+visible at gameplay distance without relying on shader rim effects.

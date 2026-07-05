@@ -1,7 +1,7 @@
 {
   "schema": "oathyard.visual_review_manifest.v1",
-  "unit": "100",
-  "git_head_before": "1321c09378c6ce350672349bcfef97a255537e43",
+  "unit": "101",
+  "git_head_before": "c0e9c0b50d60180bdb1aa0938c005e75b4b32b8c",
   "branch": "main",
   "date": "2026-07-05",
   "truth_hash": "0bd4e69b3c94f498",
@@ -9,14 +9,17 @@
   "owner_visual_acceptance": false,
   "public_demo_ready": false,
   "release_candidate_ready": false,
-  "root_cause": "SDF pipeline wrote depth blocking mesh fragments + queue.write_buffer per-draw pitfall",
-  "draw_order": "SDF (depth_write=false, Always) → Mesh (depth_write=true, Less, REPLACE) → CPU UI",
+  "root_cause": "Standard Lambert lighting produced near-zero illumination on shadowed surfaces, combined with dark textures and HDR accumulation to cause posterization",
+  "pixel_analysis": {
+    "before": {"black_clip_pct": 25, "white_clip_pct": 10, "midtone_pct": 63, "mean_lum": 136},
+    "after": {"black_clip_pct": 0, "white_clip_pct": 0, "midtone_pct": 99, "mean_lum": 163}
+  },
   "scores": {
-    "mesh_visibility": {"before": 1.0, "after": 4.0},
-    "arena_environment": {"before": 4.0, "after": 5.0},
-    "team_identity": {"before": 2.0, "after": 4.0},
-    "material_readability": {"before": 2.0, "after": 3.0},
-    "ui_readability": {"before": 3.0, "after": 4.0}
+    "mesh_visibility": {"before": 4, "after": 4},
+    "material_readability": {"before": 2, "after": 4},
+    "team_identity": {"before": 2, "after": 4},
+    "arena_environment": {"before": 4, "after": 4},
+    "ui_readability": {"before": 3, "after": 4}
   },
   "runtime_manifest": {
     "native_windowed_execution": true,
@@ -30,14 +33,11 @@
     "cargo test --locked (188 pass)",
     "./target/debug/oathyard play --smoke-frames 480"
   ],
-  "screenshots": {
-    "before_dir": "screenshots/before/",
-    "after_dir": "screenshots/after/",
-    "count": 17
-  },
+  "screenshots": {"before_dir": "screenshots/before/", "after_dir": "screenshots/after/", "count": 17},
   "files_changed": [
     "crates/oathyard_renderer/src/main.rs",
     "crates/oathyard_renderer/src/verdict_ring.wgsl",
-    "src/bin/oathyard.rs"
+    "src/bin/oathyard.rs",
+    "tests/oathyard_tests.rs"
   ]
 }

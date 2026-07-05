@@ -578,8 +578,8 @@ fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     out.position = vec4<f32>(clip_x, clip_y, clip_z, 1.0);
     out.world_pos = world_pos;
     out.color = input.color;
-    // Unit-098: Raised shade floor from 0.22 to 0.50 — prevents depth-based darkening crush.
-    out.shade = clamp(0.65 + view_z * 0.15 + abs(world_pos.y) * 0.08, 0.50, 1.15);
+    // Unit-101: Raised shade floor from 0.50 to 0.65 for brighter fighters.
+    out.shade = clamp(0.75 + view_z * 0.10 + abs(world_pos.y) * 0.05, 0.65, 1.10);
     out.normal = input.normal;
     out.material_uv = input.material_uv;
     return out;
@@ -591,79 +591,61 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let mat_type = mesh_material.material_type;
     let tint = mesh_material.tint.rgb;
 
-    // Unit-062: Use pre-computed per-vertex normals from face geometry.
-    // Was: cross(dpdx, dpdy) which produced unstable/faceted shading.
     let n = normalize(input.normal);
 
-    // Unit-081: sample the Meshy/Rodin candidate material maps that the Rust
-    // renderer already binds. Earlier evidence only proved texture-binding
-    // metadata; this makes the asset maps affect visible pixels.
     let sampled_base = textureSample(base_color_texture, material_sampler, input.material_uv).rgb;
     let sampled_normal = textureSample(normal_texture, material_sampler, input.material_uv).rgb;
     let sampled_orm = textureSample(orm_texture, material_sampler, input.material_uv).rgb;
 
-    // Procedural PBR remains a deterministic fallback/detail layer; the local
-    // candidate texture sample now drives visible asset identity.
     let procedural_base = procedural_pbr(input.world_pos, n, mat_type, tint);
-    let normal_detail = clamp(length(sampled_normal - vec3<f32>(0.5)) * 0.85, 0.0, 0.22);
-    let map_contrast = clamp(
-        (sampled_base - vec3<f32>(0.5)) * 1.65 + vec3<f32>(0.5),
-        vec3<f32>(0.02),
-        vec3<f32>(1.18),
-    );
-    // Unit-100: Team color is baked into the base color texture at load time
-    // (CPU-side multiply). The shader just samples the texture directly.
-    // For fighter meshes, use texture as-is. For non-fighters, blend with procedural.
+    // Unit-101: Use normal map detail for subtle surface variation.
+    let normal_detail = clamp(length(sampled_normal - vec3<f32>(0.5)) * 0.5, 0.0, 0.15);
+    // Unit-101: Simplified base color — fighters use texture directly (team color
+    // already baked in via CPU lerp). Non-fighters blend texture with procedural.
+    // candidate texture sample now drives visible asset identity.
     // Unit-095 renderer contract: material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22))
     // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
     let is_fighter_body_mesh = mat_type > 3.5 && mat_type < 4.5;
-    let texture_base = sampled_base;
-    let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
-    let base = select(mix(procedural_base, texture_base, fighter_mix), texture_base, is_fighter_body_mesh);
+    let base = select(mix(procedural_base, sampled_base, 0.75), sampled_base * (1.0 + normal_detail), is_fighter_body_mesh);
 
-    // Unit-098: Balanced 3-point lighting with strong ambient fill.
-    // Previous values produced extreme HDR (diffuse*1.2 + fill + back + rim + spec + fresnel)
-    // which tone_map compressed to black/white noise.
+    // Unit-101: Balanced half-Lambert lighting — prevents the harsh black/white
+    // posterization from Unit-100. Half-Lambert wraps diffuse light around surfaces
+    // so shadowed sides still receive 25-50% illumination instead of near-zero.
     let key = normalize(vec3<f32>(-0.48, 0.88, 0.30));
     let fill = normalize(vec3<f32>(0.42, 0.36, 0.82));
-    let back = normalize(vec3<f32>(0.30, 0.55, -0.78));
-    let diffuse = max(dot(n, key), 0.0);
-    let fill_light = max(dot(n, fill), 0.0) * 0.30;
-    let back_light = max(dot(n, back), 0.0) * 0.15;
+    let half_lambert = dot(n, key) * 0.5 + 0.5;
+    let half_lambert_fill = dot(n, fill) * 0.5 + 0.5;
+    let diffuse = half_lambert * half_lambert;
+    let fill_light = half_lambert_fill * 0.35;
 
-    // Unit-098: Raised AO floor from 0.28 to 0.45 — prevents crushed black shadows.
-    // Unit-099: Raised AO floor further to 0.50 for brighter fighters.
-    let texture_ao = clamp(sampled_orm.r, 0.50, 1.0);
-    let texture_roughness = clamp(sampled_orm.g, 0.15, 1.0);
-    let ground_occlusion = mix(1.0, 0.88, smoothstep(0.15, -0.35, input.world_pos.y));
-    // Unit-099: Raised AO from 0.45 to 0.55 for less crushed shadows.
-    let ao = clamp(0.65 + 0.35 * n.y, 0.55, 1.0) * ground_occlusion * texture_ao;
-    // Unit-100: Reduced ambient from 0.85 to 0.45 to preserve team color saturation.
-    // High ambient was washing gold/crimson to white after tone mapping.
-    let color = base * (0.45 + diffuse * 0.55 + fill_light + back_light) * ao * input.shade;
+    // Unit-101: Texture AO floor at 0.60 to prevent crushed darks from ORM.
+    let texture_ao = clamp(sampled_orm.r, 0.60, 1.0);
+    let texture_roughness = clamp(sampled_orm.g, 0.20, 1.0);
+    let ground_occlusion = mix(1.0, 0.90, smoothstep(0.15, -0.35, input.world_pos.y));
+    let ao = clamp(0.70 + 0.30 * n.y, 0.60, 1.0) * ground_occlusion * texture_ao;
 
-    // Subtle specular for metallic materials
-    let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
-    let rim_vec = normalize(vec3<f32>(0.72, 0.54, -0.72));
-    // Unit-098: Reduced rim/spec/fresnel intensities to prevent HDR blowout.
-    let rim_light = pow(max(dot(reflect(-rim_vec, n), vec3<f32>(0.0, 0.0, 1.0)), 0.0), spec_power) * mix(0.04, 0.18, step(0.5, abs(mat_type - 0.25)));
+    // Unit-101: Balanced ambient + half-Lambert diffuse.
+    // Ambient 0.55 ensures all surfaces receive visible light.
+    // Diffuse 0.45 provides form definition without extreme HDR.
+    let color = base * (0.55 + diffuse * 0.45 + fill_light) * ao * input.shade;
 
-    // Unit-054 RI-01: Fresnel rim lighting for edge separation and depth perception.
-    let view_dir = normalize(camera.eye.xyz - input.world_pos);
-    let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 3.0);
-    // Unit-098: Subtle fresnel — was 0.22, reduced to 0.10.
-    let fresnel_rim = vec3<f32>(0.82, 0.64, 0.38) * fresnel * 0.10;
-
-    // Unit-054 RI-02: Enhanced specular response with material-dependent power.
+    // Unit-101: Minimal specular — only for metallic weapon surfaces.
+    // Unit-054 RI-01: Fresnel rim lighting for edge separation (now team_rim below).
+    // Unit-054 RI-02: Enhanced specular response (now simplified to metal-only).
     let metal_factor = select(0.0, 1.0, mat_type < 0.5);
-    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.06, 0.30, metal_factor) * (1.12 - texture_roughness * 0.42);
-    let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
+    let spec = pow(diffuse, 16.0) * metal_factor * 0.15 * (1.0 - texture_roughness * 0.5);
+    let spec_contribution = vec3<f32>(0.85, 0.83, 0.88) * spec;
 
-    let raw_final = color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution;
-    // Unit-100: Gentle Reinhard tone map — soft knee that preserves team color hue
-    // without the white crush of gamma-only or the color wash of full Reinhard.
+    // Unit-101: Team-colored rim band for identity (not just lighting).
+    // Player gets warm gold rim, opponent gets crimson rim on fighter bodies.
+    let view_dir = normalize(camera.eye.xyz - input.world_pos);
+    let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 4.0);
+    let team_rim = select(vec3<f32>(0.0), tint * 0.30, is_fighter_body_mesh) * fresnel;
+
+    let raw_final = color + spec_contribution + team_rim;
+    // Unit-101: Standard Reinhard — x/(1+l). Preserves midtones and saturation.
     let l = dot(raw_final, vec3<f32>(0.2126, 0.7152, 0.0722));
-    let mapped = raw_final / (1.0 + l * 0.4);
+    let mapped = raw_final / (1.0 + l);
     let final_color = pow(clamp(mapped, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
     return vec4<f32>(final_color, 1.0);
 }

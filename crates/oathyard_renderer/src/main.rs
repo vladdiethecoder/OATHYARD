@@ -4349,9 +4349,9 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     for chunk in bi.rgba.chunks_exact_mut(4) {
                         // Unit-100: Lerp texture toward team color (60% team, 40% texture)
                         // This preserves some surface detail while showing strong team hue.
-                        chunk[0] = ((chunk[0] as f32 * 0.35) + (tr as f32 * 0.65)).min(255.0) as u8;
-                        chunk[1] = ((chunk[1] as f32 * 0.35) + (tg as f32 * 0.65)).min(255.0) as u8;
-                        chunk[2] = ((chunk[2] as f32 * 0.35) + (tb as f32 * 0.65)).min(255.0) as u8;
+                        chunk[0] = ((chunk[0] as f32 * 0.25) + (tr as f32 * 0.75)).min(255.0) as u8;
+                        chunk[1] = ((chunk[1] as f32 * 0.25) + (tg as f32 * 0.75)).min(255.0) as u8;
+                        chunk[2] = ((chunk[2] as f32 * 0.25) + (tb as f32 * 0.75)).min(255.0) as u8;
                     }
                 }
                 let ni = load_png_rgba(&mesh.material.normal_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![128,128,255,255] });
@@ -5454,12 +5454,16 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let line = format!("{}[{}] {}", marker, i, s.to_uppercase());
                 draw_text(rgba, width, height, &line, 35, 138 + i as i32 * 16, 200, 200, 200);
             }
-            // Unit-100: Action legend in a panel at bottom-left to avoid overlap.
-            draw_panel(rgba, width, height, 20, height as i32 - 100, 550, 80);
-            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY 5=CUT", 30, height as i32 - 90, 150, 180, 200);
-            draw_text(rgba, width, height, "6=THRUST 7=BRACE 8=BASH 9=HOOK 0=BIND", 30, height as i32 - 72, 150, 180, 200);
-            draw_text(rgba, width, height, "G=GRAB B=SHOVE K=KICK R=RECOVER", 30, height as i32 - 54, 150, 180, 200);
-            draw_text(rgba, width, height, "ENTER=COMMIT", 30, height as i32 - 36, 255, 220, 120);
+            // Unit-101: Action legend in two-column panel at bottom for readability.
+            draw_panel(rgba, width, height, 20, height as i32 - 80, 700, 60);
+            // Left column: keys 1-5
+            draw_text(rgba, width, height, "1=STEP  2=PIVOT  3=GUARD", 30, height as i32 - 72, 150, 180, 200);
+            draw_text(rgba, width, height, "4=PARRY 5=CUT   6=THRUST", 30, height as i32 - 54, 150, 180, 200);
+            // Right column: keys 7-0 + letters
+            draw_text(rgba, width, height, "7=BRACE 8=BASH  9=HOOK",  370, height as i32 - 72, 150, 180, 200);
+            draw_text(rgba, width, height, "0=BIND  G=GRAB  K=KICK",  370, height as i32 - 54, 150, 180, 200);
+            // Commit instruction
+            draw_text(rgba, width, height, "B=SHOVE R=RECOVER  ENTER=COMMIT", 30, height as i32 - 36, 255, 220, 120);
         }
         InteractiveState::Plan => {
             draw_text(rgba, width, height, "PLAN - COMMITTING...", 35, 78, 255, 220, 120);
