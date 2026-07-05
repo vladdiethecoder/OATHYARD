@@ -234,6 +234,19 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
             _pad: [0.0, 0.0, 0.0],
             tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // opponent crimson
         },
+        // Unit-095: AAA Meshy asset material overrides
+        id if id == "player_duelist_gold_aaa" => MeshMaterial {
+            material_type: 4.0, _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.95, tint_g: 0.70, tint_b: 0.20, tint_a: 1.0,  // player gold
+        },
+        id if id == "opponent_heavy_crimson_aaa" => MeshMaterial {
+            material_type: 4.0, _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.90, tint_g: 0.15, tint_b: 0.10, tint_a: 1.0,  // opponent crimson
+        },
+        id if id == "verdict_ring_aaa" => MeshMaterial {
+            material_type: 3.0, _pad: [0.0, 0.0, 0.0],
+            tint_r: 0.48, tint_g: 0.42, tint_b: 0.38, tint_a: 1.0,  // arena stone
+        },
         // Generic material_type branches for the full local Meshy/Rodin candidate family.
         id if id.contains("saltreach_duelist")
             || id.contains("oathyard_writ")

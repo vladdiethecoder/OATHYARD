@@ -1,0 +1,71 @@
+{
+  "schema": "oathyard.wgpu_runtime_mesh_manifest.v1",
+  "source": "Unit-095 AAA Meshy mesh manifest",
+  "capture_id": "aaa_mesh_test",
+  "candidate_renderer_only": false,
+  "material_separation_classes": [
+    "fighter_body",
+    "weapon_metal",
+    "arena_stone_ground"
+  ],
+  "presentation_material_fallback": "source-approved 4K runtime texture paths",
+  "production_seed_render": true,
+  "production_ready": false,
+  "truth_mutation": false,
+  "meshes": [
+    {
+      "mesh_asset_id": "player_duelist_gold_aaa",
+      "mesh_asset_class": "fighter",
+      "mesh_source": "assets/presentation_runtime/duelist_gold_aaa.mesh.json",
+      "translation": [
+        -0.72,
+        0.0,
+        0.0
+      ],
+      "scale": 0.72,
+      "yaw_radians": 0.1,
+      "base_color_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/duelist_gold_textures/base_color.png",
+      "normal_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/duelist_gold_textures/normal.png",
+      "orm_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/duelist_gold_textures/roughness.png",
+      "candidate_status": "source_approved_production_seed",
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "mesh_asset_id": "opponent_heavy_crimson_aaa",
+      "mesh_asset_class": "fighter",
+      "mesh_source": "assets/presentation_runtime/heavy_crimson_aaa.mesh.json",
+      "translation": [
+        0.72,
+        0.0,
+        0.0
+      ],
+      "scale": 0.6,
+      "yaw_radians": 0.1,
+      "base_color_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/heavy_crimson_textures/base_color.png",
+      "normal_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/heavy_crimson_textures/normal.png",
+      "orm_texture_path": "assets_src/model_candidates/t_aaa_v1/fighters/heavy_crimson_textures/roughness.png",
+      "candidate_status": "source_approved_production_seed",
+      "production_ready": false,
+      "truth_mutation": false
+    },
+    {
+      "mesh_asset_id": "verdict_ring_aaa",
+      "mesh_asset_class": "arena",
+      "mesh_source": "assets/presentation_runtime/verdict_ring_aaa.mesh.json",
+      "translation": [
+        0.0,
+        -0.3,
+        0.35
+      ],
+      "scale": 0.5,
+      "yaw_radians": 0.0,
+      "base_color_texture_path": "assets_src/model_candidates/t_aaa_v1/arenas/verdict_ring_aaa_textures/base_color.png",
+      "normal_texture_path": "assets_src/model_candidates/t_aaa_v1/arenas/verdict_ring_aaa_textures/normal.png",
+      "orm_texture_path": "assets_src/model_candidates/t_aaa_v1/arenas/verdict_ring_aaa_textures/roughness.png",
+      "candidate_status": "source_approved_production_seed",
+      "production_ready": false,
+      "truth_mutation": false
+    }
+  ]
+}
