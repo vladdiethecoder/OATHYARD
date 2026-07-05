@@ -169,7 +169,7 @@ RENDERER_ARGS=(
   --packet "$PACKET"
   --out "$WINDOWED_OUT"
   --mesh-manifest-json "$MESH_MANIFEST"
-  --candidate-assets "saltreach_duelist,longsword,gambeson,training_yard"
+  --candidate-assets "duelist_gold_aaa,heavy_crimson_aaa,longsword,gambeson,arming_sword,mail_hauberk,verdict_ring_aaa"
   --smoke-frames "$SMOKE_FRAMES"
 )
 

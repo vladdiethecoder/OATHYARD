@@ -493,11 +493,8 @@ fn real_main() -> Result<(), String> {
         .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
         .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
     if aaa_manifest.exists() {
-        // Remove old fighter/arena meshes that AAA assets replace
-        mesh_specs.retain(|s| {
-            !s.mesh_asset_id.contains("saltreach")
-                && !s.mesh_asset_id.contains("training_yard")
-        });
+        // Remove ALL old non-AAA meshes — AAA assets replace them
+        mesh_specs.clear();
         mesh_specs.extend(load_runtime_mesh_manifest(&aaa_manifest)?);
     }
     let runtime_meshes = mesh_specs
@@ -1721,6 +1718,13 @@ fn validate_mesh_asset_class(value: &str) -> Result<(), String> {
 }
 
 fn infer_mesh_asset_class(asset_id: &str) -> &'static str {
+    // Unit-096: Recognize AAA Meshy asset names
+    if asset_id.contains("duelist_gold") || asset_id.contains("heavy_crimson") {
+        return "fighter";
+    }
+    if asset_id.contains("verdict_ring") && asset_id.contains("aaa") {
+        return "arena";
+    }
     match asset_id {
         "saltreach_duelist" | "oathyard_writ" | "chainbreaker" | "reed_sentinel"
         | "gate_shield" | "bruiser_oath" => "fighter",
@@ -3512,6 +3516,15 @@ fn windowed_main() -> Result<(), String> {
     let mut mesh_specs = Vec::new();
     if let Some(path) = &config.mesh_manifest_path {
         mesh_specs.extend(load_runtime_mesh_manifest(path)?);
+    }
+    // Unit-096: Auto-load AAA Meshy assets when manifest exists
+    let aaa_manifest = std::env::current_dir()
+        .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
+    if aaa_manifest.exists() {
+        // Remove ALL old non-AAA meshes — AAA assets replace them
+        mesh_specs.clear();
+        mesh_specs.extend(load_runtime_mesh_manifest(&aaa_manifest)?);
     }
     let runtime_meshes = mesh_specs
         .iter()

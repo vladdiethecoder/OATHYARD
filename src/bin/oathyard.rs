@@ -1272,14 +1272,13 @@ fn launch_play_flow(
     };
 
     let candidate_assets = format!(
-        "{},{},{},{},{},{},{}",
-        cfg.player_fighter.name,
-        cfg.opponent_fighter.name,
+        "duelist_gold_aaa,heavy_crimson_aaa,{},{},{},{},{},{}",
         cfg.player_fighter.armor_id,
         cfg.opponent_fighter.armor_id,
         cfg.player_fighter.weapon_id,
         cfg.opponent_fighter.weapon_id,
         cfg.arena_id,
+        "verdict_ring_aaa",
     );
 
     let windowed_out = artifact_dir.join("windowed");

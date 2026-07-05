@@ -195,7 +195,7 @@ for entry in "${PHASES[@]}"; do
     --capture-id "$phase_id" \
     --capture-file-stem "$capture_stem" \
     --camera-mode "$camera_mode" \
-    --candidate-assets "saltreach_duelist,longsword,gambeson,training_yard" \
+    --candidate-assets "duelist_gold_aaa,heavy_crimson_aaa,longsword,gambeson,arming_sword,mail_hauberk,verdict_ring_aaa" \
     --mesh-manifest-json "$mesh_manifest_path" \
     >/dev/null 2>&1
 

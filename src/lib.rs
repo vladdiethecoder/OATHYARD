@@ -7006,7 +7006,7 @@ pub fn native_combat_render(
         .arg("--camera-mode")
         .arg("oathyard_verdict_ring_establishing")
         .arg("--candidate-assets")
-        .arg("saltreach_duelist,longsword,gambeson,training_yard")
+        .arg("duelist_gold_aaa,heavy_crimson_aaa,longsword,gambeson,arming_sword,mail_hauberk,verdict_ring_aaa")
         .output();
     let renderer_succeeded = match renderer_result {
         Ok(_) => {
