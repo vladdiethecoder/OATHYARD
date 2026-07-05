@@ -417,9 +417,16 @@ fn tone_map(x: vec3<f32>) -> vec3<f32> {
 }
 
 // Unit-049: SDF material palette — Unit-060: increased saturation for separation.
+// Unit-098b: Brighter floor and ring for arena visibility. Added fighter contact shadow.
 fn sdf_material_color(mat: f32, p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
-    if (mat < 1.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.22, 0.18, 0.12)); } // floor — warmer
-    if (mat < 2.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.62, 0.48, 0.20)); } // ring — golden
+    // Floor — warm grey-brown, visible against void (was dark 0.22/0.18/0.12)
+    let floor_base = procedural_pbr(p, n, 3.0, vec3<f32>(0.38, 0.34, 0.26));
+    // Fighter proximity darkening — contact shadow blob
+    let dist_a = length(p - vec3<f32>(-0.72, 0.0, 0.0));
+    let dist_b = length(p - vec3<f32>(0.72, 0.0, 0.0));
+    let fighter_shadow = 1.0 - smoothstep(0.15, 0.55, min(dist_a, dist_b)) * 0.45;
+    if (mat < 1.5) { return floor_base * fighter_shadow; }
+    if (mat < 2.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.75, 0.58, 0.22)); } // ring — brighter gold
     if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.40, 0.36, 0.32)); } // stone — warmer gray
     if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.82, 0.50, 0.32)); } // skin/fighter — warmer
     if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.85, 0.83, 0.88)); } // blade — brighter

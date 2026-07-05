@@ -939,7 +939,14 @@ fn real_main() -> Result<(), OathError> {
                 arena,
             };
 
-            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir, selection, interactive_mode)
+            launch_play_flow(
+                out,
+                scripted_input,
+                smoke_frames,
+                artifact_dir,
+                selection,
+                interactive_mode,
+            )
         }
         "--help" | "-h" | "help" => {
             println!("{}", usage());
