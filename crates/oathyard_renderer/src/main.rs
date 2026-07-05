@@ -3483,6 +3483,9 @@ struct WindowedApp {
     mesh_triangle_count: usize,
     saltreach_consumed: bool,
     training_yard_consumed: bool,
+    // Unit-097: Screenshot capture on state transitions
+    last_captured_state: Option<InteractiveState>,
+    capture_screenshots: bool,
     // Unit-087: In-game roster selection state
     roster_fighter_idx: usize,
     roster_weapon_idx: usize,
@@ -4291,6 +4294,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             mesh_triangle_count: self.mesh_triangle_count,
             saltreach_consumed: self.saltreach_consumed,
             training_yard_consumed: self.training_yard_consumed,
+            last_captured_state: None,
+            capture_screenshots: true,
             roster_fighter_idx: 0,
             roster_weapon_idx: 0,
             roster_armor_idx: 0,
@@ -4833,6 +4838,26 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
 
                             // Unit-092: Composite windowed UI overlay
                             composite_windowed_ui(&mut rgba_buf, surf_w, surf_h, app);
+
+                            // Unit-097: Capture screenshot when entering a new state
+                            if app.capture_screenshots {
+                                let should_capture = match app.last_captured_state {
+                                    None => true,
+                                    Some(last) => last != app.interactive_state,
+                                };
+                                if should_capture {
+                                    app.last_captured_state = Some(app.interactive_state);
+                                    let state_name = app.interactive_state.as_str().to_lowercase();
+                                    let cap_dir = app.out_dir.join("captures");
+                                    let _ = std::fs::create_dir_all(&cap_dir);
+                                    let cap_path = cap_dir.join(format!(
+                                        "{}_f{:04}.png",
+                                        state_name,
+                                        app.frames_presented
+                                    ));
+                                    let _ = write_png_rgba(&cap_path, surf_w, surf_h, &rgba_buf);
+                                }
+                            }
 
                             // Copy composited result to surface texture via staging texture
                             // Repad the buffer for texture upload
