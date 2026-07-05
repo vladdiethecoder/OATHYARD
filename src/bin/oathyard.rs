@@ -850,6 +850,7 @@ fn real_main() -> Result<(), OathError> {
             let mut opponent_armor: Option<String> = None;
             let mut arena: Option<String> = None;
             let mut roster_only: bool = false;
+            let mut interactive_mode: bool = false;
             while let Some(arg) = args.next() {
                 match arg.as_str() {
                     "--out" => {
@@ -911,6 +912,9 @@ fn real_main() -> Result<(), OathError> {
                     "--roster-only" => {
                         roster_only = true;
                     }
+                    "--interactive" => {
+                        interactive_mode = true;
+                    }
                     other => {
                         return Err(OathError::Parse(format!("unknown play argument '{other}'")));
                     }
@@ -935,7 +939,7 @@ fn real_main() -> Result<(), OathError> {
                 arena,
             };
 
-            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir, selection)
+            launch_play_flow(out, scripted_input, smoke_frames, artifact_dir, selection, interactive_mode)
         }
         "--help" | "-h" | "help" => {
             println!("{}", usage());
@@ -1017,6 +1021,7 @@ fn launch_play_flow(
     smoke_frames: Option<u32>,
     artifact_dir: PathBuf,
     selection: RosterSelection,
+    interactive_mode: bool,
 ) -> Result<(), OathError> {
     use std::process::Command;
 
@@ -1297,13 +1302,21 @@ fn launch_play_flow(
         .arg("--candidate-assets")
         .arg(&candidate_assets)
         .arg("--smoke-frames")
-        .arg(sf.to_string())
-        .arg("--auto-exit");
+        .arg(sf.to_string());
 
-    // Unit-096: Generate default scripted input if none provided.
+    // Unit-097: Interactive mode — player drives all transitions with keyboard.
+    // Auto-exit is disabled so the player controls when to quit.
+    if interactive_mode {
+        cmd.arg("--interactive");
+    } else {
+        cmd.arg("--auto-exit");
+    }
+
+    // Unit-096: Generate default scripted input if none provided AND not interactive.
+    // In interactive mode, the player drives all transitions with real keyboard input.
     // This cycles through all 16 game states during the windowed run,
     // proving the executable gameplay flow, not just a static OBSERVE frame.
-    let default_scripted_input = if scripted_input.is_none() {
+    let default_scripted_input = if scripted_input.is_none() && !interactive_mode {
         let si_path = artifact_dir.join("default_scripted_input.json");
         // Space 16 "advance" events across the first ~480 frames (30 frames each)
         let inputs: Vec<String> = (0..16u32)
@@ -1579,7 +1592,7 @@ fn usage() -> &'static str {
   oathyard audio-device-smoke --scenario <path> --out <dir>
   oathyard animation-state-machine --scenario <path> --out <dir>
   oathyard presentation-bricks --scenario <path> --out <dir>
-  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--artifact-dir <dir>]
+  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--interactive] [--artifact-dir <dir>]
   oathyard play-local --out <dir>
 
 launch env:

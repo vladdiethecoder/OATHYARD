@@ -4371,7 +4371,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 app.interactive_state = next;
                                 let next_str = next.as_str().to_string();
                                 if !app.states_visited.contains(&next_str) {
-                                    app.states_visited.push(next_str);
+                                    app.states_visited.push(next_str.clone());
                                 }
                                 app.transitions.push(format!(
                                     "{} -> {}",
@@ -4662,8 +4662,15 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         app.event_log.push(InteractiveEvent {
                             event_index: app.event_log.len() as u32,
                             frame_index: app.frames_presented as u32,
-                            event_source: if self.scripted_input_idx > 0 || self.config.scripted_input_path.is_some() {
-                                "manual".to_string()
+                            // Unit-097: Distinguish manual keyboard input from scripted input
+                            event_source: if app.interactive_state != prev_state && self.scripted_inputs.len() > self.scripted_input_idx {
+                                // Check if this input came from the scripted queue
+                                let scheduled = &self.scripted_inputs[self.scripted_input_idx];
+                                if scheduled.at_frame <= app.frames_presented as u32 {
+                                    "scripted".to_string()
+                                } else {
+                                    "manual".to_string()
+                                }
                             } else {
                                 "manual".to_string()
                             },
@@ -4916,9 +4923,21 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             app.interactive_state = next;
                             let next_str = next.as_str().to_string();
                             if !app.states_visited.contains(&next_str) {
-                                app.states_visited.push(next_str);
+                                app.states_visited.push(next_str.clone());
                             }
                             app.transitions.push(format!("{} -> {}", prev_str, next.as_str()));
+                            // Unit-097: Log scripted advance to event_log
+                            app.event_log.push(InteractiveEvent {
+                                event_index: app.event_log.len() as u32,
+                                frame_index: app.frames_presented as u32,
+                                event_source: "scripted".to_string(),
+                                raw_event_type: format!("scripted:advance@{}", input.at_frame),
+                                logical_input: input.label.clone(),
+                                previous_state: prev_str.clone(),
+                                next_state: next_str.clone(),
+                                accepted: true,
+                                reason_if_ignored: None,
+                            });
                         }
                         "replay" => {
                             app.interactive_state = InteractiveState::Replay;
@@ -5323,6 +5342,32 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
     // Bottom-right: truth status
     draw_panel(rgba, width, height, (width as i32) - 260, (height as i32) - 45, 240, 28);
     draw_text(rgba, width, height, "TM:F", (width as i32) - 252, (height as i32) - 38, 150, 255, 150);
+
+    // Unit-097: Bottom-left persistent control hint bar
+    let hint = match app.interactive_state {
+        InteractiveState::Boot | InteractiveState::MainMenu => "ENTER=Start  ESC=Quit",
+        InteractiveState::FighterSelect => "UP/DOWN=Cycle  ENTER=Confirm",
+        InteractiveState::LoadoutSelect => "UP/DOWN=Weapon  L/R=Armor  ENTER=Confirm",
+        InteractiveState::ArenaSelect => "L/R=Cycle  ENTER=Start Duel",
+        InteractiveState::MatchIntro | InteractiveState::Observe => "ENTER=Plan Actions",
+        InteractiveState::Timeline => "1-9,0,G,B,K,R=Actions  L/R=Cursor  ENTER=Commit",
+        InteractiveState::Plan => "ENTER=Continue",
+        InteractiveState::CommitReveal => "ENTER=See Result",
+        InteractiveState::Resolve => "ENTER=See Consequence",
+        InteractiveState::Consequence => "ENTER=Continue",
+        InteractiveState::Replan => "ENTER=Match Result",
+        InteractiveState::MatchResult => "ENTER=Replay  R=Replay  F=FightFilm",
+        InteractiveState::Replay => "ENTER=Fight Film",
+        InteractiveState::FightFilm => "ENTER=Quit  ESC=Quit",
+        InteractiveState::Settings => "ENTER=Return  V=Camera  ESC=Return",
+        InteractiveState::Quit => "ESC=Close",
+    };
+    draw_panel(rgba, width, height, 20, (height as i32) - 45, 500, 28);
+    draw_text(rgba, width, height, hint, 28, (height as i32) - 38, 180, 180, 220);
+
+    // Unit-097: Input event count display
+    let event_str = format!("IN:{}", app.input_event_count);
+    draw_text(rgba, width, height, &event_str, (width as i32) - 340, (height as i32) - 38, 150, 255, 150);
 
     // Unit-093: Runtime audio feedback — deterministic generated tones
     // Plays a short beep for state transitions and combat events
