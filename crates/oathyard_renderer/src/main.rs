@@ -69,7 +69,7 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
         bone_yaw2: [0.0; 4],
     };
     // Bone indices: 0=root, 1=spine, 2=head, 3=right_arm, 4=left_arm, 5=right_leg, 6=left_leg
-    // Unit-095: Amplified offsets (2x previous) for visibility at gameplay camera distance
+    // Unit-098: All 13 actions have distinct visible poses
     match clip_id {
         "idle" => {
             pose.bone_offset_y[1] = 0.016; // spine
@@ -86,42 +86,118 @@ fn pose_for_clip(clip_id: &str) -> PoseUniform {
             pose.bone_yaw2[0] = 0.70;  // left arm supports weapon
             pose.bone_offset_y[3] = 0.06;
             pose.bone_offset_y2[0] = 0.06;
-            pose.bone_offset_z[3] = 0.03;  // weapon forward
+            pose.bone_offset_z[3] = 0.03;
             pose.bone_offset_z2[0] = 0.03;
-            pose.bone_offset_y[1] = 0.010;  // slight spine straightening
+            pose.bone_offset_y[1] = 0.010;
         }
         "cut" => {
             // Diagonal cut — right arm swings down-across with torso twist
-            pose.bone_yaw[3] = -1.50;  // right arm extended in cut arc
-            pose.bone_offset_z[3] = 0.10;  // forward extension
-            pose.bone_offset_y[3] = -0.04;  // downward swing
-            pose.bone_yaw[1] = 0.44;  // torso twist into cut
-            pose.bone_offset_z2[1] = 0.06;  // right leg steps forward
-            pose.bone_offset_z2[2] = -0.03; // left leg braces back
+            pose.bone_yaw[3] = -1.50;
+            pose.bone_offset_z[3] = 0.10;
+            pose.bone_offset_y[3] = -0.04;
+            pose.bone_yaw[1] = 0.44;
+            pose.bone_offset_z2[1] = 0.06;
+            pose.bone_offset_z2[2] = -0.03;
         }
         "thrust" => {
             // Straight thrust — arms forward, weight shifts forward
-            pose.bone_offset_z[3] = 0.16;  // right arm thrusts forward
-            pose.bone_offset_z2[0] = 0.12;  // left arm follows weapon shaft
-            pose.bone_offset_y[3] = 0.08;   // weapon at shoulder height
+            pose.bone_offset_z[3] = 0.16;
+            pose.bone_offset_z2[0] = 0.12;
+            pose.bone_offset_y[3] = 0.08;
             pose.bone_offset_y2[0] = 0.08;
-            pose.bone_yaw[3] = -0.30;  // slight inward rotation
-            pose.bone_offset_z2[1] = 0.08;  // right leg lunges forward
-            pose.bone_offset_z2[2] = -0.06; // left leg extends back
-            pose.bone_yaw[1] = 0.16;  // slight torso lean forward
+            pose.bone_yaw[3] = -0.30;
+            pose.bone_offset_z2[1] = 0.08;
+            pose.bone_offset_z2[2] = -0.06;
+            pose.bone_yaw[1] = 0.16;
         }
         "recover" => {
-            // Recovery settle — return from action to guard
-            pose.bone_yaw[3] = -0.40;  // right arm settling
+            pose.bone_yaw[3] = -0.40;
             pose.bone_offset_y[3] = 0.030;
             pose.bone_offset_z[3] = 0.010;
-            pose.bone_offset_y[1] = 0.006;  // spine settling
+            pose.bone_offset_y[1] = 0.006;
         }
         "attack" => {
-            // Legacy attack: maps to cut
-            pose.bone_yaw[3] = -1.20;  // right arm swinging
+            pose.bone_yaw[3] = -1.20;
             pose.bone_offset_z[3] = 0.06;
-            pose.bone_yaw[1] = 0.30;  // torso twist
+            pose.bone_yaw[1] = 0.30;
+        }
+        // Unit-098: New distinct poses for remaining actions
+        "step" => {
+            // Lateral step — weight shift to right, legs spread
+            pose.bone_offset_x[1] = 0.08;     // root shifts right
+            pose.bone_offset_x2[1] = 0.10;    // right leg steps out
+            pose.bone_offset_x2[2] = -0.04;   // left leg trails
+            pose.bone_offset_y[1] = 0.012;    // slight bob
+            pose.bone_yaw[1] = 0.08;          // slight torso turn
+        }
+        "pivot" => {
+            // Pivot turn — torso rotates, weight on back foot
+            pose.bone_yaw[1] = 0.90;          // strong torso rotation
+            pose.bone_yaw[2] = 0.40;          // head follows
+            pose.bone_offset_x2[2] = -0.06;   // left leg pivots back
+            pose.bone_offset_y[1] = 0.008;
+        }
+        "parry" => {
+            // Deflection — weapon up and angled, body slightly back
+            pose.bone_yaw[3] = -1.10;         // right arm raises weapon high
+            pose.bone_offset_y[3] = 0.12;     // weapon up
+            pose.bone_offset_z[3] = -0.04;    // slightly back
+            pose.bone_yaw2[0] = 0.90;         // left arm mirrors
+            pose.bone_offset_y2[0] = 0.10;
+            pose.bone_offset_z[1] = -0.03;    // lean back slightly
+        }
+        "brace" => {
+            // Low brace — crouch with weapon low and forward
+            pose.bone_offset_y[1] = -0.06;    // spine lowers (crouch)
+            pose.bone_offset_y[2] = -0.04;    // head drops
+            pose.bone_offset_z[3] = 0.04;     // weapon forward low
+            pose.bone_offset_y[3] = -0.04;
+            pose.bone_offset_z2[1] = -0.04;   // legs brace wide
+            pose.bone_offset_z2[2] = 0.04;
+        }
+        "bash" => {
+            // Shield/weapon bash — arms thrust forward together, body lunges
+            pose.bone_offset_z[3] = 0.14;     // right arm forward
+            pose.bone_offset_z2[0] = 0.14;    // left arm forward
+            pose.bone_offset_y[3] = 0.04;     // chest height
+            pose.bone_offset_y2[0] = 0.04;
+            pose.bone_offset_z[1] = 0.08;     // torso leans into bash
+            pose.bone_offset_z2[1] = 0.10;    // right leg lunges
+            pose.bone_offset_z2[2] = -0.04;
+        }
+        "hook_bind" => {
+            // Hook/bind — arms crossed close, weapon entangled
+            pose.bone_yaw[3] = 0.60;          // right arm crosses inward
+            pose.bone_yaw2[0] = -0.60;        // left arm crosses inward
+            pose.bone_offset_z[3] = 0.06;     // close to body
+            pose.bone_offset_z2[0] = 0.06;
+            pose.bone_offset_y[1] = 0.014;    // slight rise from tension
+        }
+        "grab" => {
+            // Grab — both arms reach forward, claws open
+            pose.bone_offset_z[3] = 0.12;     // right arm reaches
+            pose.bone_offset_z2[0] = 0.12;    // left arm reaches
+            pose.bone_offset_y[3] = 0.02;     // low reach
+            pose.bone_offset_y2[0] = 0.02;
+            pose.bone_offset_z[1] = 0.06;     // torso leans forward
+            pose.bone_offset_z2[1] = 0.06;    // lunge
+        }
+        "shove" => {
+            // Shove — palms forward pushing, full body extension
+            pose.bone_offset_z[3] = 0.10;     // arms extend forward
+            pose.bone_offset_z2[0] = 0.10;
+            pose.bone_offset_y[3] = 0.06;     // chest height
+            pose.bone_offset_y2[0] = 0.06;
+            pose.bone_offset_z[1] = 0.10;     // torso pushes
+            pose.bone_offset_z2[1] = 0.08;
+        }
+        "kick" => {
+            // Kick — right leg extends forward, arms back for balance
+            pose.bone_offset_z2[1] = 0.18;    // right leg kicks forward hard
+            pose.bone_offset_y2[1] = 0.08;    // leg raised
+            pose.bone_offset_z[3] = -0.06;    // arms back
+            pose.bone_offset_z2[0] = -0.06;
+            pose.bone_offset_y[1] = -0.04;    // torso leans back for balance
         }
         _ => {
             pose.pose_active = 0.0;
@@ -349,8 +425,8 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "gameplay_distance_fighter_weapon_01" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.35, -0.1], fov_radians: 0.70 },
         "gameplay_distance_fighter_loadout_family_01" => CameraMode { eye: [0.0, 1.15, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
         "gameplay_distance_weapon_family_01" => CameraMode { eye: [0.0, 0.90, 3.2], look_at: [0.05, 0.35, -0.1], fov_radians: 0.68 },
-        "pre_contact_frame" => CameraMode { eye: [0.15, 0.85, 2.4], look_at: [0.0, 0.40, -0.1], fov_radians: 0.60 },
-        "contact_frame" => CameraMode { eye: [0.08, 0.70, 1.8], look_at: [0.0, 0.38, -0.05], fov_radians: 0.52 },
+        "pre_contact_frame" => CameraMode { eye: [0.0, 1.0, 3.8], look_at: [0.0, 0.30, -0.1], fov_radians: 0.75 },
+        "contact_frame" => CameraMode { eye: [0.0, 0.90, 3.2], look_at: [0.0, 0.28, -0.05], fov_radians: 0.72 },
         "fight_film_candidate_shot_01" => CameraMode { eye: [0.35, 1.2, 3.2], look_at: [0.0, 0.30, -0.15], fov_radians: 0.66 },
         "fight_film_replay_camera_shot" => CameraMode { eye: [-0.3, 1.1, 2.8], look_at: [0.05, 0.35, -0.1], fov_radians: 0.64 },
         // Unit-051: production-ready-candidate capture cameras
@@ -2749,15 +2825,20 @@ fn action_clip_for_state(
         }
         InteractiveState::Plan => "guard_pose",
         InteractiveState::CommitReveal => {
-            // Show the first committed action as the reveal pose
             if let Some(slot) = timeline_slots.first() {
                 match slot.as_str() {
+                    "step" => "step",
+                    "pivot" => "pivot",
+                    "guard" => "guard_pose",
+                    "parry" => "parry",
                     "cut" => "cut",
                     "thrust" => "thrust",
-                    "guard" | "parry" => "guard_pose",
-                    "step" | "pivot" => "walk",
-                    "brace" => "guard_pose",
-                    "bash" => "cut",
+                    "brace" => "brace",
+                    "bash" => "bash",
+                    "hook_bind" => "hook_bind",
+                    "grab" => "grab",
+                    "shove" => "shove",
+                    "kick" => "kick",
                     "recover" => "recover",
                     _ => "guard_pose",
                 }
@@ -2766,16 +2847,20 @@ fn action_clip_for_state(
             }
         }
         InteractiveState::Resolve => {
-            // Show contact action pose
             if let Some(contact) = combat_contacts.first() {
                 match contact.player_action.as_str() {
+                    "step" => "step",
+                    "pivot" => "pivot",
+                    "guard" => "guard_pose",
+                    "parry" => "parry",
                     "cut" => "cut",
                     "thrust" => "thrust",
-                    "guard" | "parry" => "guard_pose",
-                    "bash" | "shove" | "kick" => "attack",
-                    "step" | "pivot" => "walk",
-                    "brace" => "guard_pose",
-                    "grab" | "hook_bind" => "attack",
+                    "brace" => "brace",
+                    "bash" => "bash",
+                    "hook_bind" => "hook_bind",
+                    "grab" => "grab",
+                    "shove" => "shove",
+                    "kick" => "kick",
                     "recover" => "recover",
                     _ => "attack",
                 }
@@ -2789,8 +2874,19 @@ fn action_clip_for_state(
         InteractiveState::Replay => {
             if let Some(contact) = combat_contacts.first() {
                 match contact.player_action.as_str() {
+                    "step" => "step",
+                    "pivot" => "pivot",
+                    "guard" => "guard_pose",
+                    "parry" => "parry",
                     "cut" => "cut",
                     "thrust" => "thrust",
+                    "brace" => "brace",
+                    "bash" => "bash",
+                    "hook_bind" => "hook_bind",
+                    "grab" => "grab",
+                    "shove" => "shove",
+                    "kick" => "kick",
+                    "recover" => "recover",
                     _ => "guard_pose",
                 }
             } else {
@@ -2800,8 +2896,19 @@ fn action_clip_for_state(
         InteractiveState::FightFilm => {
             if let Some(contact) = combat_contacts.first() {
                 match contact.player_action.as_str() {
+                    "step" => "step",
+                    "pivot" => "pivot",
+                    "guard" => "guard_pose",
+                    "parry" => "parry",
                     "cut" => "cut",
                     "thrust" => "thrust",
+                    "brace" => "brace",
+                    "bash" => "bash",
+                    "hook_bind" => "hook_bind",
+                    "grab" => "grab",
+                    "shove" => "shove",
+                    "kick" => "kick",
+                    "recover" => "recover",
                     _ => "guard_pose",
                 }
             } else {

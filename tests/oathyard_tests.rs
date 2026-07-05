@@ -4463,10 +4463,14 @@ fn unit094_pose_system_procedural() {
         "bone yaw system exists for procedural pose"
     );
     // Verify action-to-clip mapping covers the required actions
+    // Unit-098: Each action now maps to its own distinct pose
     assert!(renderer.contains("\"cut\" => \"cut\""));
     assert!(renderer.contains("\"thrust\" => \"thrust\""));
-    assert!(renderer.contains("\"guard\" | \"parry\" => \"guard_pose\""));
-    assert!(renderer.contains("\"brace\" => \"guard_pose\""));
+    assert!(renderer.contains("\"guard\" => \"guard_pose\""));
+    assert!(renderer.contains("\"parry\" => \"parry\""));
+    assert!(renderer.contains("\"brace\" => \"brace\""));
+    assert!(renderer.contains("\"bash\" => \"bash\""));
+    assert!(renderer.contains("\"kick\" => \"kick\""));
     assert!(renderer.contains("\"recover\" => \"recover\""));
 }
 
