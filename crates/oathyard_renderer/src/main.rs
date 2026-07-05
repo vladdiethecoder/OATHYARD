@@ -498,6 +498,7 @@ fn real_main() -> Result<(), String> {
     let mut asset_manifest_sha256 = String::new();
     let mut mesh_json: Option<PathBuf> = None;
     let mut mesh_manifest_json: Option<PathBuf> = None;
+    let mut no_aaa_override = false;
     let mut args = env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -523,8 +524,11 @@ fn real_main() -> Result<(), String> {
             "--mesh-manifest-json" => {
                 mesh_manifest_json = Some(PathBuf::from(next_arg(&mut args, "--mesh-manifest-json")?))
             }
+            "--no-aaa-override" => {
+                no_aaa_override = true;
+            }
             "--help" | "-h" => {
-                println!("usage: oathyard-native-renderer --packet post_hash_presentation_packet.json --out <dir> [--capture-id <id>] [--capture-file-stem <production_renderer_*.png stem>] [--camera-mode <mode>] [--candidate-assets comma,separated,ids] [--asset-manifest-sha256 <sha256>] [--mesh-json assets/runtime/candidate/<id>.mesh.json] [--mesh-manifest-json <mesh-manifest.json>]");
+                println!("usage: oathyard-native-renderer --packet post_hash_presentation_packet.json --out <dir> [--capture-id <id>] [--capture-file-stem <production_renderer_*.png stem>] [--camera-mode <mode>] [--candidate-assets comma,separated,ids] [--asset-manifest-sha256 <sha256>] [--mesh-json assets/runtime/candidate/<id>.mesh.json] [--mesh-manifest-json <mesh-manifest.json>] [--no-aaa-override]");
                 return Ok(());
             }
             other => return Err(format!("unknown argument '{other}'")),
@@ -565,10 +569,11 @@ fn real_main() -> Result<(), String> {
         mesh_specs.extend(load_runtime_mesh_manifest(path)?);
     }
     // Unit-095: Always load AAA Meshy assets when the manifest exists
+    // Unit-103: Skip AAA override when --no-aaa-override is passed (per-asset capture)
     let aaa_manifest = std::env::current_dir()
         .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
         .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
-    if aaa_manifest.exists() {
+    if !no_aaa_override && aaa_manifest.exists() {
         // Unit-096: Replace old fighters/arena with AAA, keep weapons/armor
         mesh_specs.retain(|s| {
             let cls = infer_mesh_asset_class(&s.mesh_asset_id);

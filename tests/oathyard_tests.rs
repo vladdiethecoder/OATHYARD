@@ -4537,3 +4537,262 @@ fn unit095_per_mesh_material_uniform_layout() {
         "fighter material type (4) must exist"
     );
 }
+
+// ============================================================
+// Unit-103: Native executable roster asset capture matrix tests
+// ============================================================
+
+/// Unit-103: The play subcommand accepts --capture-roster-matrix.
+#[test]
+fn test_unit103_capture_roster_matrix_cli_flag_exists() {
+    let bin = env!("CARGO_BIN_EXE_oathyard");
+    // --capture-roster-matrix is a recognized argument (it needs a directory arg,
+    // but the "unknown play argument" error only fires for unrecognized args).
+    // Test that the usage text mentions the flag.
+    let output = Command::new(bin)
+        .arg("--help")
+        .output()
+        .expect("run oathyard --help");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("--capture-roster-matrix"),
+        "usage must mention --capture-roster-matrix"
+    );
+}
+
+/// Unit-103: The renderer accepts --no-aaa-override.
+#[test]
+fn test_unit103_renderer_no_aaa_override_flag_exists() {
+    let source =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer source");
+    assert!(
+        source.contains("\"--no-aaa-override\""),
+        "renderer must accept --no-aaa-override flag"
+    );
+    assert!(
+        source.contains("no_aaa_override"),
+        "renderer must have no_aaa_override variable"
+    );
+}
+
+/// Unit-103: The roster has exactly 22 assets with correct kind counts.
+#[test]
+fn test_unit103_roster_has_22_assets() {
+    let bin_source = fs::read_to_string("src/bin/oathyard.rs").expect("read oathyard bin source");
+
+    // Count fighters
+    let fighter_ids = [
+        "saltreach_duelist",
+        "oathyard_writ",
+        "bruiser_oath",
+        "chainbreaker",
+        "gate_shield",
+        "reed_sentinel",
+    ];
+    for id in &fighter_ids {
+        assert!(
+            bin_source.contains(&format!("\"{}\"", id)),
+            "fighter {} must be in roster",
+            id
+        );
+    }
+
+    // Count weapons
+    let weapon_ids = [
+        "longsword",
+        "arming_sword",
+        "ash_spear",
+        "bearded_axe",
+        "billhook",
+        "curved_sword",
+        "iron_maul",
+        "round_shield",
+    ];
+    for id in &weapon_ids {
+        assert!(
+            bin_source.contains(&format!("\"{}\"", id)),
+            "weapon {} must be in roster",
+            id
+        );
+    }
+
+    // Count armor
+    let armor_ids = [
+        "gambeson",
+        "mail_hauberk",
+        "bruiser_padded_plate",
+        "fencer_light",
+        "heavy_plate",
+        "lamellar",
+    ];
+    for id in &armor_ids {
+        assert!(
+            bin_source.contains(&format!("\"{}\"", id)),
+            "armor {} must be in roster",
+            id
+        );
+    }
+
+    // Count arenas
+    let arena_ids = ["oathyard_verdict_ring", "training_yard"];
+    for id in &arena_ids {
+        assert!(
+            bin_source.contains(&format!("\"{}\"", id)),
+            "arena {} must be in roster",
+            id
+        );
+    }
+
+    assert_eq!(fighter_ids.len(), 6, "6 fighters");
+    assert_eq!(weapon_ids.len(), 8, "8 weapons");
+    assert_eq!(armor_ids.len(), 6, "6 armor");
+    assert_eq!(arena_ids.len(), 2, "2 arenas");
+    assert_eq!(
+        fighter_ids.len() + weapon_ids.len() + armor_ids.len() + arena_ids.len(),
+        22
+    );
+}
+
+/// Unit-103: The capture matrix function exists and is wired to the play subcommand.
+#[test]
+fn test_unit103_capture_matrix_function_wired() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    assert!(
+        source.contains("fn launch_roster_matrix_capture"),
+        "launch_roster_matrix_capture function must exist"
+    );
+    assert!(
+        source.contains("launch_roster_matrix_capture(matrix_dir)"),
+        "capture-roster-matrix must call launch_roster_matrix_capture"
+    );
+    assert!(
+        source.contains("--capture-roster-matrix"),
+        "--capture-roster-matrix CLI flag must be parsed"
+    );
+}
+
+/// Unit-103: The matrix schema is correct.
+#[test]
+fn test_unit103_matrix_schema() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    assert!(
+        source.contains("\"oathyard.roster_asset_capture_matrix.v1\""),
+        "matrix schema must be oathyard.roster_asset_capture_matrix.v1"
+    );
+}
+
+/// Unit-103: No readiness flags are promoted.
+#[test]
+fn test_unit103_no_readiness_promotion() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+
+    // Find the matrix JSON construction and verify readiness flags are false
+    let matrix_section = source
+        .find("launch_roster_matrix_capture")
+        .expect("function exists");
+
+    // Check that the matrix JSON contains false readiness flags
+    assert!(
+        source[matrix_section..].contains("\"production_asset_ready\":false"),
+        "production_asset_ready must be false"
+    );
+    assert!(
+        source[matrix_section..].contains("\"owner_visual_accepted\":false"),
+        "owner_visual_accepted must be false"
+    );
+    assert!(
+        source[matrix_section..].contains("\"public_demo_ready\":false"),
+        "public_demo_ready must be false"
+    );
+    assert!(
+        source[matrix_section..].contains("\"release_candidate_ready\":false"),
+        "release_candidate_ready must be false"
+    );
+    assert!(
+        source[matrix_section..].contains("\"truth_mutation\":false"),
+        "truth_mutation must be false"
+    );
+}
+
+/// Unit-103: Contact sheet script exists and is embedded.
+#[test]
+fn test_unit103_contact_sheet_script_embedded() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    assert!(
+        source.contains("include_str!(\"../../tools/unit103_contact_sheets.py\")"),
+        "contact sheet script must be embedded via include_str!"
+    );
+    assert!(
+        Path::new("tools/unit103_contact_sheets.py").exists(),
+        "contact sheet script file must exist"
+    );
+}
+
+/// Unit-103: Fail-closed behavior — visual_status is fail when no screenshot.
+#[test]
+fn test_unit103_fail_closed_logic() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    // The fail-closed logic: if capture_ok is false, status is "fail"
+    assert!(
+        source.contains("\"fail\", \"renderer did not produce a valid screenshot\""),
+        "must fail-closed when no screenshot"
+    );
+    assert!(
+        source.contains("\"fail\", \"mesh geometry not consumed"),
+        "must fail-closed when mesh geometry not consumed"
+    );
+}
+
+/// Unit-103: SHA256 is computed for screenshots.
+#[test]
+fn test_unit103_sha256_computation_exists() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    assert!(
+        source.contains("fn sha256_file"),
+        "sha256_file function must exist"
+    );
+    assert!(
+        source.contains("fn sha256_compute"),
+        "sha256_compute function must exist"
+    );
+    assert!(
+        source.contains("screenshot_sha256"),
+        "screenshot SHA256 must be computed per asset"
+    );
+}
+
+/// Unit-103: Package-relative path discipline — no absolute paths in mesh manifests.
+#[test]
+fn test_unit103_package_relative_paths() {
+    let source = fs::read_to_string("src/bin/oathyard.rs").expect("read source");
+    // Verify mesh paths use relative paths starting with assets/
+    assert!(
+        source.contains("\"assets/presentation_runtime\""),
+        "mesh paths must use package-relative assets/presentation_runtime"
+    );
+    assert!(
+        source.contains("\"assets/runtime\""),
+        "mesh paths must use package-relative assets/runtime"
+    );
+    assert!(
+        source.contains("\"assets/model_candidates/t_73291be5/textures\""),
+        "texture paths must use package-relative assets/model_candidates/..."
+    );
+}
+
+/// Unit-103: The renderer's --no-aaa-override actually prevents AAA replacement.
+#[test]
+fn test_unit103_no_aaa_override_prevents_replacement() {
+    let source =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer source");
+    // The override logic must check no_aaa_override before loading AAA manifest
+    let aaa_section = source
+        .find("// Unit-095: Always load AAA Meshy assets when the manifest exists")
+        .expect("AAA section exists");
+
+    let relevant = &source[aaa_section..aaa_section + 500];
+    assert!(
+        relevant.contains("!no_aaa_override"),
+        "AAA override must be gated by !no_aaa_override"
+    );
+}

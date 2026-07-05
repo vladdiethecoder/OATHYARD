@@ -1,76 +1,63 @@
-# OATHYARD Unit-102: Visual Composition and Roster Matrix
+# OATHYARD Visual Review — Roster Asset Capture Matrix (Unit-103)
 
-## Before → After Summary
+## What This Is
 
-### Baseline (Unit-101 HEAD: bbb7aca)
-- **Duplicate geometry**: play-path fighters misclassified as "weapon" by `infer_mesh_asset_class`, retained alongside AAA fighters — 9 meshes, 2 fighter bodies per side
-- **Full-body tint**: 75% team color lerp destroyed PBR material detail
-- **Timeline**: action legend still cramped at bottom
+This directory contains curated visual evidence from the Unit-103 native
+executable roster asset capture matrix. Every roster asset has been rendered
+individually through the native `oathyard play --capture-roster-matrix` path
+using the real wgpu/Vulkan renderer with source-approved Meshy/Rodin assets.
 
-### After (Unit-102)
-- **Single fighter body per side**: `infer_mesh_asset_class` fixed to use `contains()` — 7 meshes, exactly 1 AAA fighter per side
-- **Material detail preserved**: 30% team color lerp (was 75%), identity via fresnel rim band (0.45 intensity)
-- **Timeline**: two-column action legend with clear separation
+**This is evidence only.** It does not promote production asset readiness,
+owner visual acceptance, public demo readiness, or release candidate readiness.
 
-## Root Cause
+## Readiness Boundary
 
-`infer_mesh_asset_class` used exact string matching (`match asset_id { "saltreach_duelist" => "fighter" }`)
-but play-path manifest generates prefixed IDs (`player_saltreach_duelist`). Prefixed IDs fell through
-to `_ => "weapon"`, so play-path fighters were retained as "weapon" class alongside AAA fighters,
-creating duplicate geometry at the same position.
+- `truth_mutation`: **false**
+- `production_asset_ready`: **false**
+- `owner_visual_accepted`: **false**
+- `public_demo_ready`: **false**
+- `release_candidate_ready`: **false**
 
-## Changes Made
+## Asset Counts
 
-### crates/oathyard_renderer/src/main.rs
-- **Fixed `infer_mesh_asset_class`**: changed from exact match to `contains()` for all 22 asset names
-- **Reduced CPU texture tint**: 30% team color (was 75%) to preserve PBR material detail
-- Armor/weapon transforms: offset to reduce body overlap
+- **Fighters**: 6 (saltreach_duelist, oathyard_writ, bruiser_oath, chainbreaker, gate_shield, reed_sentinel)
+- **Weapons**: 8 (longsword, arming_sword, ash_spear, bearded_axe, billhook, curved_sword, iron_maul, round_shield)
+- **Armor**: 6 (gambeson, mail_hauberk, bruiser_padded_plate, fencer_light, heavy_plate, lamellar)
+- **Arenas**: 2 (oathyard_verdict_ring, training_yard)
+- **Total**: 22
 
-### crates/oathyard_renderer/src/verdict_ring.wgsl
-- **Stronger team rim band**: 0.45 intensity (was 0.30) to compensate for reduced body tint
+## Capture Method
 
-### src/bin/oathyard.rs
-- Armor scale: 0.14 → 0.22, weapon scale: 0.34 → 0.38
-- Armor/weapon translations offset from fighter body center
+```bash
+./bin/oathyard play --capture-roster-matrix <output-dir>
+```
 
-### tests/oathyard_tests.rs
-- Updated team rim band assertion
+Each asset was rendered individually through the native wgpu/Vulkan offscreen
+renderer. No SDF placeholders, no static pre-existing images, no proxy geometry.
 
-## 22-Asset Roster Visual Matrix
+## Contact Sheets
 
-All 22 source-approved assets have runtime mesh files and are consumed:
+- `asset_matrix_contact_sheet.png` — all 22 assets
+- `fighters_contact_sheet.png` — 6 fighters
+- `weapons_contact_sheet.png` — 8 weapons
+- `armors_contact_sheet.png` — 6 armor pieces
+- `arenas_contact_sheet.png` — 2 arenas
 
-| Kind | Count | Mesh Files | Vertices Range |
-|---|---|---|---|
-| Fighter | 6 | 6/6 | 13,262–13,598 |
-| Weapon | 8 | 8/8 | 472–1,870 |
-| Armor | 6 | 6/6 | 672–1,422 |
-| Arena | 2 | 2/2 | 1,850–2,398 |
+## Per-Asset Thumbnails
 
-Full matrix: `artifacts/verification/2026-07-05T_unit102_visual_composition_roster_matrix/roster_asset_visual_matrix.json`
+Representative screenshots in `thumbnails/` (one per kind).
 
-## Verification
+## Known Visual Issues
 
-| Check | Result |
-|---|---|
-| cargo fmt --check | PASS |
-| cargo build --locked | PASS |
-| cargo test --locked | 188 passed, 0 failed |
-| oathyard play (smoke) | PASS, 480 frames |
-| mesh_asset_count | 7 (was 9) |
-| Truth hash | 0bd4e69b3c94f498 |
-| truth_mutation | false |
-| All readiness flags | false |
+- Weapons have low contrast (grey-on-grey) against the arena background
+- Some fighters appear washed out due to flat lighting/material presentation
+- Fog/lighting makes fine detail hard to read at this capture distance
 
-## Remaining Gaps
+These are presentation quality issues, not capture failures. All 22 assets
+have valid geometry consumption (mesh_geometry_consumed=true) and native
+screenshots with valid SHA256 hashes.
 
-- AAA Meshy fighter meshes have complex layered geometry (572K vertices) that at low resolution
-  can appear as overlapping forms — this is an asset quality limitation, not a rendering bug
-- Team rim band provides body-anchored identity but is subtle at gameplay distance
-- Full per-asset screenshots require a dedicated capture matrix tool (not yet built)
+## See Also
 
-## Recommended Unit-103
-
-Build a native executable asset capture matrix tool that renders each of the 22 roster assets
-individually through the real `oathyard play` path, producing per-asset screenshots and visual
-scores for the full roster evidence.
+- `manifest.json` — full machine-readable matrix
+- `visual_scores.md` — per-asset pass/warn/fail score table
