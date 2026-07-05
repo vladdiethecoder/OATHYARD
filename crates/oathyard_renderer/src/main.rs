@@ -296,6 +296,33 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
     result
 }
 
+// Unit-095: Minimal dummy bind_group0 for the initial GpuMeshResource construction.
+// Replaced by per-mesh bind groups after collection.
+fn create_dummy_bind_group0(
+    device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
+    uniform_buffer: &wgpu::Buffer,
+    camera_buffer: &wgpu::Buffer,
+    pose_buffer: &wgpu::Buffer,
+) -> wgpu::BindGroup {
+    let dummy_mat = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("dummy per-mesh material buffer"),
+        size: 32,
+        usage: wgpu::BufferUsages::UNIFORM,
+        mapped_at_creation: true,
+    });
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("dummy per-mesh bind group 0"),
+        layout: bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry { binding: 0, resource: uniform_buffer.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 1, resource: camera_buffer.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 2, resource: dummy_mat.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 3, resource: pose_buffer.as_entire_binding() },
+        ],
+    })
+}
+
 fn camera_for_mode(mode: &str) -> CameraMode {
     match mode {
         "boot_main_menu" => CameraMode { eye: [0.0, 1.8, 4.5], look_at: [0.0, 0.8, -0.5], fov_radians: 0.72 },
@@ -1711,6 +1738,9 @@ struct GpuMeshResource {
     index_count: u32,
     material_bind_group: wgpu::BindGroup,
     mesh_material: MeshMaterial,
+    // Unit-095: Per-mesh material uniform buffer + bind_group0
+    material_uniform_buffer: wgpu::Buffer,
+    bind_group0: wgpu::BindGroup,
     _base_color_texture: wgpu::Texture,
     _normal_texture: wgpu::Texture,
     _orm_texture: wgpu::Texture,
@@ -1989,7 +2019,7 @@ async fn render_wgpu_frame(
                 },
                 count: None,
             },
-            // Unit-049: MeshMaterial uniform as binding 2
+            // Unit-049: MeshMaterial uniform as binding 2 (fixed, per-per-mesh via separate bind groups)
             wgpu::BindGroupLayoutEntry {
                 binding: 2,
                 visibility: wgpu::ShaderStages::FRAGMENT,
@@ -2132,7 +2162,7 @@ async fn render_wgpu_frame(
             mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             ..Default::default()
         });
-        let buffers = runtime_meshes
+        let mut buffers = runtime_meshes
             .iter()
             .map(|mesh| {
                 let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -2231,13 +2261,52 @@ async fn render_wgpu_frame(
                     index_count: mesh.indices.len() as u32,
                     material_bind_group,
                     mesh_material: material_for_mesh(&mesh.mesh_asset_id),
+                    // Unit-095: Per-mesh fields filled in later, set to dummy here
+                    material_uniform_buffer: device.create_buffer(&wgpu::BufferDescriptor {
+                        label: Some("dummy per-mesh init"),
+                        size: 32,
+                        usage: wgpu::BufferUsages::UNIFORM,
+                        mapped_at_creation: true,
+                    }),
+                    bind_group0: create_dummy_bind_group0(&device, &bind_group_layout, &uniform_buffer, &camera_buffer, &pose_buffer),
                     _base_color_texture: base_color_texture,
                     _normal_texture: normal_texture,
                     _orm_texture: orm_texture,
                 })
             })
             .collect::<Result<Vec<_>, String>>()?;
-        Some((mesh_pipeline, buffers))
+        // Unit-095: Per-mesh bind groups — each with its own material uniform buffer.
+        // Shared buffers (seed, camera, pose) are reused across all bind groups.
+        use std::sync::Arc;
+        let uniform_arc = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard shared seed"),
+            size: 16,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&uniform_arc, 0, bytemuck::bytes_of(&[seed]));
+        let mut per_mesh_bgs: Vec<wgpu::BindGroup> = Vec::new();
+        for resource in &buffers {
+            let mb = device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("per-mesh material buf"),
+                size: std::mem::size_of::<MeshMaterial>() as u64,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            queue.write_buffer(&mb, 0, bytemuck::bytes_of(&resource.mesh_material));
+            let bg = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("per-mesh bg0"),
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: uniform_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 1, resource: camera_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 2, resource: mb.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 3, resource: pose_buffer.as_entire_binding() },
+                ],
+            });
+            per_mesh_bgs.push(bg);
+        }
+        Some((mesh_pipeline, buffers, per_mesh_bgs))
     };
 
     let bytes_per_pixel = 4u32;
@@ -2290,22 +2359,12 @@ async fn render_wgpu_frame(
             pass.set_pipeline(&pipeline);
             pass.set_bind_group(0, &bind_group, &[]);
             pass.draw(0..3, 0..1);
-        } else if let Some((mesh_pipeline, buffers)) = &mesh_resources {
-            // Pre-write materials before the pass
-            // We can only write one material to the shared buffer at a time,
-            // so use a dynamic approach: write before each mesh draw via
-            // the queue, which will be applied at submit time.
-            // The REAL fix is per-mesh bind groups, but for now we use
-            // a single bind_group and hope the last write wins.
-            // Instead: write the FIRST fighter material and use it for all draws.
-            // This is a known limitation — per-mesh materials need per-mesh buffers.
-            if let Some(first) = buffers.first() {
-                let bytes = bytemuck::bytes_of(&first.mesh_material);
-                queue.write_buffer(&mesh_material_buffer, 0, bytes);
-            }
+        } else if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources {
+            // Unit-095: Per-mesh bind groups — each mesh has its own material uniform.
+            // Bind groups were created with per-mesh material data before the render pass.
             pass.set_pipeline(mesh_pipeline);
-            for resource in buffers {
-                pass.set_bind_group(0, &bind_group, &[]);
+            for (idx, resource) in buffers.iter().enumerate() {
+                pass.set_bind_group(0, &per_mesh_bind_groups[idx], &[]);
                 pass.set_bind_group(1, &resource.material_bind_group, &[]);
                 pass.set_vertex_buffer(0, resource.vertex_buffer.slice(..));
                 pass.set_index_buffer(resource.index_buffer.slice(..), wgpu::IndexFormat::Uint32);

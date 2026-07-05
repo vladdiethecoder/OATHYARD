@@ -4469,3 +4469,67 @@ fn unit094_pose_system_procedural() {
     assert!(renderer.contains("\"brace\" => \"guard_pose\""));
     assert!(renderer.contains("\"recover\" => \"recover\""));
 }
+
+#[test]
+fn unit095_per_mesh_bind_groups_exist() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("per_mesh_bgs"),
+        "per_mesh_bgs vector missing"
+    );
+    assert!(
+        renderer.contains("per-mesh material buf"),
+        "per-mesh material buffer creation missing"
+    );
+    assert!(
+        renderer.contains("per-mesh bg0"),
+        "per-mesh bind group label missing"
+    );
+    // Verify the render pass uses per-mesh bind groups
+    assert!(
+        renderer.contains("per_mesh_bind_groups"),
+        "render pass must use per_mesh_bind_groups"
+    );
+}
+
+#[test]
+fn unit095_no_sdf_when_meshes_present() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    assert!(
+        renderer.contains("mesh_resources.is_none()"),
+        "must check mesh_resources.is_none() before drawing SDF"
+    );
+    // Verify SDF is skipped when meshes are present
+    assert!(
+        renderer.contains(
+            "} else if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources"
+        ),
+        "must enter else-if branch when meshes are present"
+    );
+}
+
+#[test]
+fn unit095_per_mesh_material_uniform_layout() {
+    let renderer =
+        fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Verify material uniform layout exists with correct setup
+    assert!(
+        renderer.contains("MeshMaterial uniform as binding 2"),
+        "mesh material binding layout must exist"
+    );
+    assert!(
+        renderer.contains("GpuMeshResource"),
+        "GpuMeshResource struct must exist for per-mesh material storage"
+    );
+    // Verify at least 4 material types are supported (fighter, armor, weapon, arena)
+    assert!(
+        renderer.contains("material_type: 0.0"),
+        "weapon material type (0) must exist"
+    );
+    assert!(
+        renderer.contains("material_type: 4.0"),
+        "fighter material type (4) must exist"
+    );
+}
