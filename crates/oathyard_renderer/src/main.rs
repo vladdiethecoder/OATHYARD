@@ -227,12 +227,12 @@ fn material_for_mesh(asset_id: &str) -> MeshMaterial {
         id if id == "player_saltreach" || id == "player_saltreach_duelist" => MeshMaterial {
             material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.82, tint_g: 0.62, tint_b: 0.40, tint_a: 1.0,  // player gold
+            tint_r: 0.95, tint_g: 0.72, tint_b: 0.22, tint_a: 1.0,  // stronger gold
         },
         id if id == "opponent_saltreach" || id == "opponent_saltreach_duelist" => MeshMaterial {
             material_type: 4.0,
             _pad: [0.0, 0.0, 0.0],
-            tint_r: 0.85, tint_g: 0.22, tint_b: 0.15, tint_a: 1.0,  // opponent crimson
+            tint_r: 0.92, tint_g: 0.18, tint_b: 0.12, tint_a: 1.0,  // stronger crimson
         },
         // Unit-095: AAA Meshy asset material overrides
         id if id == "player_duelist_gold_aaa" => MeshMaterial {
@@ -487,6 +487,18 @@ fn real_main() -> Result<(), String> {
     }
     if let Some(path) = mesh_manifest_json.as_deref() {
         mesh_specs.extend(load_runtime_mesh_manifest(path)?);
+    }
+    // Unit-095: Always load AAA Meshy assets when the manifest exists
+    let aaa_manifest = std::env::current_dir()
+        .map(|p| p.join("assets/manifests/aaa_mesh_manifest.json"))
+        .unwrap_or_else(|_| std::path::PathBuf::from("assets/manifests/aaa_mesh_manifest.json"));
+    if aaa_manifest.exists() {
+        // Remove old fighter/arena meshes that AAA assets replace
+        mesh_specs.retain(|s| {
+            !s.mesh_asset_id.contains("saltreach")
+                && !s.mesh_asset_id.contains("training_yard")
+        });
+        mesh_specs.extend(load_runtime_mesh_manifest(&aaa_manifest)?);
     }
     let runtime_meshes = mesh_specs
         .iter()
@@ -2300,13 +2312,11 @@ async fn render_wgpu_frame(
         queue.write_buffer(&uniform_arc, 0, bytemuck::bytes_of(&[seed]));
         let mut per_mesh_bgs: Vec<wgpu::BindGroup> = Vec::new();
         for resource in &buffers {
-            let mb = device.create_buffer(&wgpu::BufferDescriptor {
+            let mb = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("per-mesh material buf"),
-                size: std::mem::size_of::<MeshMaterial>() as u64,
+                contents: bytemuck::bytes_of(&resource.mesh_material),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                mapped_at_creation: false,
             });
-            queue.write_buffer(&mb, 0, bytemuck::bytes_of(&resource.mesh_material));
             let bg = device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("per-mesh bg0"),
                 layout: &bind_group_layout,

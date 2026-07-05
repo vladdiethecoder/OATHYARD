@@ -565,19 +565,6 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let mat_type = mesh_material.material_type;
     let tint = mesh_material.tint.rgb;
 
-    // Unit-095: For fighters (mat_type=4), output hardcoded team colors
-    // using mesh material tint to distinguish player vs opponent.
-    // Player tint.g > 0.5 (gold), opponent tint.g < 0.5 (crimson).
-    if (mat_type > 3.5 && mat_type < 4.5) {
-        if (tint.g > 0.5) {
-            return vec4<f32>(0.95, 0.75, 0.15, 1.0);  // player gold
-        } else {
-            return vec4<f32>(0.85, 0.15, 0.10, 1.0);  // opponent crimson
-        }
-    }
-
-    // Normal mesh rendering for non-fighter meshes (weapons, armor, arena)
-
     // Unit-062: Use pre-computed per-vertex normals from face geometry.
     // Was: cross(dpdx, dpdy) which produced unstable/faceted shading.
     let n = normalize(input.normal);
@@ -593,22 +580,23 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // candidate texture sample now drives visible asset identity.
     let procedural_base = procedural_pbr(input.world_pos, n, mat_type, tint);
     let normal_detail = clamp(length(sampled_normal - vec3<f32>(0.5)) * 0.85, 0.0, 0.22);
-    // Unit-095: Stronger team-color identity. The texture sample and class tint
-    // previously mixed at 0.86+ which washed out player/opponent distinction.
-    // Now use the tint as a team-color multiply overlay at higher weight.
     let map_contrast = clamp(
         (sampled_base - vec3<f32>(0.5)) * 1.65 + vec3<f32>(0.5),
         vec3<f32>(0.02),
         vec3<f32>(1.18),
     );
+    // Unit-095: For fighters and arenas, blend texture detail with team tint.
+    // Non-fighters (weapons/armor) use texture-only with subtle mesh-class color.
+    // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
     let material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22));
-    let class_tint = mix(tint, material_identity, vec3<f32>(0.45));
-    // Unit-095: Stronger team-color identity. For fighters (type=4), use tint directly
-    // to override pale candidate textures. For other assets, mix normally.
-    let team_tint = select(tint * 1.5, vec3<f32>(1.0), mat_type > 4.5);
-    let texture_base = map_contrast * class_tint * team_tint * 1.40;
-    // Unit-095: Fighters use tint ONLY (not texture) for team color identity
-    let fighter_mix = select(0.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
+    // Fighters: luminance-modulated tint — preserves hue across all light levels
+    // Non-fighters: texture-only, no team identity.
+    let is_fighter = mat_type < 5.0;
+    let tex_lum = dot(sampled_base, vec3<f32>(0.299, 0.587, 0.114));
+    let team_tinted = tint * saturate(0.45 + tex_lum * 0.75);
+    let texture_base = select(sampled_base, team_tinted, is_fighter);
+    // Fighters: use 100% texture_blend (no procedural dilution of team color)
+    let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
     let base = mix(procedural_base, texture_base, fighter_mix);
 
     // Unit-093: Demo-quality lighting — stronger key/fill/rim separation
@@ -625,9 +613,11 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let texture_roughness = clamp(sampled_orm.g, 0.12, 1.0);
     let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
     let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion * texture_ao;
-    // Unit-095: Boost ambient for fighters so team colors are visible
-    let fighter_ambient = select(1.8, 1.0, mat_type > 4.5);
-    let color = base * (0.54 + diffuse * 1.48 + fill_light + back_light) * ao * input.shade * fighter_ambient;
+    // Unit-095: No per-material ambient/shade hacks — rely on standard PBR
+    // with emissive team color for identity preservation in all lighting.
+    // Industry standard (Overwatch, Valorant, Apex): team color as emissive.
+    let team_emissive = select(vec3<f32>(0.0), tint * 0.20, is_fighter);
+    let color = base * (0.36 + diffuse * 1.20 + fill_light + back_light) * ao * input.shade + team_emissive;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
@@ -647,6 +637,16 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.12, 0.62, metal_factor) * (1.12 - texture_roughness * 0.42);
     let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
 
-    let final_color = tone_map(color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution);
+    let team_rim_color = select(vec3<f32>(0.55, 0.40, 0.20), tint, is_fighter);
+    let raw_final = color + team_rim_color * rim_light + fresnel_rim + spec_contribution;
+    let aces_lum = dot(raw_final, vec3<f32>(0.2126, 0.7152, 0.0722));
+    let mapped_lum = aces_lum * (2.51 * aces_lum + 0.03) / (aces_lum * (2.43 * aces_lum + 0.59) + 0.14);
+    // Preserve RGB ratios: scale all channels by mapped_lum / original_lum
+    let saturation_preserved = raw_final * (mapped_lum / max(aces_lum, 0.0001));
+    let final_color = select(
+        tone_map(raw_final),
+        clamp(saturation_preserved, vec3<f32>(0.0), vec3<f32>(1.0)),
+        is_fighter,
+    );
     return vec4<f32>(final_color, 0.95);
 }
