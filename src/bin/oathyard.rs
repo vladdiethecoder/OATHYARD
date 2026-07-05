@@ -1412,6 +1412,7 @@ fn launch_play_flow(
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
+
             // Parse the windowed runtime manifest if it exists
             let wr_manifest = windowed_out.join("native_window_runtime_manifest.json");
             if wr_manifest.exists() {

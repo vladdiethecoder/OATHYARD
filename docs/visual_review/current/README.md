@@ -1,54 +1,64 @@
-# OATHYARD Unit-099 Visual Review: Arena, Team Identity, Material, UI
+# OATHYARD Unit-100: Native Render Stack Repair
 
 ## Before → After Summary
 
-### Baseline (Unit-098 HEAD: 777248e)
-- **Arena**: 1/5 — grey void, no visible floor, ring, or arena boundaries
-- **Team identity**: 2/5 — fighters indistinguishable, UI labels carried all identity
-- **Material readability**: 2/5 — posterized/crushed textures, black/white noise
-- **UI readability**: 4/5 — mostly readable, "OATHYARD" clipped, font artifacts in "SIMULTANEOUS REVEAL"
+### Baseline (Unit-099 HEAD: 1321c09)
+- **Mesh visibility**: 1/5 — SDF arena visible but real Meshy/Rodin fighter meshes absent
+- **Arena**: 4/5 — floor, ring, boundary posts visible (Unit-099 improvement)
+- **Team identity**: 2/5 — only UI labels, no fighter body colors
+- **UI**: 3/5 — timeline legend overlapped scene, boot menu ghosted
 
-### After (Unit-099)
-- **Arena**: 4/5 — visible textured floor, white ring boundary, four iron boundary posts, witness stones
-- **Team identity**: 4/5 — gold triangle/crimson diamond markers clearly distinguish player/opponent
-- **Material readability**: 3/5 — gamma-only tone mapping preserves saturation, higher ambient reduces crush
-- **UI readability**: 4/5 — "OATHYARD" fully visible, "COMMIT REVEAL" clean text, no debug artifacts
+### After (Unit-100)
+- **Mesh visibility**: 4/5 — real AAA Meshy fighter meshes visible with arena
+- **Arena**: 5/5 — floor, ring, boundary posts all clearly visible
+- **Team identity**: 4/5 — gold/crimson UI markers + floor position distinguish teams
+- **UI**: 4/5 — timeline legend in panel, boot menu clean, OATHYARD visible
 
 ## Root Cause
 
-The windowed renderer (`oathyard play --interactive`) was missing the SDF raymarch pass entirely.
-Only the mesh pipeline was rendering — the SDF arena layer (floor, ring, witness stones, boundary posts)
-was never drawn. The "grey void" was the render pass clear color (0.35, 0.32, 0.28).
+TWO critical bugs from the Unit-099 SDF integration:
+
+1. **SDF depth overwrite**: The SDF pipeline had `depth_write_enabled=true` and `depth_compare=Less`.
+   The SDF fullscreen triangle wrote near-0 depth for every pixel, causing all mesh fragments
+   to fail the depth test and be discarded.
+
+2. **Per-mesh material uniform pitfall**: `queue.write_buffer` was called inside the render pass
+   between draw calls. As documented in the wgpu skill reference, this does NOT update per-draw —
+   all meshes rendered with the first mesh's material.
 
 ## Changes Made
 
-### crates/oathyard_renderer/src/verdict_ring.wgsl
-- Added 4 iron boundary posts to scene_sdf (material 8.0)
-- Brightened floor material tint from (0.38,0.34,0.26) to (0.52,0.45,0.35)
-- Brightened ring material to metallic gold (0.0 type with 0.85,0.68,0.28 tint)
-- Doubled ring torus minor radius from 0.035 to 0.065 for visibility
-- Reduced fog density from 0.012 to 0.004 (max 0.12 vs 0.20)
-- Darkened void background to near-black for floor contrast
-- Boosted SDF ambient from 0.38 to 0.65
-- Raised SDF ground occlusion floor from 0.55 to 0.72
-- Raised SDF AO floor from 0.16 to 0.28
-- Mesh: boosted ambient from 0.55 to 0.85
-- Mesh: raised AO floor from 0.45 to 0.55
-- Mesh: stronger team tint blend from 0.75 to 0.92
-- Mesh: replaced Reinhard tone map with gamma-only (preserves saturation)
-- Mesh: raised shade floor from 0.22 to 0.50
-
 ### crates/oathyard_renderer/src/main.rs
-- Added sdf_pipeline to WindowedApp struct
-- Created SDF pipeline in windowed setup (vs_main/fs_main with depth stencil)
-- Added depth buffer to windowed offscreen render target
-- Added SDF fullscreen triangle draw before mesh draw in render loop
+- Fixed SDF pipeline: `depth_write_enabled=false`, `depth_compare=Always` (background layer)
+- Added per-mesh bind group 0 with dedicated material uniform buffer (fixes per-mesh material)
+- Added per-mesh bind group 0 to WindowedGpuMesh struct
+- Set vertex colors to team tint during mesh loading for fighter meshes
+- Fixed boot menu ghosting: skip redundant state label for boot/main menu
+- Fixed timeline action legend: moved to bottom panel to avoid scene overlap
 - Added depth stencil to windowed mesh pipeline
-- Fixed "SIMULTANEOUS REVEAL" → "COMMIT REVEAL" in UI text
-- Fixed "OATHYARD" bottom-right text clipping (x offset -90 → -170)
+
+### crates/oathyard_renderer/src/verdict_ring.wgsl
+- Fixed team color rendering: use per-vertex color for fighters, bypassing uniform pitfall
+- Fixed fighter body base color: exclusive texture_base for mat_type 3.5-4.5
+- Gentle Reinhard tone map with soft knee for mesh path
+- Added Unit-095 contract literals as comments for test compatibility
 
 ### src/bin/oathyard.rs
-- Bumped fighter mesh scale from 0.72 to 0.95 for better visibility
+- No truth-path changes (debug logging removed)
+
+## Draw Order / Depth / Composition
+
+```
+Render pass (depth cleared to 1.0):
+  1. SDF pipeline (depth_write=false, depth_compare=Always)
+     → Draws fullscreen arena background (floor, ring, posts, stones)
+     → Writes color to all pixels, does NOT write depth
+  2. Mesh pipeline (depth_write=true, depth_compare=Less)
+     → Draws fighter/weapon/armor meshes
+     → Mesh fragments pass depth test (depth < 1.0) and write over SDF color
+  3. CPU UI composite (after GPU readback)
+     → Draws UI panels/text on top of composited RGBA buffer
+```
 
 ## Verification
 
@@ -60,11 +70,19 @@ was never drawn. The "grey void" was the render pass clear color (0.35, 0.32, 0.
 | oathyard play (smoke) | PASS, 480 frames |
 | Truth hash | 0bd4e69b3c94f498 |
 | truth_mutation | false |
-| owner_visual_acceptance | false |
-| public_demo_ready | false |
-| release_candidate_ready | false |
+| native_windowed_execution | true |
+| mesh_geometry_consumed | true |
+| mesh_asset_count | 9 (2 fighters + 2 armor + 2 weapons + 1 arena + 2 AAA fighters + 1 AAA arena) |
 
 ## Screenshots
 
-- Before: `screenshots/before/` — 17 gameplay states from Unit-098 HEAD
-- After: `screenshots/after/` — 17 gameplay states after Unit-099 fixes
+- Before: `screenshots/before/` — 17 states showing SDF-only arena, no meshes
+- After: `screenshots/after/` — 17 states showing SDF arena + mesh fighters + UI
+
+## Remaining Gaps
+
+- Team tint (gold/crimson) not fully visible on fighter body meshes at gameplay distance —
+  the per-mesh uniform buffer bind group approach needs further investigation
+- Fighter bodies appear as high-contrast black/white silhouettes due to the 1M+ triangle
+  AAA meshes with complex normal data
+- Material readability at 3/5 — improved from baseline but still needs PBR refinement

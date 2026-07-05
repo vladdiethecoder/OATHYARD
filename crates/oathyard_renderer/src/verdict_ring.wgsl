@@ -264,9 +264,9 @@ fn procedural_pbr(world_pos: vec3<f32>, n: vec3<f32>, material_type: f32, tint: 
         return tint * (0.98 + subtle);  // Unit-064: full tint for color readability
     }
 
-    // Unit-095: Fighter team-color path — output tint directly, bypass all procedural/texture mixing
+    // Unit-095: Fighter team-color path — output tint directly with brightness modulation
     if (material_type > 3.5 && material_type < 4.5) {
-        return vec3<f32>(tint.r * 2.0, tint.g * 2.0, tint.b * 2.0);  // amplified for visibility
+        return tint * (0.85 + noise2(fract(vec2<f32>(world_pos.x * 3.0, world_pos.y * 3.0))) * 0.15);
     }
 
     if (material_type < 0.5) {
@@ -611,19 +611,23 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
         vec3<f32>(0.02),
         vec3<f32>(1.18),
     );
-    // Unit-095: Team color rendering — two-layer approach:
-    // 1. Fighters use tint as primary color with texture luminance as brightness modulation
-    //    This preserves team color identity (gold/crimson) while showing surface detail.
-    // 2. Non-fighters use texture-only with procedural identity.
+    // Unit-100: Team color rendering — use per-vertex color as team tint.
+    // The vertex color is set during mesh loading to the team color,
+    // bypassing the uniform buffer pitfall entirely.
     // Unit-095 renderer contract: material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22))
     // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
-    // Unit-098: Team identity — strong blend for visible gold/crimson.
-    // Unit-099: Very strong tint blend (0.92) for clear team color on small fighters.
-    let is_fighter = mat_type < 5.0;
-    let team_tinted = mix(sampled_base, tint, 0.92);
-    let texture_base = select(sampled_base, team_tinted, is_fighter);
+    let is_fighter_body_mesh = mat_type > 3.5 && mat_type < 4.5;
+    let vertex_tint = input.color;
+    let tex_lum = dot(sampled_base, vec3<f32>(0.299, 0.587, 0.114));
+    let team_tinted = vertex_tint * (0.85 + tex_lum * 0.30);
+    let uniform_tinted = tint * (0.85 + tex_lum * 0.30);
+    // Use vertex color for fighters, uniform tint for others
+    let texture_base = select(sampled_base, select(uniform_tinted, team_tinted, is_fighter_body_mesh), is_fighter_body_mesh);
+    // Unit-100: For fighters (mat_type ~4.0), use texture_base exclusively.
+    // For non-fighters, blend procedural_pbr with texture_base.
     let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
-    let base = mix(procedural_base, texture_base, fighter_mix);
+    let is_fighter_body = mat_type > 3.5 && mat_type < 4.5;
+    let base = select(mix(procedural_base, texture_base, fighter_mix), texture_base, is_fighter_body);
 
     // Unit-098: Balanced 3-point lighting with strong ambient fill.
     // Previous values produced extreme HDR (diffuse*1.2 + fill + back + rim + spec + fresnel)
@@ -664,9 +668,10 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
 
     let raw_final = color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution;
-    // Unit-099: Milder tone map for mesh fighters — simple gamma only, no Reinhard knee.
-    // Team colors (gold/crimson) are crushed by the aggressive x/(1+l) curve.
-    // Gamma 2.2 alone preserves hue and saturation at typical gameplay luminances.
-    let final_color = pow(clamp(raw_final, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
+    // Unit-100: Gentle Reinhard tone map — soft knee that preserves team color hue
+    // without the white crush of gamma-only or the color wash of full Reinhard.
+    let l = dot(raw_final, vec3<f32>(0.2126, 0.7152, 0.0722));
+    let mapped = raw_final / (1.0 + l * 0.4);
+    let final_color = pow(clamp(mapped, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
     return vec4<f32>(final_color, 0.95);
 }

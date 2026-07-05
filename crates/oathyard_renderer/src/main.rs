@@ -1066,8 +1066,9 @@ fn load_runtime_mesh_with_clip(spec: &RuntimeMeshSpec, clip_id: &str) -> Result<
             ];
             MeshVertex {
                 position: [transformed[0], transformed[1] * 1.55, transformed[2]],
-                // Unit-062: Stable object-space box-projection material coordinates.
-                // Replace noisy triplanar with per-asset scaled object-space coords.
+                // Unit-100: Set vertex color to team tint for fighter meshes.
+                // This bypasses the uniform buffer pitfall and ensures each
+                // fighter mesh gets its correct team color via vertex attribute.
                 material_uv: if vi < mesh_texcoords.len() {
                     [wrap01(mesh_texcoords[vi][0]), wrap01(mesh_texcoords[vi][1])]
                 } else {
@@ -1076,18 +1077,24 @@ fn load_runtime_mesh_with_clip(spec: &RuntimeMeshSpec, clip_id: &str) -> Result<
                         wrap01(local[1] * 0.58 + 0.21),
                     ]
                 },
-                color: if vi < mesh_material_colors.len() {
-                    [
-                        (mesh_material_colors[vi][0] + 0.04 * local[2].abs().min(1.0)).min(1.25),
-                        (mesh_material_colors[vi][1] + 0.04 * local[1].abs().min(1.0)).min(1.25),
-                        (mesh_material_colors[vi][2] + 0.04 * local[0].abs().min(1.0)).min(1.25),
-                    ]
-                } else {
-                    [
-                        base_color[0] + 0.05 * local[2].abs().min(1.0),
-                        base_color[1] + 0.05 * local[1].abs().min(1.0),
-                        base_color[2] + 0.05 * local[0].abs().min(1.0),
-                    ]
+                color: {
+                    // Unit-100: Use team tint as vertex color for fighter body meshes
+                    let mat = material_for_mesh(&spec.mesh_asset_id);
+                    if mat.material_type > 3.5 && mat.material_type < 4.5 {
+                        [mat.tint_r, mat.tint_g, mat.tint_b]
+                    } else if vi < mesh_material_colors.len() {
+                        [
+                            (mesh_material_colors[vi][0] + 0.04 * local[2].abs().min(1.0)).min(1.25),
+                            (mesh_material_colors[vi][1] + 0.04 * local[1].abs().min(1.0)).min(1.25),
+                            (mesh_material_colors[vi][2] + 0.04 * local[0].abs().min(1.0)).min(1.25),
+                        ]
+                    } else {
+                        [
+                            base_color[0] + 0.05 * local[2].abs().min(1.0),
+                            base_color[1] + 0.05 * local[1].abs().min(1.0),
+                            base_color[2] + 0.05 * local[0].abs().min(1.0),
+                        ]
+                    }
                 },
                 // Normals: use source normals if available (set later), otherwise computed.
                 normal: if vi < mesh_normals.len() { mesh_normals[vi] } else { [0.0, 0.0, 0.0] },
@@ -3512,6 +3519,10 @@ struct WindowedGpuMesh {
     index_buffer: wgpu::Buffer,
     index_count: u32,
     material_bind_group: wgpu::BindGroup,
+    // Unit-100: Per-mesh bind group 0 with this mesh's own material uniform buffer.
+    // Fixes the queue.write_buffer-inside-render-pass pitfall where all meshes
+    // shared the first mesh's material.
+    per_mesh_bind_group0: wgpu::BindGroup,
     mesh_material: MeshMaterial,
     _textures: (wgpu::Texture, wgpu::Texture, wgpu::Texture),
 }
@@ -4354,11 +4365,34 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::Sampler(&material_sampler) },
                 ],
             });
+            // Unit-100: Create per-mesh material uniform buffer + bind group 0.
+            // This fixes the queue.write_buffer-inside-render-pass pitfall where
+            // all meshes shared the first mesh's material uniform.
+            let mat = material_for_mesh(&mesh.mesh_asset_id);
+            let mat_bytes = bytemuck::bytes_of(&mat);
+            let mat_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("oathyard windowed per-mesh material"),
+                size: mat_bytes.len() as u64,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            queue.write_buffer(&mat_buffer, 0, mat_bytes);
+            let per_mesh_bg0 = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("oathyard windowed per-mesh bind group 0"),
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: uniform_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 1, resource: camera_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 2, resource: mat_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 3, resource: pose_buffer.as_entire_binding() },
+                ],
+            });
             WindowedGpuMesh {
                 vertex_buffer, index_buffer,
                 index_count: mesh.indices.len() as u32,
                 material_bind_group: mat_bg,
-                mesh_material: material_for_mesh(&mesh.mesh_asset_id),
+                per_mesh_bind_group0: per_mesh_bg0,
+                mesh_material: mat,
                 _textures: (bt, nt, ot),
             }
         }).collect();
@@ -4391,10 +4425,14 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 })],
             }),
             primitive: wgpu::PrimitiveState::default(),
+            // Unit-100: SDF is a background layer — write color but NOT depth.
+            // depth_compare=Always means SDF always passes; depth_write=false
+            // means the depth buffer stays at 1.0 (cleared) so mesh fragments
+            // with depth < 1.0 will correctly pass the Less test.
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: Some(true),
-                depth_compare: Some(wgpu::CompareFunction::Less),
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::Always),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -4934,12 +4972,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             render_pass.set_pipeline(&app.pipeline);
                             render_pass.set_bind_group(0, &app.bind_group, &[]);
                             for mesh in &app.gpu_meshes {
-                                app.queue.write_buffer(
-                                    &app.mesh_material_buffer,
-                                    0,
-                                    bytemuck::bytes_of(&mesh.mesh_material),
-                                );
-                                render_pass.set_bind_group(0, &app.bind_group, &[]);
+                                // Unit-100: Use per-mesh bind group 0 instead of
+                                // queue.write_buffer inside render pass (which
+                                // doesn't update per-draw).
+                                render_pass.set_bind_group(0, &mesh.per_mesh_bind_group0, &[]);
                                 render_pass.set_bind_group(1, &mesh.material_bind_group, &[]);
                                 render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
                                 render_pass.set_index_buffer(
@@ -5306,20 +5342,24 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
 // Draws game state, timeline, action labels, and combat results
 // using the existing bitmap font system.
 fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &WindowedApp) {
-    let state_label = app.interactive_state.as_str();
-
-    // Top-left: state label panel
-    draw_panel(rgba, width, height, 20, 20, 600, 35);
-    draw_text(rgba, width, height, state_label, 35, 28, 255, 220, 120);
+    // Unit-100: Skip redundant state label for boot/main menu to prevent ghosting.
+    let is_boot_menu = matches!(app.interactive_state, InteractiveState::Boot | InteractiveState::MainMenu);
+    if !is_boot_menu {
+        // Top-left: state label panel
+        let state_label = app.interactive_state.as_str();
+        draw_panel(rgba, width, height, 20, 20, 600, 35);
+        draw_text(rgba, width, height, state_label, 35, 28, 255, 220, 120);
+    }
 
     // State-specific UI
     match app.interactive_state {
         InteractiveState::Boot | InteractiveState::MainMenu => {
             // Unit-098: OATHYARD branding on boot/main menu
-            draw_text(rgba, width, height, "OATHYARD", 35, 70, 255, 220, 60);
-            draw_text(rgba, width, height, "VERDICT-RING COMBAT", 35, 90, 200, 180, 100);
-            draw_text(rgba, width, height, "> LOCAL DUEL (ENTER)", 35, 120, 255, 255, 100);
-            draw_text(rgba, width, height, "  QUIT (ESC/Q)", 35, 140, 200, 200, 200);
+            draw_panel(rgba, width, height, 20, 20, 600, 120);
+            draw_text(rgba, width, height, "OATHYARD", 35, 35, 255, 220, 60);
+            draw_text(rgba, width, height, "VERDICT-RING COMBAT", 35, 65, 200, 180, 100);
+            draw_text(rgba, width, height, "> LOCAL DUEL (ENTER)", 35, 95, 255, 255, 100);
+            draw_text(rgba, width, height, "  QUIT (ESC/Q)", 35, 115, 200, 200, 200);
         }
         InteractiveState::FighterSelect => {
             let fighter = ROSTER_FIGHTERS_WINDOWED
@@ -5395,10 +5435,12 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let line = format!("{}[{}] {}", marker, i, s.to_uppercase());
                 draw_text(rgba, width, height, &line, 35, 138 + i as i32 * 16, 200, 200, 200);
             }
-            // Unit-098: Action legend moved below all 10 slots
-            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY 5=CUT", 35, 310, 150, 180, 200);
-            draw_text(rgba, width, height, "6=THRUST 7=BRACE 8=BASH 9=HOOK 0=BIND", 35, 328, 150, 180, 200);
-            draw_text(rgba, width, height, "G=GRAB B=SHOVE K=KICK R=RECOVER  ENTER=COMMIT", 35, 346, 150, 180, 200);
+            // Unit-100: Action legend in a panel at bottom-left to avoid overlap.
+            draw_panel(rgba, width, height, 20, height as i32 - 100, 550, 80);
+            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY 5=CUT", 30, height as i32 - 90, 150, 180, 200);
+            draw_text(rgba, width, height, "6=THRUST 7=BRACE 8=BASH 9=HOOK 0=BIND", 30, height as i32 - 72, 150, 180, 200);
+            draw_text(rgba, width, height, "G=GRAB B=SHOVE K=KICK R=RECOVER", 30, height as i32 - 54, 150, 180, 200);
+            draw_text(rgba, width, height, "ENTER=COMMIT", 30, height as i32 - 36, 255, 220, 120);
         }
         InteractiveState::Plan => {
             draw_text(rgba, width, height, "PLAN - COMMITTING...", 35, 78, 255, 220, 120);
