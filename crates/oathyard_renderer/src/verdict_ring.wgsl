@@ -140,10 +140,17 @@ fn fighter_sdf(p: vec3<f32>, side: f32, guard: f32) -> f32 {
 
 fn scene_sdf(p: vec3<f32>) -> vec4<f32> {
     let floor_val = p.y + 0.48;
-    let ring = sd_torus_y(p - vec3<f32>(0.0, -0.47, 0.0), 1.48, 0.035);
+    // Unit-099: Wider ring with thicker rim — 25% larger radius, 2x thicker
+    // so it remains visible against the grey background at gameplay distances.
+    let ring = sd_torus_y(p - vec3<f32>(0.0, -0.47, 0.0), 1.48, 0.065);
     let oath_stone = sd_box(rot_y(p - vec3<f32>(0.0, -0.32, -1.22), 0.25), vec3<f32>(0.38, 0.18, 0.12));
     let witness_left = sd_box(rot_y(p - vec3<f32>(-1.38, -0.34, -0.58), 0.10), vec3<f32>(0.12, 0.28, 0.10));
     let witness_right = sd_box(rot_y(p - vec3<f32>(1.38, -0.34, -0.58), -0.10), vec3<f32>(0.12, 0.28, 0.10));
+    // Unit-099: Additional arena boundary markers — four boundary posts at corners
+    let bound_post_tl = sd_box(p - vec3<f32>(-1.65, -0.20, -1.65), vec3<f32>(0.05, 0.28, 0.05));
+    let bound_post_tr = sd_box(p - vec3<f32>(1.65, -0.20, -1.65), vec3<f32>(0.05, 0.28, 0.05));
+    let bound_post_bl = sd_box(p - vec3<f32>(-1.65, -0.20, 1.65), vec3<f32>(0.05, 0.28, 0.05));
+    let bound_post_br = sd_box(p - vec3<f32>(1.65, -0.20, 1.65), vec3<f32>(0.05, 0.28, 0.05));
     let guard = 0.35 + 0.40 * packet.seed.x;
     // Unit-095: Disable SDF fighters when mesh fighters are loaded.
     // The SDF procedural fighters used fixed colors that masked the
@@ -173,6 +180,10 @@ fn scene_sdf(p: vec3<f32>) -> vec4<f32> {
     if (oath_stone < d) { d = oath_stone; mat = 3.0; }
     if (witness_left < d) { d = witness_left; mat = 3.0; }
     if (witness_right < d) { d = witness_right; mat = 3.0; }
+    if (bound_post_tl < d) { d = bound_post_tl; mat = 8.0; }
+    if (bound_post_tr < d) { d = bound_post_tr; mat = 8.0; }
+    if (bound_post_bl < d) { d = bound_post_bl; mat = 8.0; }
+    if (bound_post_br < d) { d = bound_post_br; mat = 8.0; }
     if (fighter_a < d) { d = fighter_a; mat = 4.0; }
     if (fighter_b < d) { d = fighter_b; mat = 4.0; }
     if (contact_spark < d) { d = contact_spark; mat = 6.0; }
@@ -416,22 +427,23 @@ fn tone_map(x: vec3<f32>) -> vec3<f32> {
     return pow(clamp(mapped, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
 }
 
-// Unit-049: SDF material palette — Unit-060: increased saturation for separation.
-// Unit-098b: Brighter floor and ring for arena visibility. Added fighter contact shadow.
+// Unit-049: SDF material palette — Unit-099: dramatic brightness boost for arena readability.
+// Floor: warm stone visible against dark void. Ring: metallic gold/bronze. Posts: dark iron.
 fn sdf_material_color(mat: f32, p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
-    // Floor — warm grey-brown, visible against void (was dark 0.22/0.18/0.12)
-    let floor_base = procedural_pbr(p, n, 3.0, vec3<f32>(0.38, 0.34, 0.26));
-    // Fighter proximity darkening — contact shadow blob
+    // Floor — warm stone, substantially brighter (was 0.38/0.34/0.26 tint)
+    let floor_base = procedural_pbr(p, n, 3.0, vec3<f32>(0.52, 0.45, 0.35));
+    // Fighter proximity darkening — contact shadow blob (reduced to avoid crushing)
     let dist_a = length(p - vec3<f32>(-0.72, 0.0, 0.0));
     let dist_b = length(p - vec3<f32>(0.72, 0.0, 0.0));
-    let fighter_shadow = 1.0 - smoothstep(0.15, 0.55, min(dist_a, dist_b)) * 0.45;
+    let fighter_shadow = 1.0 - smoothstep(0.15, 0.55, min(dist_a, dist_b)) * 0.35;
     if (mat < 1.5) { return floor_base * fighter_shadow; }
-    if (mat < 2.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.75, 0.58, 0.22)); } // ring — brighter gold
-    if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.40, 0.36, 0.32)); } // stone — warmer gray
-    if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.82, 0.50, 0.32)); } // skin/fighter — warmer
-    if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.85, 0.83, 0.88)); } // blade — brighter
-    if (mat < 6.5) { return vec3<f32>(1.0, 0.58, 0.15); } // accent — brighter orange
-    // Unit-049: UI panel material — emissive warm glow with subtle pattern
+    if (mat < 2.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.85, 0.68, 0.28)); } // ring — bright gold
+    if (mat < 3.5) { return procedural_pbr(p, n, 3.0, vec3<f32>(0.48, 0.42, 0.36)); } // stone — warmer
+    if (mat < 4.5) { return procedural_pbr(p, n, 4.0, vec3<f32>(0.82, 0.50, 0.32)); } // fighter — warmer
+    if (mat < 5.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.88, 0.86, 0.90)); } // blade — brighter
+    if (mat < 6.5) { return vec3<f32>(1.0, 0.58, 0.15); } // accent — orange spark
+    if (mat < 7.5) { return procedural_pbr(p, n, 0.0, vec3<f32>(0.50, 0.46, 0.42)); } // iron boundary posts
+    // UI panel material — emissive warm glow
     let ui_uv = fract(vec2<f32>(p.x * 3.0 + p.z * 2.0, p.y * 4.0));
     let ui_line = smoothstep(0.02, 0.0, abs(fract(p.y * 8.0) - 0.5)) * 0.15;
     return vec3<f32>(0.42, 0.38, 0.32) + vec3<f32>(ui_line * 0.6, ui_line * 0.4, ui_line * 0.2);
@@ -451,7 +463,10 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
     let rd = normalize(forward + right_vec * uv.x * aspect * fov + up_vec * uv.y * fov);
 
     let hit = raymarch_scene(ro, rd);
-    var color = vec3<f32>(0.018, 0.015, 0.022) + vec3<f32>(0.03, 0.026, 0.030) * (1.0 - input.uv.y);
+    // Unit-099: Darker void background to contrast with arena floor.
+    // Was: (0.018, 0.015, 0.022) + gradient
+    // Now: nearly black void with slight blue tint at bottom
+    var color = vec3<f32>(0.006, 0.005, 0.010) + vec3<f32>(0.010, 0.008, 0.015) * (1.0 - input.uv.y);
     if (hit.w > 0.5) {
         let p = ro + rd * hit.x;
         let n = normal_at(p);
@@ -464,19 +479,19 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
         // Unit-051: SSAO approximation for contact grounding
         let ssao = ssao_approx(p, n);
         // Unit-051: Ground contact darkening — stronger occlusion near floor
-        let ground_occlusion = mix(1.0, 0.55, smoothstep(0.1, -0.4, p.y));
-        let ao = clamp(0.38 + 0.62 * n.y, 0.16, 1.0) * ssao * ground_occlusion;
+        let ground_occlusion = mix(1.0, 0.72, smoothstep(0.1, -0.4, p.y));
+        let ao = clamp(0.42 + 0.58 * n.y, 0.28, 1.0) * ssao * ground_occlusion;
         let base = sdf_material_color(hit.y, p, n);
-        // Unit-060: Increased ambient for visibility (was 0.18).
-        color = base * (0.38 + diffuse * 1.55 + fill_light) * ao + vec3<f32>(0.65, 0.48, 0.28) * rim_light;
+        // Unit-099: Boosted ambient from 0.38 to 0.65 for arena floor visibility.
+        color = base * (0.65 + diffuse * 1.55 + fill_light) * ao + vec3<f32>(0.65, 0.48, 0.28) * rim_light;
         let contact_bloom = exp(-32.0 * length(p - vec3<f32>(0.02, 0.42, -0.02)));
         color = color + vec3<f32>(0.85, 0.48, 0.10) * contact_bloom * 1.8;
     }
-    // Unit-060: Reduced fog density and brighter fog color for scene readability.
-    // Was: exp(-0.060 * hit.x^2), max 0.65, dark color (0.14,0.12,0.10)
-    // Now: exp(-0.012 * hit.x^2), max 0.20, warmer/lighter color
-    let fog = clamp(1.0 - exp(-0.012 * hit.x * hit.x), 0.0, 0.20);
-    let fog_color = vec3<f32>(0.35, 0.32, 0.28) + vec3<f32>(0.08, 0.06, 0.03) * input.uv.y;
+    // Unit-099: Reduced fog density for closer arena visibility.
+    // Was: exp(-0.012 * hit.x^2), max 0.20, dark color
+    // Now: exp(-0.004 * hit.x^2), max 0.12, warmer/lighter color
+    let fog = clamp(1.0 - exp(-0.004 * hit.x * hit.x), 0.0, 0.12);
+    let fog_color = vec3<f32>(0.38, 0.34, 0.30) + vec3<f32>(0.06, 0.04, 0.02) * input.uv.y;
     color = mix(color, fog_color, fog);
     let vignette = smoothstep(1.42, 0.20, length(uv * vec2<f32>(0.82, 1.0)));
     color = color * (0.52 + 0.48 * vignette);
@@ -603,9 +618,9 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // Unit-095 renderer contract: material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22))
     // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
     // Unit-098: Team identity — strong blend for visible gold/crimson.
-    // mix(texture, tint, 0.75) pushes team color clearly while retaining texture detail.
+    // Unit-099: Very strong tint blend (0.92) for clear team color on small fighters.
     let is_fighter = mat_type < 5.0;
-    let team_tinted = mix(sampled_base, tint, 0.75);
+    let team_tinted = mix(sampled_base, tint, 0.92);
     let texture_base = select(sampled_base, team_tinted, is_fighter);
     let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
     let base = mix(procedural_base, texture_base, fighter_mix);
@@ -621,13 +636,15 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let back_light = max(dot(n, back), 0.0) * 0.15;
 
     // Unit-098: Raised AO floor from 0.28 to 0.45 — prevents crushed black shadows.
-    let texture_ao = clamp(sampled_orm.r, 0.45, 1.0);
+    // Unit-099: Raised AO floor further to 0.50 for brighter fighters.
+    let texture_ao = clamp(sampled_orm.r, 0.50, 1.0);
     let texture_roughness = clamp(sampled_orm.g, 0.15, 1.0);
     let ground_occlusion = mix(1.0, 0.88, smoothstep(0.15, -0.35, input.world_pos.y));
-    let ao = clamp(0.65 + 0.35 * n.y, 0.45, 1.0) * ground_occlusion * texture_ao;
-    // Unit-098: Balanced lighting — high ambient (0.55) prevents dark-side crush,
-    // moderate diffuse (0.65) provides form definition without extreme HDR.
-    let color = base * (0.55 + diffuse * 0.65 + fill_light + back_light) * ao * input.shade;
+    // Unit-099: Raised AO from 0.45 to 0.55 for less crushed shadows.
+    let ao = clamp(0.65 + 0.35 * n.y, 0.55, 1.0) * ground_occlusion * texture_ao;
+    // Unit-098: Balanced lighting — high ambient prevents dark-side crush.
+    // Unit-099: Boosted ambient from 0.55 to 0.85 for visible team colors.
+    let color = base * (0.85 + diffuse * 0.65 + fill_light + back_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
@@ -647,7 +664,9 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
 
     let raw_final = color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution;
-    // Unit-095: Standard tone mapping for all meshes.
-    let final_color = tone_map(raw_final);
+    // Unit-099: Milder tone map for mesh fighters — simple gamma only, no Reinhard knee.
+    // Team colors (gold/crimson) are crushed by the aggressive x/(1+l) curve.
+    // Gamma 2.2 alone preserves hue and saturation at typical gameplay luminances.
+    let final_color = pow(clamp(raw_final, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
     return vec4<f32>(final_color, 0.95);
 }

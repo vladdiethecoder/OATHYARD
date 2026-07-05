@@ -3822,8 +3822,8 @@ fn unit088_commit_reveal_ui_has_matchup_explanation() {
     let renderer =
         fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
     assert!(
-        renderer.contains("SIMULTANEOUS REVEAL"),
-        "commit/reveal must have simultaneous reveal text"
+        renderer.contains("=== COMMIT REVEAL ==="),
+        "commit/reveal must show simultaneous reveal text"
     );
     assert!(
         renderer.contains("MATCHUP"),
@@ -4219,8 +4219,8 @@ fn unit092_windowed_ui_overlay_exists() {
         "windowed timeline UI missing"
     );
     assert!(
-        renderer.contains("SIMULTANEOUS REVEAL"),
-        "windowed commit/reveal UI missing"
+        renderer.contains("=== COMMIT REVEAL ==="),
+        "windowed commit/reveal UI present"
     );
     assert!(
         renderer.contains("MATCH RESULT"),

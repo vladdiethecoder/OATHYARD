@@ -3039,7 +3039,7 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             let o_cat = action_category(o_action);
             draw_panel(rgba, width, height, 20, 70, 600, 220);
             draw_title_bar(rgba, width, height, 20, 70, 600, "COMMIT / REVEAL");
-            draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "=== COMMIT REVEAL ===", 35, 108, 255, 255, 100);
             let p_line = format!("PLAYER(GOLD): {}", p_action.to_uppercase());
             draw_text(rgba, width, height, &p_line, 35, 138, 255, 220, 60);
             let p_cat_line = format!("  INTENT: {}", p_cat.to_uppercase());
@@ -3551,6 +3551,7 @@ struct WindowedApp {
     surface: wgpu::Surface<'static>,
     surface_config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
+    sdf_pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
     mesh_material_buffer: wgpu::Buffer,
     pose_buffer: wgpu::Buffer,
@@ -4295,7 +4296,13 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 cull_mode: None,
                 ..Default::default()
             },
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::Less),
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState::default(),
             multiview_mask: None,
             cache: None,
@@ -4356,12 +4363,53 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             }
         }).collect();
 
+        // Unit-099: SDF pipeline for arena/environment background.
+        // The SDF pass (vs_main/fs_main) renders the floor, ring, witness stones,
+        // and boundary posts as a fullscreen triangle behind the meshes.
+        let sdf_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("oathyard windowed SDF pipeline layout"),
+            bind_group_layouts: &[Some(&bind_group_layout)],
+            immediate_size: 0,
+        });
+        let sdf_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("oathyard windowed SDF pipeline"),
+            layout: Some(&sdf_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: surface_format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::Less),
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+
         self.app = Some(WindowedApp {
             device,
             queue,
             surface,
             surface_config,
             pipeline,
+            sdf_pipeline,
             bind_group,
             mesh_material_buffer,
             pose_buffer,
@@ -4836,6 +4884,18 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             },
                         );
 
+                        let depth_texture = app.device.create_texture(&wgpu::TextureDescriptor {
+                            label: Some("oathyard windowed depth"),
+                            size: wgpu::Extent3d { width: surf_w, height: surf_h, depth_or_array_layers: 1 },
+                            mip_level_count: 1,
+                            sample_count: 1,
+                            dimension: wgpu::TextureDimension::D2,
+                            format: wgpu::TextureFormat::Depth32Float,
+                            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                            view_formats: &[],
+                        });
+                        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
                         {
                             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                                 label: Some("oathyard windowed render pass"),
@@ -4844,20 +4904,32 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                     resolve_target: None,
                                     ops: wgpu::Operations {
                                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                                            r: 0.35,
-                                            g: 0.32,
-                                            b: 0.28,
+                                            r: 0.02,
+                                            g: 0.015,
+                                            b: 0.03,
                                             a: 1.0,
                                         }),
                                         store: wgpu::StoreOp::Store,
                                     },
                                     depth_slice: None,
                                 })],
-                                depth_stencil_attachment: None,
+                                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                                    view: &depth_view,
+                                    depth_ops: Some(wgpu::Operations {
+                                        load: wgpu::LoadOp::Clear(1.0),
+                                        store: wgpu::StoreOp::Store,
+                                    }),
+                                    stencil_ops: None,
+                                }),
                                 occlusion_query_set: None,
                                 timestamp_writes: None,
                                 multiview_mask: None,
                             });
+
+                            // Unit-099: SDF arena background — fullscreen triangle raymarch
+                            render_pass.set_pipeline(&app.sdf_pipeline);
+                            render_pass.set_bind_group(0, &app.bind_group, &[]);
+                            render_pass.draw(0..3, 0..1);
 
                             render_pass.set_pipeline(&app.pipeline);
                             render_pass.set_bind_group(0, &app.bind_group, &[]);
@@ -5332,7 +5404,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
             draw_text(rgba, width, height, "PLAN - COMMITTING...", 35, 78, 255, 220, 120);
         }
         InteractiveState::CommitReveal => {
-            draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 78, 255, 255, 100);
+            draw_text(rgba, width, height, "=== COMMIT REVEAL ===", 35, 78, 255, 255, 100);
             let p_action = app
                 .timeline_slots
                 .first()
@@ -5486,7 +5558,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
     // Unit-098: Remove debug readouts from player-facing UI.
     // TM:F and IN:N are internal verification data, not player-facing.
     // Only show a small OATHYARD watermark in bottom-right.
-    draw_text(rgba, width, height, "OATHYARD", (width as i32) - 90, (height as i32) - 25, 80, 80, 100);
+    draw_text(rgba, width, height, "OATHYARD", (width as i32) - 170, (height as i32) - 25, 80, 80, 100);
 
     // Unit-097: Bottom-left persistent control hint bar
     let hint = match app.interactive_state {
