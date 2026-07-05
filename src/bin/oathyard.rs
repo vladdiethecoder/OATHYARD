@@ -1300,6 +1300,50 @@ fn launch_play_flow(
         .arg(sf.to_string())
         .arg("--auto-exit");
 
+    // Unit-096: Generate default scripted input if none provided.
+    // This cycles through all 16 game states during the windowed run,
+    // proving the executable gameplay flow, not just a static OBSERVE frame.
+    let default_scripted_input = if scripted_input.is_none() {
+        let si_path = artifact_dir.join("default_scripted_input.json");
+        // Space 16 "advance" events across the first ~480 frames (30 frames each)
+        let inputs: Vec<String> = (0..16u32)
+            .map(|i| {
+                let frame = i * 30 + 10; // Start at frame 10, advance every 30 frames
+                let label = match i {
+                    0 => "boot_to_main_menu",
+                    1 => "main_menu_to_fighter_select",
+                    2 => "fighter_to_loadout",
+                    3 => "loadout_to_arena",
+                    4 => "arena_to_match_intro",
+                    5 => "intro_to_observe",
+                    6 => "observe_to_timeline",
+                    7 => "timeline_to_plan",
+                    8 => "plan_to_commit_reveal",
+                    9 => "reveal_to_resolve",
+                    10 => "resolve_to_consequence",
+                    11 => "consequence_to_replan",
+                    12 => "replan_to_match_result",
+                    13 => "result_to_replay",
+                    14 => "replay_to_fight_film",
+                    _ => "fight_film_to_quit",
+                };
+                format!(
+                    r#"{{"action":"advance","at_frame":{frame},"label":"{label}"}}"#
+                )
+            })
+            .collect();
+        let si_json = format!(
+            r#"{{"schema":"oathyard.windowed_scripted_input.v1","inputs":[{}]}}"#,
+            inputs.join(",")
+        );
+        fs::write(&si_path, &si_json).map_err(|e| OathError::Io(e.to_string()))?;
+        Some(si_path)
+    } else {
+        None
+    };
+
+    let scripted_input = scripted_input.or(default_scripted_input);
+
     if let Some(ref si) = scripted_input {
         cmd.arg("--scripted-input").arg(si);
     }
