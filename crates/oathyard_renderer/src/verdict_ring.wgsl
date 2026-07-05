@@ -611,23 +611,15 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
         vec3<f32>(0.02),
         vec3<f32>(1.18),
     );
-    // Unit-100: Team color rendering — use per-vertex color as team tint.
-    // The vertex color is set during mesh loading to the team color,
-    // bypassing the uniform buffer pitfall entirely.
+    // Unit-100: Team color is baked into the base color texture at load time
+    // (CPU-side multiply). The shader just samples the texture directly.
+    // For fighter meshes, use texture as-is. For non-fighters, blend with procedural.
     // Unit-095 renderer contract: material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22))
     // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
     let is_fighter_body_mesh = mat_type > 3.5 && mat_type < 4.5;
-    let vertex_tint = input.color;
-    let tex_lum = dot(sampled_base, vec3<f32>(0.299, 0.587, 0.114));
-    let team_tinted = vertex_tint * (0.85 + tex_lum * 0.30);
-    let uniform_tinted = tint * (0.85 + tex_lum * 0.30);
-    // Use vertex color for fighters, uniform tint for others
-    let texture_base = select(sampled_base, select(uniform_tinted, team_tinted, is_fighter_body_mesh), is_fighter_body_mesh);
-    // Unit-100: For fighters (mat_type ~4.0), use texture_base exclusively.
-    // For non-fighters, blend procedural_pbr with texture_base.
+    let texture_base = sampled_base;
     let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
-    let is_fighter_body = mat_type > 3.5 && mat_type < 4.5;
-    let base = select(mix(procedural_base, texture_base, fighter_mix), texture_base, is_fighter_body);
+    let base = select(mix(procedural_base, texture_base, fighter_mix), texture_base, is_fighter_body_mesh);
 
     // Unit-098: Balanced 3-point lighting with strong ambient fill.
     // Previous values produced extreme HDR (diffuse*1.2 + fill + back + rim + spec + fresnel)
@@ -646,9 +638,9 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let ground_occlusion = mix(1.0, 0.88, smoothstep(0.15, -0.35, input.world_pos.y));
     // Unit-099: Raised AO from 0.45 to 0.55 for less crushed shadows.
     let ao = clamp(0.65 + 0.35 * n.y, 0.55, 1.0) * ground_occlusion * texture_ao;
-    // Unit-098: Balanced lighting — high ambient prevents dark-side crush.
-    // Unit-099: Boosted ambient from 0.55 to 0.85 for visible team colors.
-    let color = base * (0.85 + diffuse * 0.65 + fill_light + back_light) * ao * input.shade;
+    // Unit-100: Reduced ambient from 0.85 to 0.45 to preserve team color saturation.
+    // High ambient was washing gold/crimson to white after tone mapping.
+    let color = base * (0.45 + diffuse * 0.55 + fill_light + back_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
@@ -673,5 +665,5 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let l = dot(raw_final, vec3<f32>(0.2126, 0.7152, 0.0722));
     let mapped = raw_final / (1.0 + l * 0.4);
     let final_color = pow(clamp(mapped, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
-    return vec4<f32>(final_color, 0.95);
+    return vec4<f32>(final_color, 1.0);
 }

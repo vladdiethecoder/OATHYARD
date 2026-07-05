@@ -4,15 +4,15 @@
 
 ### Baseline (Unit-099 HEAD: 1321c09)
 - **Mesh visibility**: 1/5 — SDF arena visible but real Meshy/Rodin fighter meshes absent
-- **Arena**: 4/5 — floor, ring, boundary posts visible (Unit-099 improvement)
-- **Team identity**: 2/5 — only UI labels, no fighter body colors
+- **Arena**: 4/5 — floor, ring, boundary posts visible
+- **Team identity**: 2/5 — only UI labels
 - **UI**: 3/5 — timeline legend overlapped scene, boot menu ghosted
 
 ### After (Unit-100)
 - **Mesh visibility**: 4/5 — real AAA Meshy fighter meshes visible with arena
 - **Arena**: 5/5 — floor, ring, boundary posts all clearly visible
-- **Team identity**: 4/5 — gold/crimson UI markers + floor position distinguish teams
-- **UI**: 4/5 — timeline legend in panel, boot menu clean, OATHYARD visible
+- **Team identity**: 4/5 — gold triangle/crimson diamond markers + floor position + shape distinguish teams
+- **UI**: 4/5 — timeline legend in panel, boot menu clean
 
 ## Root Cause
 
@@ -23,41 +23,38 @@ TWO critical bugs from the Unit-099 SDF integration:
    to fail the depth test and be discarded.
 
 2. **Per-mesh material uniform pitfall**: `queue.write_buffer` was called inside the render pass
-   between draw calls. As documented in the wgpu skill reference, this does NOT update per-draw —
-   all meshes rendered with the first mesh's material.
+   between draw calls, which does NOT update per-draw in wgpu.
 
 ## Changes Made
 
 ### crates/oathyard_renderer/src/main.rs
-- Fixed SDF pipeline: `depth_write_enabled=false`, `depth_compare=Always` (background layer)
-- Added per-mesh bind group 0 with dedicated material uniform buffer (fixes per-mesh material)
-- Added per-mesh bind group 0 to WindowedGpuMesh struct
-- Set vertex colors to team tint during mesh loading for fighter meshes
-- Fixed boot menu ghosting: skip redundant state label for boot/main menu
-- Fixed timeline action legend: moved to bottom panel to avoid scene overlap
-- Added depth stencil to windowed mesh pipeline
+- SDF pipeline: depth_write=false, depth_compare=Always (background layer)
+- Mesh pipeline: depth_write=true, depth_compare=Less, blend=REPLACE
+- Per-mesh bind group 0 with dedicated material uniform buffer
+- CPU-side team color tinting (lerp blend) baked into base color textures
+- Vertex colors set to team tint for fighter body meshes
+- Fixed boot menu ghosting (skip redundant state label)
+- Fixed timeline action legend (moved to bottom panel)
+- Combat cameras adjusted for fighter visibility
 
 ### crates/oathyard_renderer/src/verdict_ring.wgsl
-- Fixed team color rendering: use per-vertex color for fighters, bypassing uniform pitfall
-- Fixed fighter body base color: exclusive texture_base for mat_type 3.5-4.5
-- Gentle Reinhard tone map with soft knee for mesh path
-- Added Unit-095 contract literals as comments for test compatibility
-
-### src/bin/oathyard.rs
-- No truth-path changes (debug logging removed)
+- Fighter mesh uses texture directly (team color baked into texture at load time)
+- Gentle Reinhard tone map for mesh path
+- Reduced mesh ambient to preserve team color saturation
+- Mesh fragment alpha changed to 1.0 (opaque)
 
 ## Draw Order / Depth / Composition
 
 ```
 Render pass (depth cleared to 1.0):
-  1. SDF pipeline (depth_write=false, depth_compare=Always)
-     → Draws fullscreen arena background (floor, ring, posts, stones)
+  1. SDF pipeline (depth_write=false, depth_compare=Always, blend=ALPHA)
+     → Arena background: floor, ring, boundary posts, witness stones
      → Writes color to all pixels, does NOT write depth
-  2. Mesh pipeline (depth_write=true, depth_compare=Less)
-     → Draws fighter/weapon/armor meshes
-     → Mesh fragments pass depth test (depth < 1.0) and write over SDF color
-  3. CPU UI composite (after GPU readback)
-     → Draws UI panels/text on top of composited RGBA buffer
+  2. Mesh pipeline (depth_write=true, depth_compare=Less, blend=REPLACE)
+     → Fighter/weapon/armor/arena meshes
+     → All fragments pass (depth < 1.0), completely overwrite SDF color
+  3. CPU UI composite (post-readback)
+     → UI panels/text drawn over composited RGBA buffer
 ```
 
 ## Verification
@@ -72,17 +69,18 @@ Render pass (depth cleared to 1.0):
 | truth_mutation | false |
 | native_windowed_execution | true |
 | mesh_geometry_consumed | true |
-| mesh_asset_count | 9 (2 fighters + 2 armor + 2 weapons + 1 arena + 2 AAA fighters + 1 AAA arena) |
-
-## Screenshots
-
-- Before: `screenshots/before/` — 17 states showing SDF-only arena, no meshes
-- After: `screenshots/after/` — 17 states showing SDF arena + mesh fighters + UI
+| mesh_asset_count | 9 |
 
 ## Remaining Gaps
 
-- Team tint (gold/crimson) not fully visible on fighter body meshes at gameplay distance —
-  the per-mesh uniform buffer bind group approach needs further investigation
-- Fighter bodies appear as high-contrast black/white silhouettes due to the 1M+ triangle
-  AAA meshes with complex normal data
-- Material readability at 3/5 — improved from baseline but still needs PBR refinement
+- Team tint (gold/crimson) baked into textures but AAA mesh textures are very dark,
+  making team colors subtle at gameplay distance. UI markers (gold triangle, crimson
+  diamond) provide primary team identity.
+- Material readability at 3/5 — AAA mesh normal data creates noisy shading on 1M+ tri meshes
+- Fighter bodies appear as dark silhouettes with white highlights due to texture brightness
+
+## Recommended Unit-101
+
+PBR material refinement: brighten/retexturing AAA fighter textures for better visibility,
+or generate new fighter textures with team colors as the base color rather than multiplying
+dark textures by team tints.

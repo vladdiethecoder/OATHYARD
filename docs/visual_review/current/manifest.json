@@ -2,7 +2,6 @@
   "schema": "oathyard.visual_review_manifest.v1",
   "unit": "100",
   "git_head_before": "1321c09378c6ce350672349bcfef97a255537e43",
-  "git_head_after": "current",
   "branch": "main",
   "date": "2026-07-05",
   "truth_hash": "0bd4e69b3c94f498",
@@ -10,8 +9,8 @@
   "owner_visual_acceptance": false,
   "public_demo_ready": false,
   "release_candidate_ready": false,
-  "root_cause": "Two bugs: (1) SDF pipeline wrote depth, blocking all mesh fragments; (2) queue.write_buffer inside render pass didn't update per-draw materials",
-  "draw_order": "SDF background (depth_write=false, compare=Always) → Mesh (depth_write=true, compare=Less) → CPU UI composite",
+  "root_cause": "SDF pipeline wrote depth blocking mesh fragments + queue.write_buffer per-draw pitfall",
+  "draw_order": "SDF (depth_write=false, Always) → Mesh (depth_write=true, Less, REPLACE) → CPU UI",
   "scores": {
     "mesh_visibility": {"before": 1.0, "after": 4.0},
     "arena_environment": {"before": 4.0, "after": 5.0},
@@ -28,8 +27,8 @@
   "commands_run": [
     "cargo fmt --check",
     "cargo build --locked",
-    "cargo test --locked",
-    "./target/debug/oathyard play --smoke-frames 480 --artifact-dir <dir>"
+    "cargo test --locked (188 pass)",
+    "./target/debug/oathyard play --smoke-frames 480"
   ],
   "screenshots": {
     "before_dir": "screenshots/before/",

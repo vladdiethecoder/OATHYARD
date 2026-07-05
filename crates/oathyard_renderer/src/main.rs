@@ -420,7 +420,7 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "fighter_closeup_01" => CameraMode { eye: [0.0, 0.90, 2.0], look_at: [0.0, 0.45, -0.1], fov_radians: 0.58 },
         "armor_loadout_family_closeup_01" => CameraMode { eye: [0.0, 0.70, 1.9], look_at: [0.0, 0.32, -0.1], fov_radians: 0.60 },
         "weapon_family_closeup_01" => CameraMode { eye: [0.0, 0.55, 1.6], look_at: [0.0, 0.30, -0.1], fov_radians: 0.55 },
-        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 1.4, 4.5], look_at: [0.0, 0.15, -0.1], fov_radians: 0.80 },
+        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.25, -0.1], fov_radians: 0.78 },
         "oathyard_arena_candidate_01" => CameraMode { eye: [0.0, 0.55, 3.35], look_at: [0.0, 0.18, -0.10], fov_radians: 0.78 },
         "gameplay_distance_fighter_weapon_01" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.35, -0.1], fov_radians: 0.70 },
         "gameplay_distance_fighter_loadout_family_01" => CameraMode { eye: [0.0, 1.15, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
@@ -436,8 +436,8 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         // Unit-052: expanded capture cameras
         "training_yard_establishing" => CameraMode { eye: [0.0, 1.6, 5.0], look_at: [0.0, 0.1, -0.3], fov_radians: 0.78 },
         "recovery_replan_frame" => CameraMode { eye: [-0.2, 0.90, 2.6], look_at: [0.0, 0.38, -0.1], fov_radians: 0.62 },
-        "first_person_combat_view" => CameraMode { eye: [0.0, 1.0, 4.0], look_at: [0.0, 0.30, -0.5], fov_radians: 0.85 },
-        "third_person_combat_view" => CameraMode { eye: [0.0, 1.2, 5.0], look_at: [0.0, 0.25, -0.1], fov_radians: 0.85 },
+        "first_person_combat_view" => CameraMode { eye: [0.0, 1.1, 3.5], look_at: [0.0, 0.35, -0.1], fov_radians: 0.75 },
+        "third_person_combat_view" => CameraMode { eye: [0.0, 1.2, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.78 },
         "replay_verification_ui_or_packet_view" => CameraMode { eye: [0.0, 1.5, 4.0], look_at: [0.0, 0.60, -0.5], fov_radians: 0.70 },
         "performance_debug_overlay" => CameraMode { eye: [0.0, 1.0, 3.5], look_at: [0.0, 0.45, -0.2], fov_radians: 0.72 },
         "settings_accessibility" => CameraMode { eye: [0.0, 1.6, 3.8], look_at: [0.0, 0.80, -0.8], fov_radians: 0.68 },
@@ -4297,7 +4297,9 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: surface_format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    // Unit-100: REPLACE blend for mesh pipeline — mesh fragments
+                    // completely overwrite SDF background without alpha blending.
+                    blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -4333,8 +4335,25 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 usage: wgpu::BufferUsages::INDEX,
             });
             // Material textures: use dummy 1x1 for meshes without material_validation
+            let mat_info = material_for_mesh(&mesh.mesh_asset_id);
+            let is_fighter = mat_info.material_type > 3.5 && mat_info.material_type < 4.5;
             let (bt, nt, ot) = if mesh.material.material_texture_binding {
-                let bi = load_png_rgba(&mesh.material.base_color_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
+                let mut bi = load_png_rgba(&mesh.material.base_color_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
+                // Unit-100: CPU-side team color tinting for fighter meshes.
+                // Bake team tint directly into the base color texture pixels,
+                // bypassing the per-mesh uniform buffer pitfall entirely.
+                if is_fighter && bi.width > 1 {
+                    let tr = (mat_info.tint_r * 255.0) as u8;
+                    let tg = (mat_info.tint_g * 255.0) as u8;
+                    let tb = (mat_info.tint_b * 255.0) as u8;
+                    for chunk in bi.rgba.chunks_exact_mut(4) {
+                        // Unit-100: Lerp texture toward team color (60% team, 40% texture)
+                        // This preserves some surface detail while showing strong team hue.
+                        chunk[0] = ((chunk[0] as f32 * 0.35) + (tr as f32 * 0.65)).min(255.0) as u8;
+                        chunk[1] = ((chunk[1] as f32 * 0.35) + (tg as f32 * 0.65)).min(255.0) as u8;
+                        chunk[2] = ((chunk[2] as f32 * 0.35) + (tb as f32 * 0.65)).min(255.0) as u8;
+                    }
+                }
                 let ni = load_png_rgba(&mesh.material.normal_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![128,128,255,255] });
                 let oi = load_png_rgba(&mesh.material.orm_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
                 (
