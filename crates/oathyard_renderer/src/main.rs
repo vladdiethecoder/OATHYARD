@@ -436,8 +436,8 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         // Unit-052: expanded capture cameras
         "training_yard_establishing" => CameraMode { eye: [0.0, 1.6, 5.0], look_at: [0.0, 0.1, -0.3], fov_radians: 0.78 },
         "recovery_replan_frame" => CameraMode { eye: [-0.2, 0.90, 2.6], look_at: [0.0, 0.38, -0.1], fov_radians: 0.62 },
-        "first_person_combat_view" => CameraMode { eye: [0.0, 0.70, 0.15], look_at: [0.0, 0.55, -1.5], fov_radians: 1.05 },
-        "third_person_combat_view" => CameraMode { eye: [0.0, 1.3, 2.8], look_at: [0.0, 0.50, -0.5], fov_radians: 0.82 },
+        "first_person_combat_view" => CameraMode { eye: [0.0, 1.0, 4.0], look_at: [0.0, 0.30, -0.5], fov_radians: 0.85 },
+        "third_person_combat_view" => CameraMode { eye: [0.0, 1.2, 5.0], look_at: [0.0, 0.25, -0.1], fov_radians: 0.85 },
         "replay_verification_ui_or_packet_view" => CameraMode { eye: [0.0, 1.5, 4.0], look_at: [0.0, 0.60, -0.5], fov_radians: 0.70 },
         "performance_debug_overlay" => CameraMode { eye: [0.0, 1.0, 3.5], look_at: [0.0, 0.45, -0.2], fov_radians: 0.72 },
         "settings_accessibility" => CameraMode { eye: [0.0, 1.6, 3.8], look_at: [0.0, 0.80, -0.8], fov_radians: 0.68 },
