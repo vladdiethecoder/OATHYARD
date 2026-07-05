@@ -1811,16 +1811,42 @@ fn infer_mesh_asset_class(asset_id: &str) -> &'static str {
     if asset_id.contains("verdict_ring") && asset_id.contains("aaa") {
         return "arena";
     }
-    match asset_id {
-        "saltreach_duelist" | "oathyard_writ" | "chainbreaker" | "reed_sentinel"
-        | "gate_shield" | "bruiser_oath" => "fighter",
-        "longsword" | "arming_sword" | "ash_spear" | "bearded_axe" | "billhook"
-        | "curved_sword" | "iron_maul" | "round_shield" => "weapon",
-        "gambeson" | "mail_hauberk" | "heavy_plate" | "lamellar" | "fencer_light"
-        | "bruiser_padded_plate" => "armor",
-        "oathyard_verdict_ring" | "training_yard" => "arena",
-        _ => "weapon",
+    // Unit-102: Use contains() for prefixed IDs (player_saltreach_duelist, etc.)
+    // Previous exact-match caused play-path fighters to be misclassified as "weapon"
+    // and retained alongside AAA fighters, creating duplicate geometry.
+    if asset_id.contains("saltreach_duelist")
+        || asset_id.contains("oathyard_writ")
+        || asset_id.contains("chainbreaker")
+        || asset_id.contains("reed_sentinel")
+        || asset_id.contains("gate_shield")
+        || asset_id.contains("bruiser_oath")
+    {
+        return "fighter";
     }
+    if asset_id.contains("longsword")
+        || asset_id.contains("arming_sword")
+        || asset_id.contains("ash_spear")
+        || asset_id.contains("bearded_axe")
+        || asset_id.contains("billhook")
+        || asset_id.contains("curved_sword")
+        || asset_id.contains("iron_maul")
+        || asset_id.contains("round_shield")
+    {
+        return "weapon";
+    }
+    if asset_id.contains("gambeson")
+        || asset_id.contains("mail_hauberk")
+        || asset_id.contains("heavy_plate")
+        || asset_id.contains("lamellar")
+        || asset_id.contains("fencer_light")
+        || asset_id.contains("bruiser_padded_plate")
+    {
+        return "armor";
+    }
+    if asset_id.contains("verdict_ring") || asset_id.contains("training_yard") {
+        return "arena";
+    }
+    "_unknown"
 }
 
 // Unit-062: Asset-specific tint palette for material readability.
@@ -4339,19 +4365,17 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             let is_fighter = mat_info.material_type > 3.5 && mat_info.material_type < 4.5;
             let (bt, nt, ot) = if mesh.material.material_texture_binding {
                 let mut bi = load_png_rgba(&mesh.material.base_color_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![255,255,255,255] });
-                // Unit-100: CPU-side team color tinting for fighter meshes.
-                // Bake team tint directly into the base color texture pixels,
-                // bypassing the per-mesh uniform buffer pitfall entirely.
+                // Unit-102: Mild team color tint — 30% team, 70% original texture.
+                // Preserves PBR material detail. Team identity comes from the
+                // shader fresnel rim band + UI markers, not full-body color.
                 if is_fighter && bi.width > 1 {
                     let tr = (mat_info.tint_r * 255.0) as u8;
                     let tg = (mat_info.tint_g * 255.0) as u8;
                     let tb = (mat_info.tint_b * 255.0) as u8;
                     for chunk in bi.rgba.chunks_exact_mut(4) {
-                        // Unit-100: Lerp texture toward team color (60% team, 40% texture)
-                        // This preserves some surface detail while showing strong team hue.
-                        chunk[0] = ((chunk[0] as f32 * 0.25) + (tr as f32 * 0.75)).min(255.0) as u8;
-                        chunk[1] = ((chunk[1] as f32 * 0.25) + (tg as f32 * 0.75)).min(255.0) as u8;
-                        chunk[2] = ((chunk[2] as f32 * 0.25) + (tb as f32 * 0.75)).min(255.0) as u8;
+                        chunk[0] = ((chunk[0] as f32 * 0.70) + (tr as f32 * 0.30)).min(255.0) as u8;
+                        chunk[1] = ((chunk[1] as f32 * 0.70) + (tg as f32 * 0.30)).min(255.0) as u8;
+                        chunk[2] = ((chunk[2] as f32 * 0.70) + (tb as f32 * 0.30)).min(255.0) as u8;
                     }
                 }
                 let ni = load_png_rgba(&mesh.material.normal_texture_path).unwrap_or(RuntimeTextureImage { width: 1, height: 1, rgba: vec![128,128,255,255] });

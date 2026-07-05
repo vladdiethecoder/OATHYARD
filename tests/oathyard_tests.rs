@@ -4382,7 +4382,7 @@ fn unit093_lighting_improvements() {
         "half-Lambert lighting missing"
     );
     assert!(
-        shader.contains("Unit-101: Team-colored rim band"),
+        shader.contains("Unit-102: Stronger team-colored rim band"),
         "team rim lighting missing"
     );
     assert!(

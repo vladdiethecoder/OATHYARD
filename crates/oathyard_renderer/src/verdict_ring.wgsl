@@ -636,11 +636,11 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let spec = pow(diffuse, 16.0) * metal_factor * 0.15 * (1.0 - texture_roughness * 0.5);
     let spec_contribution = vec3<f32>(0.85, 0.83, 0.88) * spec;
 
-    // Unit-101: Team-colored rim band for identity (not just lighting).
-    // Player gets warm gold rim, opponent gets crimson rim on fighter bodies.
+    // Unit-102: Stronger team-colored rim band (0.30→0.45) for body identity.
+    // Since CPU tint is now only 30%, the rim band provides the primary team color cue.
     let view_dir = normalize(camera.eye.xyz - input.world_pos);
     let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 4.0);
-    let team_rim = select(vec3<f32>(0.0), tint * 0.30, is_fighter_body_mesh) * fresnel;
+    let team_rim = select(vec3<f32>(0.0), tint * 0.45, is_fighter_body_mesh) * fresnel;
 
     let raw_final = color + spec_contribution + team_rim;
     // Unit-101: Standard Reinhard — x/(1+l). Preserves midtones and saturation.

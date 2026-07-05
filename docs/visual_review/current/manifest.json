@@ -1,7 +1,7 @@
 {
   "schema": "oathyard.visual_review_manifest.v1",
-  "unit": "101",
-  "git_head_before": "c0e9c0b50d60180bdb1aa0938c005e75b4b32b8c",
+  "unit": "102",
+  "git_head_before": "bbb7acab6c3edca431dd7b4649b4a30b369cb5e9",
   "branch": "main",
   "date": "2026-07-05",
   "truth_hash": "0bd4e69b3c94f498",
@@ -9,30 +9,28 @@
   "owner_visual_acceptance": false,
   "public_demo_ready": false,
   "release_candidate_ready": false,
-  "root_cause": "Standard Lambert lighting produced near-zero illumination on shadowed surfaces, combined with dark textures and HDR accumulation to cause posterization",
-  "pixel_analysis": {
-    "before": {"black_clip_pct": 25, "white_clip_pct": 10, "midtone_pct": 63, "mean_lum": 136},
-    "after": {"black_clip_pct": 0, "white_clip_pct": 0, "midtone_pct": 99, "mean_lum": 163}
+  "root_cause": "infer_mesh_asset_class used exact match for prefixed IDs, misclassifying play-path fighters as weapons and retaining them alongside AAA fighters",
+  "composition_fix": "Changed infer_mesh_asset_class to contains(), reducing mesh count from 9 to 7 with exactly 1 fighter body per side",
+  "material_fix": "Reduced CPU tint from 75% to 30%, strengthened fresnel rim band from 0.30 to 0.45",
+  "roster_matrix": {
+    "total_assets": 22,
+    "mesh_files_found": 22,
+    "all_consumed": true,
+    "path": "artifacts/verification/2026-07-05T_unit102_visual_composition_roster_matrix/roster_asset_visual_matrix.json"
   },
   "scores": {
-    "mesh_visibility": {"before": 4, "after": 4},
-    "material_readability": {"before": 2, "after": 4},
-    "team_identity": {"before": 2, "after": 4},
-    "arena_environment": {"before": 4, "after": 4},
-    "ui_readability": {"before": 3, "after": 4}
+    "silhouette_readability": {"before": 3, "after": 4},
+    "material_readability": {"before": 3, "after": 4},
+    "team_identity": {"before": 3, "after": 4},
+    "arena": {"before": 4, "after": 4},
+    "ui_readability": {"before": 4, "after": 4}
   },
   "runtime_manifest": {
     "native_windowed_execution": true,
     "mesh_geometry_consumed": true,
-    "mesh_asset_count": 9,
+    "mesh_asset_count": 7,
     "frames_presented": 480
   },
-  "commands_run": [
-    "cargo fmt --check",
-    "cargo build --locked",
-    "cargo test --locked (188 pass)",
-    "./target/debug/oathyard play --smoke-frames 480"
-  ],
   "screenshots": {"before_dir": "screenshots/before/", "after_dir": "screenshots/after/", "count": 17},
   "files_changed": [
     "crates/oathyard_renderer/src/main.rs",
