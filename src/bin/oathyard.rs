@@ -1318,33 +1318,70 @@ fn launch_play_flow(
     // proving the executable gameplay flow, not just a static OBSERVE frame.
     let default_scripted_input = if scripted_input.is_none() && !interactive_mode {
         let si_path = artifact_dir.join("default_scripted_input.json");
-        // Space 16 "advance" events across the first ~480 frames (30 frames each)
-        let inputs: Vec<String> = (0..16u32)
-            .map(|i| {
-                let frame = i * 30 + 10; // Start at frame 10, advance every 30 frames
-                let label = match i {
-                    0 => "boot_to_main_menu",
-                    1 => "main_menu_to_fighter_select",
-                    2 => "fighter_to_loadout",
-                    3 => "loadout_to_arena",
-                    4 => "arena_to_match_intro",
-                    5 => "intro_to_observe",
-                    6 => "observe_to_timeline",
-                    7 => "timeline_to_plan",
-                    8 => "plan_to_commit_reveal",
-                    9 => "reveal_to_resolve",
-                    10 => "resolve_to_consequence",
-                    11 => "consequence_to_replan",
-                    12 => "replan_to_match_result",
-                    13 => "result_to_replay",
-                    14 => "replay_to_fight_film",
-                    _ => "fight_film_to_quit",
-                };
-                format!(
-                    r#"{{"action":"advance","at_frame":{frame},"label":"{label}"}}"#
-                )
-            })
-            .collect();
+        let mut inputs: Vec<String> = Vec::new();
+
+        // States 0-6: advance through menu/fighter/loadout/arena/intro/observe to timeline
+        let state_labels = [
+            "boot_to_main_menu",
+            "main_menu_to_fighter_select",
+            "fighter_to_loadout",
+            "loadout_to_arena",
+            "arena_to_match_intro",
+            "intro_to_observe",
+            "observe_to_timeline",
+        ];
+        let mut frame = 10u32;
+        for label in &state_labels {
+            inputs.push(format!(
+                r#"{{"action":"advance","at_frame":{frame},"label":"{label}"}}"#
+            ));
+            frame += 20;
+        }
+
+        // Fill 10 timeline slots with 10 diverse actions + advance cursor between each
+        // Uses: step, cut, thrust, guard, parry, brace, bash, hook_bind, grab, kick
+        let actions = [
+            "place_step",
+            "place_cut",
+            "place_thrust",
+            "place_guard",
+            "place_parry",
+            "place_brace",
+            "place_bash",
+            "place_hook_bind",
+            "place_grab",
+            "place_kick",
+        ];
+        for action in &actions {
+            inputs.push(format!(
+                r#"{{"action":"{action}","at_frame":{frame},"label":"fill_{action}"}}"#
+            ));
+            frame += 2;
+            inputs.push(format!(
+                r#"{{"action":"timeline_right","at_frame":{frame},"label":"cursor_next"}}"#
+            ));
+            frame += 2;
+        }
+
+        // Reset cursor to start for display
+        // Then advance through remaining states
+        let remaining_labels = [
+            "timeline_to_plan",
+            "plan_to_commit_reveal",
+            "reveal_to_resolve",
+            "resolve_to_consequence",
+            "consequence_to_replan",
+            "replan_to_match_result",
+            "result_to_replay",
+            "replay_to_fight_film",
+            "fight_film_to_quit",
+        ];
+        for label in &remaining_labels {
+            inputs.push(format!(
+                r#"{{"action":"advance","at_frame":{frame},"label":"{label}"}}"#
+            ));
+            frame += 20;
+        }
         let si_json = format!(
             r#"{{"schema":"oathyard.windowed_scripted_input.v1","inputs":[{}]}}"#,
             inputs.join(",")
