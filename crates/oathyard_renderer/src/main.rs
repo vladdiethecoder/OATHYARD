@@ -420,7 +420,7 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "fighter_closeup_01" => CameraMode { eye: [0.0, 0.90, 2.0], look_at: [0.0, 0.45, -0.1], fov_radians: 0.58 },
         "armor_loadout_family_closeup_01" => CameraMode { eye: [0.0, 0.70, 1.9], look_at: [0.0, 0.32, -0.1], fov_radians: 0.60 },
         "weapon_family_closeup_01" => CameraMode { eye: [0.0, 0.55, 1.6], look_at: [0.0, 0.30, -0.1], fov_radians: 0.55 },
-        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 1.6, 3.0], look_at: [0.0, 0.2, -0.1], fov_radians: 0.62 },
+        "oathyard_verdict_ring_establishing" => CameraMode { eye: [0.0, 1.4, 4.5], look_at: [0.0, 0.15, -0.1], fov_radians: 0.80 },
         "oathyard_arena_candidate_01" => CameraMode { eye: [0.0, 0.55, 3.35], look_at: [0.0, 0.18, -0.10], fov_radians: 0.78 },
         "gameplay_distance_fighter_weapon_01" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.35, -0.1], fov_radians: 0.70 },
         "gameplay_distance_fighter_loadout_family_01" => CameraMode { eye: [0.0, 1.15, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
@@ -5289,6 +5289,15 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Observe => {
             draw_text(rgba, width, height, "OBSERVE", 35, 78, 255, 220, 120);
             draw_text(rgba, width, height, "ENTER to plan your actions", 35, 108, 200, 200, 200);
+            // Unit-098: Non-color identity markers — overhead glyphs
+            let mid_w = (width as i32) / 2;
+            let mid_h = (height as i32) / 2;
+            // Player: triangle marker (left side)
+            draw_marker_shape(rgba, width, height, mid_w - 200, mid_h - 60, 36, 255, 220, 60, true);
+            draw_text(rgba, width, height, "^ PLAYER", mid_w - 235, mid_h - 20, 255, 220, 60);
+            // Opponent: diamond marker (right side)
+            draw_marker_shape(rgba, width, height, mid_w + 200, mid_h - 60, 36, 255, 80, 40, false);
+            draw_text(rgba, width, height, "<> OPPONENT", mid_w + 165, mid_h - 20, 255, 80, 40);
         }
         InteractiveState::Timeline => {
             draw_text(rgba, width, height, "TIMELINE (DECISION PHASE)", 35, 78, 255, 220, 120);
