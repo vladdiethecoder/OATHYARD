@@ -409,8 +409,11 @@ fn ssao_approx(p: vec3<f32>, n: vec3<f32>) -> f32 {
 }
 
 fn tone_map(x: vec3<f32>) -> vec3<f32> {
-    let y = x * (2.51 * x + vec3<f32>(0.03)) / (x * (2.43 * x + vec3<f32>(0.59)) + vec3<f32>(0.14));
-    return pow(clamp(y, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
+    // Unit-098: Reinhard extended tone map — soft knee, no black/white crush.
+    // Replaces Hable which produced posterized black/white at extreme HDR values.
+    let l = dot(x, vec3<f32>(0.2126, 0.7152, 0.0722));
+    let mapped = x / (1.0 + l);
+    return pow(clamp(mapped, vec3<f32>(0.0), vec3<f32>(1.0)), vec3<f32>(1.0 / 2.2));
 }
 
 // Unit-049: SDF material palette — Unit-060: increased saturation for separation.
@@ -553,7 +556,8 @@ fn mesh_vs_main(input: MeshVertexIn) -> MeshVertexOut {
     out.position = vec4<f32>(clip_x, clip_y, clip_z, 1.0);
     out.world_pos = world_pos;
     out.color = input.color;
-    out.shade = clamp(0.54 + view_z * 0.25 + abs(world_pos.y) * 0.12, 0.22, 1.35);
+    // Unit-098: Raised shade floor from 0.22 to 0.50 — prevents depth-based darkening crush.
+    out.shade = clamp(0.65 + view_z * 0.15 + abs(world_pos.y) * 0.08, 0.50, 1.15);
     out.normal = input.normal;
     out.material_uv = input.material_uv;
     return out;
@@ -591,46 +595,48 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     // 2. Non-fighters use texture-only with procedural identity.
     // Unit-095 renderer contract: material_identity = clamp(input.color * 1.12, vec3<f32>(0.03), vec3<f32>(1.22))
     // Unit-095 renderer contract: class_tint = mix(tint, material_identity, vec3(0.45))
+    // Unit-098: Team identity — strong blend for visible gold/crimson.
+    // mix(texture, tint, 0.75) pushes team color clearly while retaining texture detail.
     let is_fighter = mat_type < 5.0;
-    let tex_lum = dot(sampled_base, vec3<f32>(0.299, 0.587, 0.114));
-    let team_tinted = tint * mix(0.5, 1.3, tex_lum);
+    let team_tinted = mix(sampled_base, tint, 0.75);
     let texture_base = select(sampled_base, team_tinted, is_fighter);
     let fighter_mix = select(1.0, 0.86 + normal_detail * 0.45, mat_type > 4.5);
     let base = mix(procedural_base, texture_base, fighter_mix);
 
-    // Unit-093: Demo-quality lighting — stronger key/fill/rim separation
+    // Unit-098: Balanced 3-point lighting with strong ambient fill.
+    // Previous values produced extreme HDR (diffuse*1.2 + fill + back + rim + spec + fresnel)
+    // which tone_map compressed to black/white noise.
     let key = normalize(vec3<f32>(-0.48, 0.88, 0.30));
     let fill = normalize(vec3<f32>(0.42, 0.36, 0.82));
     let back = normalize(vec3<f32>(0.30, 0.55, -0.78));
     let diffuse = max(dot(n, key), 0.0);
-    let fill_light = max(dot(n, fill), 0.0) * 0.35;
-    let back_light = max(dot(n, back), 0.0) * 0.20;
+    let fill_light = max(dot(n, fill), 0.0) * 0.30;
+    let back_light = max(dot(n, back), 0.0) * 0.15;
 
-    // Unit-062: Softer shading for seed meshes — reduce contrast between lit
-    // and shadowed faces on high-vertex-count geometry-only meshes.
-    let texture_ao = clamp(sampled_orm.r, 0.30, 1.0);
-    let texture_roughness = clamp(sampled_orm.g, 0.12, 1.0);
-    let ground_occlusion = mix(1.0, 0.82, smoothstep(0.15, -0.35, input.world_pos.y));
-    let ao = clamp(0.52 + 0.48 * n.y, 0.28, 1.0) * ground_occlusion * texture_ao;
-    // Unit-095: Standard PBR lighting — no per-material hacks.
-    let color = base * (0.36 + diffuse * 1.20 + fill_light + back_light) * ao * input.shade;
+    // Unit-098: Raised AO floor from 0.28 to 0.45 — prevents crushed black shadows.
+    let texture_ao = clamp(sampled_orm.r, 0.45, 1.0);
+    let texture_roughness = clamp(sampled_orm.g, 0.15, 1.0);
+    let ground_occlusion = mix(1.0, 0.88, smoothstep(0.15, -0.35, input.world_pos.y));
+    let ao = clamp(0.65 + 0.35 * n.y, 0.45, 1.0) * ground_occlusion * texture_ao;
+    // Unit-098: Balanced lighting — high ambient (0.55) prevents dark-side crush,
+    // moderate diffuse (0.65) provides form definition without extreme HDR.
+    let color = base * (0.55 + diffuse * 0.65 + fill_light + back_light) * ao * input.shade;
 
     // Subtle specular for metallic materials
     let spec_power = mix(6.0, 32.0, 1.0 - abs(mat_type - 0.5) * 2.0);
     let rim_vec = normalize(vec3<f32>(0.72, 0.54, -0.72));
-    let rim_light = pow(max(dot(reflect(-rim_vec, n), vec3<f32>(0.0, 0.0, 1.0)), 0.0), spec_power) * mix(0.08, 0.38, step(0.5, abs(mat_type - 0.25)));
+    // Unit-098: Reduced rim/spec/fresnel intensities to prevent HDR blowout.
+    let rim_light = pow(max(dot(reflect(-rim_vec, n), vec3<f32>(0.0, 0.0, 1.0)), 0.0), spec_power) * mix(0.04, 0.18, step(0.5, abs(mat_type - 0.25)));
 
     // Unit-054 RI-01: Fresnel rim lighting for edge separation and depth perception.
-    // Adds a warm glow at glancing angles, making object edges pop against background.
     let view_dir = normalize(camera.eye.xyz - input.world_pos);
     let fresnel = pow(1.0 - max(dot(n, view_dir), 0.0), 3.0);
-    // Unit-093: Stronger fresnel for demo readability
-    let fresnel_rim = vec3<f32>(0.82, 0.64, 0.38) * fresnel * 0.22;
+    // Unit-098: Subtle fresnel — was 0.22, reduced to 0.10.
+    let fresnel_rim = vec3<f32>(0.82, 0.64, 0.38) * fresnel * 0.10;
 
     // Unit-054 RI-02: Enhanced specular response with material-dependent power.
-    // Metals get sharper highlights; non-metals get broader, softer highlights.
     let metal_factor = select(0.0, 1.0, mat_type < 0.5);
-    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.12, 0.62, metal_factor) * (1.12 - texture_roughness * 0.42);
+    let enhanced_spec = pow(diffuse, mix(2.0, 16.0, metal_factor)) * mix(0.06, 0.30, metal_factor) * (1.12 - texture_roughness * 0.42);
     let spec_contribution = vec3<f32>(0.80, 0.78, 0.85) * enhanced_spec;
 
     let raw_final = color + vec3<f32>(0.55, 0.40, 0.20) * rim_light + fresnel_rim + spec_contribution;

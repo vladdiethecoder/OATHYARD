@@ -4382,12 +4382,12 @@ fn unit093_lighting_improvements() {
         "back light missing from demo lighting"
     );
     assert!(
-        shader.contains("Unit-093: Stronger fresnel"),
-        "strengthened fresnel missing"
+        shader.contains("Unit-098: Subtle fresnel"),
+        "fresnel lighting missing"
     );
     assert!(
-        shader.contains("Unit-093: Demo-quality lighting"),
-        "demo lighting comment missing"
+        shader.contains("Unit-098: Balanced 3-point lighting"),
+        "balanced lighting missing"
     );
 }
 

@@ -5243,8 +5243,11 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
     // State-specific UI
     match app.interactive_state {
         InteractiveState::Boot | InteractiveState::MainMenu => {
-            draw_text(rgba, width, height, "> LOCAL DUEL (ENTER)", 35, 78, 255, 255, 100);
-            draw_text(rgba, width, height, "  QUIT (ESC/Q)", 35, 98, 200, 200, 200);
+            // Unit-098: OATHYARD branding on boot/main menu
+            draw_text(rgba, width, height, "OATHYARD", 35, 70, 255, 220, 60);
+            draw_text(rgba, width, height, "VERDICT-RING COMBAT", 35, 90, 200, 180, 100);
+            draw_text(rgba, width, height, "> LOCAL DUEL (ENTER)", 35, 120, 255, 255, 100);
+            draw_text(rgba, width, height, "  QUIT (ESC/Q)", 35, 140, 200, 200, 200);
         }
         InteractiveState::FighterSelect => {
             let fighter = ROSTER_FIGHTERS_WINDOWED
@@ -5313,17 +5316,17 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                     .to_uppercase()
             );
             draw_text(rgba, width, height, &slot_line, 35, 108, 255, 255, 100);
-            // Show first 5 slots
-            for i in 0..5.min(app.timeline_slots.len()) {
+            // Unit-098: Show all 10 timeline slots
+            for i in 0..10.min(app.timeline_slots.len()) {
                 let marker = if i == app.timeline_cursor { ">" } else { " " };
                 let s = &app.timeline_slots[i];
                 let line = format!("{}[{}] {}", marker, i, s.to_uppercase());
-                draw_text(rgba, width, height, &line, 35, 138 + i as i32 * 20, 200, 200, 200);
+                draw_text(rgba, width, height, &line, 35, 138 + i as i32 * 16, 200, 200, 200);
             }
-            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY", 35, 258, 150, 180, 200);
-            draw_text(rgba, width, height, "5=CUT 6=THRUST 7=BRACE 8=BASH", 35, 278, 150, 180, 200);
-            draw_text(rgba, width, height, "9=HOOK 0=BIND G=GRAB B=SHOVE K=KICK", 35, 298, 150, 180, 200);
-            draw_text(rgba, width, height, "R=F6=RECOVER  L/R=cursor  ENTER=commit", 35, 318, 150, 180, 200);
+            // Unit-098: Action legend moved below all 10 slots
+            draw_text(rgba, width, height, "1=STEP 2=PIVOT 3=GUARD 4=PARRY 5=CUT", 35, 310, 150, 180, 200);
+            draw_text(rgba, width, height, "6=THRUST 7=BRACE 8=BASH 9=HOOK 0=BIND", 35, 328, 150, 180, 200);
+            draw_text(rgba, width, height, "G=GRAB B=SHOVE K=KICK R=RECOVER  ENTER=COMMIT", 35, 346, 150, 180, 200);
         }
         InteractiveState::Plan => {
             draw_text(rgba, width, height, "PLAN - COMMITTING...", 35, 78, 255, 220, 120);
@@ -5480,9 +5483,10 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         }
     }
 
-    // Bottom-right: truth status
-    draw_panel(rgba, width, height, (width as i32) - 260, (height as i32) - 45, 240, 28);
-    draw_text(rgba, width, height, "TM:F", (width as i32) - 252, (height as i32) - 38, 150, 255, 150);
+    // Unit-098: Remove debug readouts from player-facing UI.
+    // TM:F and IN:N are internal verification data, not player-facing.
+    // Only show a small OATHYARD watermark in bottom-right.
+    draw_text(rgba, width, height, "OATHYARD", (width as i32) - 90, (height as i32) - 25, 80, 80, 100);
 
     // Unit-097: Bottom-left persistent control hint bar
     let hint = match app.interactive_state {
@@ -5504,11 +5508,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Quit => "ESC=Close",
     };
     draw_panel(rgba, width, height, 20, (height as i32) - 45, 500, 28);
-    draw_text(rgba, width, height, hint, 28, (height as i32) - 38, 180, 180, 220);
-
-    // Unit-097: Input event count display
-    let event_str = format!("IN:{}", app.input_event_count);
-    draw_text(rgba, width, height, &event_str, (width as i32) - 340, (height as i32) - 38, 150, 255, 150);
+    draw_text(rgba, width, height, hint, 28, (height as i32) - 38, 200, 200, 230);
 
     // Unit-093: Runtime audio feedback — deterministic generated tones
     // Plays a short beep for state transitions and combat events
