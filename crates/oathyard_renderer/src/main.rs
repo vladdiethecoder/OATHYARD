@@ -2351,17 +2351,13 @@ async fn render_wgpu_frame(
             timestamp_writes: None,
             multiview_mask: None,
         });
-        // Unit-095: When meshes are loaded, skip SDF and render only meshes.
-        // Pre-write all mesh material buffers BEFORE the render pass starts,
-        // because queue.write_buffer inside a render pass is not guaranteed
-        // to take effect per-draw-call.
-        if mesh_resources.is_none() {
-            pass.set_pipeline(&pipeline);
-            pass.set_bind_group(0, &bind_group, &[]);
-            pass.draw(0..3, 0..1);
-        } else if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources {
-            // Unit-095: Per-mesh bind groups — each mesh has its own material uniform.
-            // Bind groups were created with per-mesh material data before the render pass.
+        // Unit-095: SDF renders arena background first; meshes draw on top.
+        // SDF fighters are hidden via seed.z when meshes are loaded.
+        // Both passes share a depth buffer so mesh fragments pass depth test.
+        pass.set_pipeline(&pipeline);
+        pass.set_bind_group(0, &bind_group, &[]);
+        pass.draw(0..3, 0..1);
+        if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources {
             pass.set_pipeline(mesh_pipeline);
             for (idx, resource) in buffers.iter().enumerate() {
                 pass.set_bind_group(0, &per_mesh_bind_groups[idx], &[]);

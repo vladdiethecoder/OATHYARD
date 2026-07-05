@@ -4497,16 +4497,16 @@ fn unit095_per_mesh_bind_groups_exist() {
 fn unit095_no_sdf_when_meshes_present() {
     let renderer =
         fs::read_to_string("crates/oathyard_renderer/src/main.rs").expect("read renderer");
+    // Unit-095: SDF always renders arena background first; meshes on top with depth test
     assert!(
-        renderer.contains("mesh_resources.is_none()"),
-        "must check mesh_resources.is_none() before drawing SDF"
+        renderer.contains("SDF renders arena background first; meshes draw on top"),
+        "must render SDF background first, then meshes on top"
     );
-    // Verify SDF is skipped when meshes are present
     assert!(
         renderer.contains(
-            "} else if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources"
+            "if let Some((mesh_pipeline, buffers, per_mesh_bind_groups)) = &mesh_resources"
         ),
-        "must enter else-if branch when meshes are present"
+        "must enter if-let branch when meshes are present"
     );
 }
 

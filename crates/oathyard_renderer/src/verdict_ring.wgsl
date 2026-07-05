@@ -566,10 +566,10 @@ fn mesh_fs_main(input: MeshVertexOut) -> @location(0) vec4<f32> {
     let tint = mesh_material.tint.rgb;
 
     // Unit-095: For fighters (mat_type=4), output hardcoded team colors
-    // using vertex color to distinguish player vs opponent.
-    // Player meshes have vertex color偏向 (higher G channel), opponent lower G.
+    // using mesh material tint to distinguish player vs opponent.
+    // Player tint.g > 0.5 (gold), opponent tint.g < 0.5 (crimson).
     if (mat_type > 3.5 && mat_type < 4.5) {
-        if (input.color.g > 0.5) {
+        if (tint.g > 0.5) {
             return vec4<f32>(0.95, 0.75, 0.15, 1.0);  // player gold
         } else {
             return vec4<f32>(0.85, 0.15, 0.10, 1.0);  // opponent crimson
