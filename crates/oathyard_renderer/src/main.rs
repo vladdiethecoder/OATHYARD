@@ -3781,6 +3781,10 @@ struct WindowedApp {
     // Unit-104: MotionBricks procedural animation interpolator
     motion_brick: MotionBrick,
     last_clip: String,
+    // Unit-104: Cumulative injury tracking across exchanges
+    cumulative_player_injury: u32,
+    cumulative_opponent_injury: u32,
+    cumulative_exchanges: u32,
 }
 
 mod wgpu_mesh {
@@ -4685,6 +4689,9 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             current_slot_display: 0,
             motion_brick: MotionBrick::new(),
             last_clip: String::new(),
+            cumulative_player_injury: 0,
+            cumulative_opponent_injury: 0,
+            cumulative_exchanges: 0,
         });
 
         self.window = Some(window);
@@ -4750,6 +4757,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                         &app.opponent_timeline_slots,
                                     );
                                     app.combat_contacts = contacts;
+                                    // Unit-104: Accumulate injury across exchanges
+                                    app.cumulative_player_injury = app.cumulative_player_injury.saturating_add(result.player_injury_score);
+                                    app.cumulative_opponent_injury = app.cumulative_opponent_injury.saturating_add(result.opponent_injury_score);
+                                    app.cumulative_exchanges += 1;
                                     app.match_result = Some(result);
                                 }
                                 // Unit-090: Reveal opponent intent when entering CommitReveal
@@ -4758,27 +4769,56 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 }
                                 // Unit-104: On loop-back to Observe (after Consequence),
                                 // reset opponent intent and consume the committed action
-                                // so the player can plan the next exchange.
+                                // so the player can plan the next exchange. If cumulative
+                                // injury exceeds threshold, go to MatchResult instead.
                                 if app.interactive_state == InteractiveState::Consequence {
                                     app.opponent_intent_revealed = false;
-                                    // Generate a fresh opponent action for the next exchange
-                                    app.opponent_timeline_slots = vec![opponent_policy_timeline(1)[0].clone()];
-                                    // Clear the first slot (committed action) and shift remaining
-                                    if !app.timeline_slots.is_empty() {
-                                        app.timeline_slots.remove(0);
+                                    // Check if match is over: one fighter reached injury threshold
+                                    const INJURY_THRESHOLD: u32 = 10;
+                                    let match_over = app.cumulative_player_injury >= INJURY_THRESHOLD
+                                        || app.cumulative_opponent_injury >= INJURY_THRESHOLD;
+                                    if match_over {
+                                        app.interactive_state = InteractiveState::MatchResult;
+                                        let next_str = "MATCH_RESULT".to_string();
+                                        if !app.states_visited.contains(&next_str) {
+                                            app.states_visited.push(next_str.clone());
+                                        }
+                                        app.transitions.push(format!(
+                                            "{} -> {}",
+                                            prev_state.as_str(),
+                                            "MATCH_RESULT"
+                                        ));
+                                    } else {
+                                        // Generate a fresh opponent action for the next exchange
+                                        app.opponent_timeline_slots = vec![opponent_policy_timeline(1)[0].clone()];
+                                        // Clear the first slot (committed action)
+                                        if !app.timeline_slots.is_empty() {
+                                            app.timeline_slots.remove(0);
+                                        }
+                                        app.timeline_cursor = 0;
+                                        app.interactive_state = next;
+                                        let next_str = next.as_str().to_string();
+                                        if !app.states_visited.contains(&next_str) {
+                                            app.states_visited.push(next_str.clone());
+                                        }
+                                        app.transitions.push(format!(
+                                            "{} -> {}",
+                                            prev_state.as_str(),
+                                            next.as_str()
+                                        ));
                                     }
-                                    app.timeline_cursor = 0;
+                                } else {
+                                    app.interactive_state = next;
+                                    let next_str = next.as_str().to_string();
+                                    if !app.states_visited.contains(&next_str) {
+                                        app.states_visited.push(next_str.clone());
+                                    }
+                                    app.transitions.push(format!(
+                                        "{} -> {}",
+                                        prev_state.as_str(),
+                                        next.as_str()
+                                    ));
                                 }
-                                app.interactive_state = next;
-                                let next_str = next.as_str().to_string();
-                                if !app.states_visited.contains(&next_str) {
-                                    app.states_visited.push(next_str.clone());
-                                }
-                                app.transitions.push(format!(
-                                    "{} -> {}",
-                                    prev_state.as_str(),
-                                    next.as_str()
-                                ));
                             }
                         }
                         winit::keyboard::KeyCode::KeyR => {
