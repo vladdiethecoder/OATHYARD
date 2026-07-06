@@ -1433,6 +1433,30 @@ fn launch_play_flow(
 
     let renderer_result = cmd.output();
 
+    // Unit-104: Check if renderer exited to signal a roster selection change.
+    // If selected_loadout.json was written, read it and restart with new loadout.
+    let selection_file = windowed_out.join("selected_loadout.json");
+    if selection_file.exists() {
+        if let Ok(choice_text) = fs::read_to_string(&selection_file) {
+            // Parse selected IDs
+            let choice = parse_roster_choice(&choice_text);
+            if let Some(new_selection) = choice {
+                // Clean up selection file and restart
+                let _ = fs::remove_file(&selection_file);
+                eprintln!("  Restarting with new loadout");
+                let out_path = out.clone();
+                return launch_play_flow(
+                    Some(out_path),
+                    None, // no scripted input for interactive
+                    None, // default smoke frames
+                    artifact_dir,
+                    new_selection,
+                    true, // interactive
+                );
+            }
+        }
+    }
+
     // Write the executable runtime manifest regardless of renderer outcome
     let (native_windowed, frames_presented, states_visited) = match renderer_result {
         Ok(output) => {
@@ -1528,6 +1552,36 @@ fn extract_json_u64(text: &str, key: &str) -> u64 {
         }
     }
     0
+}
+
+/// Unit-104: Parse a roster choice JSON from the renderer's selection file.
+fn parse_roster_choice(text: &str) -> Option<RosterSelection> {
+    let pf = simple_json_str(text, "player_fighter").unwrap_or("saltreach_duelist");
+    let of = simple_json_str(text, "opponent_fighter").unwrap_or("reed_sentinel");
+    let pw = simple_json_str(text, "player_weapon").unwrap_or("longsword");
+    let ow = simple_json_str(text, "opponent_weapon").unwrap_or("arming_sword");
+    let pa = simple_json_str(text, "player_armor").unwrap_or("gambeson");
+    let oa = simple_json_str(text, "opponent_armor").unwrap_or("mail_hauberk");
+    let ar = simple_json_str(text, "arena").unwrap_or("oathyard_verdict_ring");
+    Some(RosterSelection {
+        player_fighter: Some(pf.to_string()),
+        opponent_fighter: Some(of.to_string()),
+        player_weapon: Some(pw.to_string()),
+        opponent_weapon: Some(ow.to_string()),
+        player_armor: Some(pa.to_string()),
+        opponent_armor: Some(oa.to_string()),
+        arena: Some(ar.to_string()),
+    })
+}
+
+fn simple_json_str<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    let pattern = format!("\"{key}\":");
+    let pos = text.find(&pattern)?;
+    let after_val = &text[pos + pattern.len()..];
+    let quote_start = after_val.find('"')?;
+    let val = &after_val[quote_start + 1..];
+    let quote_end = val.find('"')?;
+    Some(&val[..quote_end])
 }
 
 /// Simple JSON string array extractor — finds `"key": ["str", "str", ...]` in a JSON string.

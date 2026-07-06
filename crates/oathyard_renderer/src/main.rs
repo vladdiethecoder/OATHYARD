@@ -4751,6 +4751,21 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         winit::keyboard::KeyCode::Enter | winit::keyboard::KeyCode::Space => {
                             logical = "advance".to_string();
                             if app.interactive_state != InteractiveState::Quit {
+                                // Unit-104: When confirming arena selection, write roster choice
+                                // and exit so the launcher can restart with the new loadout.
+                                if app.interactive_state == InteractiveState::ArenaSelect {
+                                    let roster_choice = serde_json::json!({
+                                        "player_fighter": ROSTER_FIGHTERS_WINDOWED.get(app.roster_fighter_idx),
+                                        "opponent_fighter": "reed_sentinel",
+                                        "player_weapon": ROSTER_WEAPONS_WINDOWED.get(app.roster_weapon_idx),
+                                        "opponent_weapon": "arming_sword",
+                                        "player_armor": ROSTER_ARMOR_WINDOWED.get(app.roster_armor_idx),
+                                        "opponent_armor": "mail_hauberk",
+                                        "arena": ROSTER_ARENAS_WINDOWED.get(app.roster_arena_idx),
+                                    });
+                                    let choice_path = app.out_dir.join("selected_loadout.json");
+                                    let _ = std::fs::write(&choice_path, serde_json::to_string_pretty(&roster_choice).unwrap_or_default());
+                                }
                                 let next = app.interactive_state.next();
                                 // Unit-078: Resolve combat when transitioning out of TIMELINE
                                 if app.interactive_state == InteractiveState::Timeline {
