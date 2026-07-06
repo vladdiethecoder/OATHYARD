@@ -4778,6 +4778,20 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                     let match_over = app.cumulative_player_injury >= INJURY_THRESHOLD
                                         || app.cumulative_opponent_injury >= INJURY_THRESHOLD;
                                     if match_over {
+                                        // Determine winner from cumulative totals
+                                        let (cumul_winner, cumul_end) = if app.cumulative_player_injury >= app.cumulative_opponent_injury {
+                                            ("opponent".to_string(), "Opponent inflicted more total damage".to_string())
+                                        } else {
+                                            ("player".to_string(), "Player inflicted more total damage".to_string())
+                                        };
+                                        let summary = format!("{} wins after {} exchanges", cumul_winner, app.cumulative_exchanges);
+                                        app.match_result = Some(MatchResult {
+                                            player_injury_score: app.cumulative_player_injury,
+                                            opponent_injury_score: app.cumulative_opponent_injury,
+                                            winner: cumul_winner,
+                                            end_condition: cumul_end,
+                                            summary,
+                                        });
                                         app.interactive_state = InteractiveState::MatchResult;
                                         let next_str = "MATCH_RESULT".to_string();
                                         if !app.states_visited.contains(&next_str) {
@@ -5664,18 +5678,24 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Observe => {
             draw_text(rgba, width, height, "OBSERVE", 35, 78, 255, 220, 120);
             draw_text(rgba, width, height, "ENTER to plan your actions", 35, 108, 200, 200, 200);
-            // Unit-098: Non-color identity markers — overhead glyphs
+            // Unit-104: Cumulative injury HUD
+            let injury_line = format!("INJURY — YOU: {}  |  OPPONENT: {}  |  ROUNDS: {}",
+                app.cumulative_player_injury, app.cumulative_opponent_injury, app.cumulative_exchanges);
+            draw_text(rgba, width, height, &injury_line, (width as i32) - 450, 35, 255, 220, 120);
+            // Non-color identity markers
             let mid_w = (width as i32) / 2;
             let mid_h = (height as i32) / 2;
-            // Player: triangle marker (left side)
             draw_marker_shape(rgba, width, height, mid_w - 200, mid_h - 60, 36, 255, 220, 60, true);
             draw_text(rgba, width, height, "^ PLAYER", mid_w - 235, mid_h - 20, 255, 220, 60);
-            // Opponent: diamond marker (right side)
             draw_marker_shape(rgba, width, height, mid_w + 200, mid_h - 60, 36, 255, 80, 40, false);
             draw_text(rgba, width, height, "<> OPPONENT", mid_w + 165, mid_h - 20, 255, 80, 40);
         }
         InteractiveState::Timeline => {
             draw_text(rgba, width, height, "TIMELINE (DECISION PHASE)", 35, 78, 255, 220, 120);
+            // Unit-104: Cumulative injury HUD  
+            let inj_line = format!("INJURY — YOU: {}  |  OPPONENT: {}",
+                app.cumulative_player_injury, app.cumulative_opponent_injury);
+            draw_text(rgba, width, height, &inj_line, (width as i32) - 450, 35, 255, 220, 120);
             // Show current slot and action
             let slot_line = format!(
                 "SLOT {}/{}: {}",
@@ -5817,7 +5837,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::MatchResult => {
             draw_text(rgba, width, height, "MATCH RESULT", 35, 78, 255, 220, 120);
             if let Some(ref result) = app.match_result {
-                // Unit-093: Impactful match result display
+                // Unit-104: Show cumulative totals on match end
                 let winner_color = match result.winner.as_str() {
                     "player" => (255u8, 255u8, 100u8),
                     "opponent" => (255u8, 80u8, 40u8),
@@ -5825,12 +5845,13 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 };
                 let winner_line = format!("*** WINNER: {} ***", result.winner.to_uppercase());
                 draw_text(rgba, width, height, &winner_line, 35, 108, winner_color.0, winner_color.1, winner_color.2);
-                let score_line = format!("PLAYER INJURY: {}  |  OPPONENT INJURY: {}", result.player_injury_score, result.opponent_injury_score);
-                draw_text(rgba, width, height, &score_line, 35, 138, 200, 200, 200);
+                let cumul_line = format!("FINAL — YOU: {} INJURY  |  OPPONENT: {} INJURY  |  {} EXCHANGES",
+                    app.cumulative_player_injury, app.cumulative_opponent_injury, app.cumulative_exchanges);
+                draw_text(rgba, width, height, &cumul_line, 35, 138, 200, 200, 200);
                 let why_line = format!("WHY: {}", result.end_condition);
                 draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER for replay  |  R for replay  |  F for fight film", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to return to main menu", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
