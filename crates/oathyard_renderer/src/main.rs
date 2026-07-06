@@ -3914,7 +3914,11 @@ struct WindowedApp {
     current_slot_display: usize,
     // Unit-104: MotionBricks procedural animation interpolator
     motion_brick: MotionBrick,
+    // Unit-105: Independent opponent animation state
+    opponent_motion_brick: MotionBrick,
+    opponent_pose_buffer: wgpu::Buffer,
     last_clip: String,
+    last_opponent_clip: String,
     // Unit-104: Cumulative injury tracking across exchanges
     cumulative_player_injury: u32,
     cumulative_opponent_injury: u32,
@@ -4555,7 +4559,15 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
+        // Unit-105: Independent opponent pose buffer
+        let opponent_pose_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("oathyard opponent pose uniform"),
+            size: pose_bytes.len() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
         queue.write_buffer(&pose_buffer, 0, pose_bytes);
+        queue.write_buffer(&opponent_pose_buffer, 0, pose_bytes);
 
         // Group 0 bind group layout: 4 uniform buffers
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -4869,7 +4881,11 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             opponent_intent_revealed: false,
             current_slot_display: 0,
             motion_brick: MotionBrick::new(),
+            // Unit-105: Independent opponent animation state
+            opponent_motion_brick: MotionBrick::new(),
+            opponent_pose_buffer,
             last_clip: String::new(),
+            last_opponent_clip: String::new(),
             cumulative_player_injury: 0,
             cumulative_opponent_injury: 0,
             cumulative_exchanges: 0,
