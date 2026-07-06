@@ -3832,6 +3832,8 @@ struct WindowedGpuMesh {
     per_mesh_bind_group0: wgpu::BindGroup,
     mesh_material: MeshMaterial,
     _textures: (wgpu::Texture, wgpu::Texture, wgpu::Texture),
+    // Unit-106: Skip flag for first-person mode — hides player's own fighter body
+    first_person_skip: bool,
 }
 
 // Unit-087: Roster arrays for in-game selection cycling
@@ -4779,6 +4781,11 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             } else {
                 &pose_buffer
             };
+            // Unit-106: Hide player's own fighter body in first-person mode
+            let first_person_skip = mesh.mesh_asset_id.starts_with("player_")
+                && mesh.mesh_asset_class.contains("fighter")
+                && !mesh.mesh_asset_id.contains("weapon")
+                && !mesh.mesh_asset_id.contains("armor");
             let per_mesh_bg0 = device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("oathyard windowed per-mesh bind group 0"),
                 layout: &bind_group_layout,
@@ -4796,6 +4803,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 per_mesh_bind_group0: per_mesh_bg0,
                 mesh_material: mat,
                 _textures: (bt, nt, ot),
+                first_person_skip,
             }
         }).collect();
 
@@ -5501,6 +5509,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             render_pass.set_pipeline(&app.pipeline);
                             render_pass.set_bind_group(0, &app.bind_group, &[]);
                             for mesh in &app.gpu_meshes {
+                                // Unit-106: Skip player's own fighter body in first-person mode
+                                if app.first_person_default && mesh.first_person_skip {
+                                    continue;
+                                }
                                 // Unit-100: Use per-mesh bind group 0 instead of
                                 // queue.write_buffer inside render pass (which
                                 // doesn't update per-draw).
