@@ -5837,6 +5837,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::MatchResult => {
             draw_text(rgba, width, height, "MATCH RESULT", 35, 78, 255, 220, 120);
             if let Some(ref result) = app.match_result {
+                // Unit-093: Impactful match result display
                 // Unit-104: Show cumulative totals on match end
                 let winner_color = match result.winner.as_str() {
                     "player" => (255u8, 255u8, 100u8),
