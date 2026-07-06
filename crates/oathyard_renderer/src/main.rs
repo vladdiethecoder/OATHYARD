@@ -511,8 +511,10 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         "gameplay_distance_fighter_weapon_01" => CameraMode { eye: [0.0, 1.2, 3.8], look_at: [0.0, 0.35, -0.1], fov_radians: 0.70 },
         "gameplay_distance_fighter_loadout_family_01" => CameraMode { eye: [0.0, 1.15, 4.0], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
         "gameplay_distance_weapon_family_01" => CameraMode { eye: [0.0, 0.90, 3.2], look_at: [0.05, 0.35, -0.1], fov_radians: 0.68 },
-        "pre_contact_frame" => CameraMode { eye: [0.0, 1.0, 3.8], look_at: [0.0, 0.30, -0.1], fov_radians: 0.75 },
-        "contact_frame" => CameraMode { eye: [0.0, 0.90, 3.2], look_at: [0.0, 0.28, -0.05], fov_radians: 0.72 },
+        // Unit-104: Tighter cameras for combat readability — push in during
+        // reveal, contact, and consequence to increase dramatic impact.
+        "pre_contact_frame" => CameraMode { eye: [0.0, 0.90, 2.8], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
+        "contact_frame" => CameraMode { eye: [0.0, 0.80, 2.5], look_at: [0.0, 0.28, -0.05], fov_radians: 0.70 },
         "fight_film_candidate_shot_01" => CameraMode { eye: [0.35, 1.2, 3.2], look_at: [0.0, 0.30, -0.15], fov_radians: 0.66 },
         "fight_film_replay_camera_shot" => CameraMode { eye: [-0.3, 1.1, 2.8], look_at: [0.05, 0.35, -0.1], fov_radians: 0.64 },
         // Unit-051: production-ready-candidate capture cameras
