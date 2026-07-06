@@ -55,13 +55,18 @@ struct PoseUniform {
 }
 
 // Unit-104: MotionBricks — procedural animation interpolation engine.
-// Transitions between poses smoothly over a configurable number of frames.
+// Unit-105: Extended to support 3-phase action presentation (wind-up / commit / recover).
+// Each action defines three distinct poses blended over pose_time 0→1.
 struct MotionBrick {
     prev_pose: PoseUniform,
     target_pose: PoseUniform,
     elapsed_frames: u32,
     duration_frames: u32,
     clip_name: String,
+    // Unit-105: Phase tracking for multi-phase animation
+    windup_target: PoseUniform,
+    commit_target: PoseUniform,
+    recover_target: PoseUniform,
 }
 
 impl MotionBrick {
@@ -83,8 +88,11 @@ impl MotionBrick {
             prev_pose: neutral,
             target_pose: neutral,
             elapsed_frames: 0,
-            duration_frames: 30, // ~0.5s at 60fps
+            duration_frames: 30,
             clip_name: String::new(),
+            windup_target: neutral,
+            commit_target: neutral,
+            recover_target: neutral,
         }
     }
 
@@ -94,6 +102,11 @@ impl MotionBrick {
         self.elapsed_frames = 0;
         self.duration_frames = duration;
         self.clip_name = new_clip.to_string();
+        // Unit-105: Set phase targets from the multi-phase pose definition
+        let phases = pose_phases_for_clip(new_clip);
+        self.windup_target = phases.0;
+        self.commit_target = phases.1;
+        self.recover_target = phases.2;
     }
 
     fn advance(&mut self, frames: u32) {
@@ -110,13 +123,132 @@ impl MotionBrick {
 
     fn current_pose(&self) -> PoseUniform {
         let t = if self.duration_frames > 0 {
-            // Smoothstep for ease-in-out
             let raw = (self.elapsed_frames as f32) / (self.duration_frames as f32);
-            raw * raw * (3.0 - 2.0 * raw)
+            raw.min(1.0)
         } else {
             1.0
         };
-        blend_pose(&self.prev_pose, &self.target_pose, t)
+        // Unit-105: 3-phase interpolation — blend between wind-up, commit, recover based on t
+        // t=0..0.33: wind-up (prev → windup_target)
+        // t=0.33..0.66: commit (windup → commit_target)
+        // t=0.66..1.0: recover (commit → recover_target)
+        if t < 0.33 {
+            let phase_t = t / 0.33;
+            blend_pose(&self.prev_pose, &self.windup_target, phase_t)
+        } else if t < 0.66 {
+            let phase_t = (t - 0.33) / 0.33;
+            blend_pose(&self.windup_target, &self.commit_target, phase_t)
+        } else {
+            let phase_t = (t - 0.66) / 0.34;
+            blend_pose(&self.commit_target, &self.recover_target, phase_t)
+        }
+    }
+}
+
+/// Unit-105: 3-phase action presentation — returns (wind_up, commit, recover) poses.
+/// Each action has distinct body/weapon cues across anticipation, contact, and follow-through.
+fn pose_phases_for_clip(clip_id: &str) -> (PoseUniform, PoseUniform, PoseUniform) {
+    fn p(a: f32, pt: f32) -> PoseUniform {
+        PoseUniform { pose_active: 1.0, pose_time: pt, _pad: [0.0; 2],
+            bone_offset_x: [0.0; 4], bone_offset_x2: [0.0; 4],
+            bone_offset_y: [0.0; 4], bone_offset_y2: [0.0; 4],
+            bone_offset_z: [0.0; 4], bone_offset_z2: [0.0; 4],
+            bone_yaw: [0.0; 4], bone_yaw2: [0.0; 4] }
+    }
+    let neutral = p(1.0, 0.0);
+    match clip_id {
+        "idle" | "guard_pose" => {
+            // Guard: wind=raise arms, commit=guard set, recover=guard settle
+            let mut w = p(1.0, 0.0); w.bone_yaw[3] = -0.3; w.bone_offset_y[3] = 0.02;
+            let mut c = p(1.0, 0.5); c.bone_yaw[3] = -0.70; c.bone_yaw2[0] = 0.70; c.bone_offset_y[3] = 0.06; c.bone_offset_y2[0] = 0.06; c.bone_offset_z[3] = 0.03; c.bone_offset_z2[0] = 0.03; c.bone_offset_y[1] = 0.010;
+            let mut r = p(1.0, 1.0); r.bone_yaw[3] = -0.65; r.bone_yaw2[0] = 0.65; r.bone_offset_y[3] = 0.05; r.bone_offset_y2[0] = 0.05; r.bone_offset_y[1] = 0.008;
+            (w, c, r)
+        }
+        "cut" => {
+            // Cut: wind-up (weapon pulled back high), commit (swing across), recover (settle)
+            let mut w = p(1.0, 0.0); w.bone_yaw[3] = -0.6; w.bone_offset_z[3] = -0.08; w.bone_offset_y[3] = 0.10; w.bone_yaw[1] = 0.2;
+            let mut c = p(1.0, 0.5); c.bone_yaw[3] = -1.50; c.bone_offset_z[3] = 0.10; c.bone_offset_y[3] = -0.04; c.bone_yaw[1] = 0.44; c.bone_offset_z2[1] = 0.06; c.bone_offset_z2[2] = -0.03;
+            let mut r = p(1.0, 1.0); r.bone_yaw[3] = -0.8; r.bone_offset_z[3] = 0.04; r.bone_offset_y[3] = 0.02; r.bone_yaw[1] = 0.25;
+            (w, c, r)
+        }
+        "thrust" => {
+            // Thrust: wind-up (arm back), commit (arm fully extended), recover (retract)
+            let mut w = p(1.0, 0.0); w.bone_offset_z[3] = -0.08; w.bone_offset_z2[0] = -0.06; w.bone_yaw[3] = 1.2;
+            let mut c = p(1.0, 0.5); c.bone_offset_z[3] = 0.16; c.bone_offset_z2[0] = 0.12; c.bone_offset_y[3] = 0.08; c.bone_offset_y2[0] = 0.08; c.bone_yaw[3] = -0.30; c.bone_offset_z2[1] = 0.08; c.bone_offset_z2[2] = -0.06; c.bone_yaw[1] = 0.16;
+            let mut r = p(1.0, 1.0); r.bone_offset_z[3] = 0.06; r.bone_offset_z2[0] = 0.04; r.bone_yaw[3] = -0.10; r.bone_offset_z2[1] = 0.04;
+            (w, c, r)
+        }
+        "step" => {
+            // Step: wind-up (weight shift), commit (foot planted), recover (balanced)
+            let mut w = p(1.0, 0.0); w.bone_offset_x[1] = 0.03; w.bone_offset_x2[1] = 0.04;
+            let mut c = p(1.0, 0.5); c.bone_offset_x[1] = 0.08; c.bone_offset_x2[1] = 0.10; c.bone_offset_x2[2] = -0.04; c.bone_offset_y[1] = 0.012; c.bone_yaw[1] = 0.08;
+            let mut r = p(1.0, 1.0); r.bone_offset_x[1] = 0.05; r.bone_offset_x2[1] = 0.06; r.bone_offset_x2[2] = -0.02;
+            (w, c, r)
+        }
+        "pivot" => {
+            let mut w = p(1.0, 0.0); w.bone_yaw[1] = 0.3;
+            let mut c = p(1.0, 0.5); c.bone_yaw[1] = 0.90; c.bone_yaw[2] = 0.40; c.bone_offset_x2[2] = -0.06; c.bone_offset_y[1] = 0.008;
+            let mut r = p(1.0, 1.0); r.bone_yaw[1] = 0.4; r.bone_yaw[2] = 0.15;
+            (w, c, r)
+        }
+        "parry" => {
+            let mut w = p(1.0, 0.0); w.bone_yaw[3] = -0.5; w.bone_offset_y[3] = 0.04;
+            let mut c = p(1.0, 0.5); c.bone_yaw[3] = -1.10; c.bone_offset_y[3] = 0.12; c.bone_offset_z[3] = -0.04; c.bone_yaw2[0] = 0.90; c.bone_offset_y2[0] = 0.10; c.bone_offset_z[1] = -0.03;
+            let mut r = p(1.0, 1.0); r.bone_yaw[3] = -0.6; r.bone_offset_y[3] = 0.06; r.bone_yaw2[0] = 0.5; r.bone_offset_z[1] = -0.01;
+            (w, c, r)
+        }
+        "brace" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_y[1] = -0.02; w.bone_offset_z[3] = 0.02;
+            let mut c = p(1.0, 0.5); c.bone_offset_y[1] = -0.06; c.bone_offset_y[2] = -0.04; c.bone_offset_z[3] = 0.04; c.bone_offset_y[3] = -0.04; c.bone_offset_z2[1] = -0.04; c.bone_offset_z2[2] = 0.04;
+            let mut r = p(1.0, 1.0); r.bone_offset_y[1] = -0.03; r.bone_offset_z[3] = 0.02; r.bone_offset_z2[1] = -0.02;
+            (w, c, r)
+        }
+        "bash" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_z[3] = -0.04; w.bone_offset_z[1] = -0.02;
+            let mut c = p(1.0, 0.5); c.bone_offset_z[3] = 0.14; c.bone_offset_z2[0] = 0.14; c.bone_offset_y[3] = 0.04; c.bone_offset_y2[0] = 0.04; c.bone_offset_z[1] = 0.08; c.bone_offset_z2[1] = 0.10; c.bone_offset_z2[2] = -0.04;
+            let mut r = p(1.0, 1.0); r.bone_offset_z[3] = 0.04; r.bone_offset_z2[0] = 0.04; r.bone_offset_z[1] = 0.02;
+            (w, c, r)
+        }
+        "hook_bind" => {
+            let mut w = p(1.0, 0.0); w.bone_yaw[3] = -0.2; w.bone_yaw2[0] = 0.2;
+            let mut c = p(1.0, 0.5); c.bone_yaw[3] = 0.60; c.bone_yaw2[0] = -0.60; c.bone_offset_z[3] = 0.06; c.bone_offset_z2[0] = 0.06; c.bone_offset_y[1] = 0.014;
+            let mut r = p(1.0, 1.0); r.bone_yaw[3] = 0.2; r.bone_yaw2[0] = -0.2; r.bone_offset_z[3] = 0.02;
+            (w, c, r)
+        }
+        "grab" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_z[3] = 0.04; w.bone_offset_z2[0] = 0.04;
+            let mut c = p(1.0, 0.5); c.bone_offset_z[3] = 0.12; c.bone_offset_z2[0] = 0.12; c.bone_offset_y[3] = 0.02; c.bone_offset_y2[0] = 0.02; c.bone_offset_z[1] = 0.06; c.bone_offset_z2[1] = 0.06;
+            let mut r = p(1.0, 1.0); r.bone_offset_z[3] = 0.04; r.bone_offset_z2[0] = 0.04;
+            (w, c, r)
+        }
+        "shove" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_z[3] = 0.04; w.bone_offset_z2[0] = 0.04;
+            let mut c = p(1.0, 0.5); c.bone_offset_z[3] = 0.10; c.bone_offset_z2[0] = 0.10; c.bone_offset_y[3] = 0.06; c.bone_offset_y2[0] = 0.06; c.bone_offset_z[1] = 0.10; c.bone_offset_z2[1] = 0.08;
+            let mut r = p(1.0, 1.0); r.bone_offset_z[3] = 0.04; r.bone_offset_z2[0] = 0.04; r.bone_offset_z[1] = 0.04;
+            (w, c, r)
+        }
+        "kick" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_z2[1] = 0.04; w.bone_offset_y2[1] = 0.02;
+            let mut c = p(1.0, 0.5); c.bone_offset_z2[1] = 0.18; c.bone_offset_y2[1] = 0.08; c.bone_offset_z[3] = -0.06; c.bone_offset_z2[0] = -0.06; c.bone_offset_y[1] = -0.04;
+            let mut r = p(1.0, 1.0); r.bone_offset_z2[1] = 0.06; r.bone_offset_y2[1] = 0.02;
+            (w, c, r)
+        }
+        "recover" => {
+            let mut w = p(1.0, 0.0); w.bone_yaw[3] = -0.8; w.bone_offset_y[3] = 0.06;
+            let mut c = p(1.0, 0.5); c.bone_yaw[3] = -0.40; c.bone_offset_y[3] = 0.030; c.bone_offset_z[3] = 0.010; c.bone_offset_y[1] = 0.006;
+            let mut r = p(1.0, 1.0); r.bone_yaw[3] = -0.2; r.bone_offset_y[3] = 0.010;
+            (w, c, r)
+        }
+        "walk" => {
+            let mut w = p(1.0, 0.0); w.bone_offset_z2[1] = 0.02;
+            let mut c = p(1.0, 0.5); c.bone_offset_z2[1] = 0.04; c.bone_offset_z2[2] = -0.04; c.bone_yaw2[1] = 0.20; c.bone_yaw2[2] = -0.20;
+            let mut r = p(1.0, 1.0); r.bone_offset_z2[1] = 0.01;
+            (w, c, r)
+        }
+        _ => {
+            // Fallback: neutral poses for unknown clips
+            (neutral, neutral, neutral)
+        }
     }
 }
 
