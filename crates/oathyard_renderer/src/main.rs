@@ -647,6 +647,9 @@ fn camera_for_mode(mode: &str) -> CameraMode {
         // reveal, contact, and consequence to increase dramatic impact.
         "pre_contact_frame" => CameraMode { eye: [0.0, 0.90, 2.8], look_at: [0.0, 0.30, -0.1], fov_radians: 0.72 },
         "contact_frame" => CameraMode { eye: [0.0, 0.80, 2.5], look_at: [0.0, 0.28, -0.05], fov_radians: 0.70 },
+        // Unit-105: Distinct consequence and replay cameras
+        "consequence_camera" => CameraMode { eye: [-0.2, 0.85, 3.0], look_at: [0.0, 0.35, -0.1], fov_radians: 0.65 },
+        "replay_viewer_camera" => CameraMode { eye: [0.3, 1.1, 3.5], look_at: [0.0, 0.30, -0.1], fov_radians: 0.68 },
         "fight_film_candidate_shot_01" => CameraMode { eye: [0.35, 1.2, 3.2], look_at: [0.0, 0.30, -0.15], fov_radians: 0.66 },
         "fight_film_replay_camera_shot" => CameraMode { eye: [-0.3, 1.1, 2.8], look_at: [0.05, 0.35, -0.1], fov_radians: 0.64 },
         // Unit-051: production-ready-candidate capture cameras
@@ -3761,10 +3764,10 @@ impl InteractiveState {
             Self::Plan => "planning_timeline",
             Self::CommitReveal => "pre_contact_frame",
             Self::Resolve => "contact_frame",
-            Self::Consequence => "injury_capability_consequence_frame",
+            Self::Consequence => "consequence_camera",
             Self::Replan => "recovery_replan_frame",
             Self::MatchResult => "oathyard_arena_candidate_01",
-            Self::Replay => "fight_film_replay_camera_shot",
+            Self::Replay => "replay_viewer_camera",
             Self::FightFilm => "fight_film_candidate_shot_01",
             Self::Settings => "settings_accessibility",
             Self::Quit => "boot_main_menu",
