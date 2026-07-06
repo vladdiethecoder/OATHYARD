@@ -4760,6 +4760,12 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                 mapped_at_creation: false,
             });
             queue.write_buffer(&mat_buffer, 0, mat_bytes);
+            // Unit-105: Select pose buffer based on mesh owner
+            let mesh_pose_buffer = if mesh.mesh_asset_id.starts_with("opponent_") || mesh.mesh_asset_id.starts_with("opponent") {
+                &opponent_pose_buffer
+            } else {
+                &pose_buffer
+            };
             let per_mesh_bg0 = device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("oathyard windowed per-mesh bind group 0"),
                 layout: &bind_group_layout,
@@ -4767,7 +4773,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                     wgpu::BindGroupEntry { binding: 0, resource: uniform_buffer.as_entire_binding() },
                     wgpu::BindGroupEntry { binding: 1, resource: camera_buffer.as_entire_binding() },
                     wgpu::BindGroupEntry { binding: 2, resource: mat_buffer.as_entire_binding() },
-                    wgpu::BindGroupEntry { binding: 3, resource: pose_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 3, resource: mesh_pose_buffer.as_entire_binding() },
                 ],
             });
             WindowedGpuMesh {
@@ -5507,6 +5513,29 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         let interpolated_pose = app.motion_brick.current_pose();
                         app.queue
                             .write_buffer(&app.pose_buffer, 0, bytemuck::bytes_of(&interpolated_pose));
+
+                        // Unit-105: Advance opponent motion brick independently
+                        let opponent_action_clip = app.opponent_timeline_slots.first()
+                            .map(|s| action_clip_for_state(
+                                &app.interactive_state,
+                                &[s.clone()],
+                                &app.combat_contacts,
+                            ))
+                            .unwrap_or("idle");
+                        if app.last_opponent_clip != opponent_action_clip {
+                            let opp_target = pose_for_clip(opponent_action_clip);
+                            let opp_dur = match opponent_action_clip {
+                                "idle" | "walk" => 15, "guard_pose" => 10,
+                                "step" | "pivot" => 8, "cut" | "thrust" | "kick" => 12,
+                                "brace" | "bash" => 10, "parry" => 8, "recover" => 15, _ => 12,
+                            };
+                            app.opponent_motion_brick.start_transition(opp_target, opponent_action_clip, opp_dur);
+                            app.last_opponent_clip = opponent_action_clip.to_string();
+                        }
+                        app.opponent_motion_brick.advance(1);
+                        let opp_interpolated = app.opponent_motion_brick.current_pose();
+                        app.queue
+                            .write_buffer(&app.opponent_pose_buffer, 0, bytemuck::bytes_of(&opp_interpolated));
 
                         // Unit-092: Copy offscreen to buffer for CPU UI compositing
                         let bytes_per_pixel = 4; // RGBA8 or BGRA8
