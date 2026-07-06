@@ -3111,10 +3111,13 @@ fn unit077_dual_timeline_reveal_truth_isolated() {
 
     // Opponent timeline fields
     assert!(source.contains("opponent_timeline_slots"));
-    assert!(source.contains("fn opponent_policy_timeline"));
+    assert!(source.contains("fn opponent_choose_action"));
 
-    // Opponent policy generates alternating guard/cut/thrust
-    assert!(source.contains("\"guard\", \"cut\", \"thrust\""));
+    // Opponent policy uses all 13 actions for counter-play
+    assert!(source.contains("\"step\", \"pivot\", \"guard\", \"parry\", \"cut\", \"thrust\""));
+    assert!(source.contains(
+        "\"brace\", \"bash\", \"hook_bind\", \"grab\", \"shove\", \"kick\", \"recover\""
+    ));
 
     // Both timelines in manifest
     assert!(source.contains("\"opponent_timeline_slots\": app.opponent_timeline_slots"));
@@ -4059,12 +4062,10 @@ fn unit090_expanded_resolver_covers_all_actions() {
             action
         );
     }
-    // Verify expanded opponent policy
+    // Verify Unit-104 opponent_choose_action exists with counter-play logic
     assert!(
-        renderer.contains(
-            "\"guard\", \"cut\", \"thrust\", \"step\", \"brace\", \"bash\", \"pivot\", \"recover\""
-        ),
-        "expanded opponent policy missing"
+        renderer.contains("fn opponent_choose_action"),
+        "opponent AI with counter-play missing"
     );
 }
 

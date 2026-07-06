@@ -4023,13 +4023,61 @@ fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str
     }
 }
 
-/// Unit-077: Simple opponent AI timeline policy (alternating guard / cut / thrust).
-fn opponent_policy_timeline(slot_count: usize) -> Vec<String> {
-    // Unit-090: Expanded opponent policy uses more of the 13-action roster
-    let actions = ["guard", "cut", "thrust", "step", "brace", "bash", "pivot", "recover"];
-    (0..slot_count)
-        .map(|i| actions[i % actions.len()].to_string())
-        .collect()
+/// Unit-104: Deterministic opponent AI — chooses an action based on the
+/// player's last action, current exchange, and injury state.
+/// Uses the 13x13 matchup matrix to find counter-plays.
+fn opponent_choose_action(
+    last_player_action: Option<&str>,
+    exchange: u32,
+    player_injury: u32,
+    opponent_injury: u32,
+) -> String {
+    // Base pool of all 13 actions
+    const ALL_ACTIONS: &[&str] = &[
+        "step", "pivot", "guard", "parry", "cut", "thrust",
+        "brace", "bash", "hook_bind", "grab", "shove", "kick", "recover"
+    ];
+
+    // Deterministic "seed" from exchange number — gives variety across rounds
+    let r = |max: usize| -> usize { (exchange as usize * 7 + max * 3) % max };
+
+    // If injured badly, prefer defensive actions
+    if opponent_injury >= 5 {
+        let defensives = ["guard", "parry", "brace", "step", "recover"];
+        return defensives[r(defensives.len())].to_string();
+    }
+
+    // If player is injured badly, go aggressive
+    if player_injury >= 5 {
+        let offensives = ["cut", "thrust", "bash", "kick", "grab"];
+        return offensives[r(offensives.len())].to_string();
+    }
+
+    // Counter the player's last action based on matchup matrix
+    if let Some(last) = last_player_action {
+        let counters = match last {
+            "cut" | "thrust" => &["parry", "brace", "step", "pivot", "grab", "shove", "kick", "hook_bind"] as &[&str],
+            "guard" => &["bash", "grab", "shove", "kick", "hook_bind"],
+            "parry" => &["bash", "grab"],
+            "brace" => &["grab", "cut", "thrust"],
+            "step" | "pivot" => &["cut", "thrust", "bash", "grab"],
+            "bash" => &["step", "pivot", "brace"],
+            "grab" => &["step", "pivot", "cut"],
+            "shove" => &["step", "pivot", "cut"],
+            "kick" => &["step", "pivot", "guard"],
+            "hook_bind" => &["bash", "shove", "step"],
+            "recover" => &["cut", "thrust", "bash", "grab", "kick"],
+            _ => ALL_ACTIONS,
+        };
+        // 70% chance to counter, 30% chance random for unpredictability
+        let use_counter = r(10) < 7;
+        if use_counter && !counters.is_empty() {
+            return counters[r(counters.len())].to_string();
+        }
+    }
+
+    // Fallback: random from all actions (weighted toward variety)
+    ALL_ACTIONS[r(ALL_ACTIONS.len())].to_string()
 }
 
 /// Unit-078/079: Combat resolution + injury tracking + match outcome.
@@ -4660,9 +4708,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             transitions: Vec::new(),
             timeline_slots: vec!["guard".to_string(); 10],
             // Unit-104: YOMI loop — opponent generates ONE action per exchange,
-            // not a pre-filled 10-slot timeline. The resolve function only
-            // processes up to min(len(player), len(opponent)) exchanges.
-            opponent_timeline_slots: vec![opponent_policy_timeline(1)[0].clone()],
+            // countering the player's last action and adapting to injury state.
+            opponent_timeline_slots: vec![opponent_choose_action(None, 0, 0, 0)],
             timeline_cursor: 0,
             timeline_slot_count: 10,
             combat_contacts: Vec::new(),
@@ -4821,7 +4868,13 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                         ));
                                     } else {
                                         // Generate a fresh opponent action for the next exchange
-                                        app.opponent_timeline_slots = vec![opponent_policy_timeline(1)[0].clone()];
+                                        let last_player = app.timeline_slots.first().map(|s| s.as_str());
+                                        app.opponent_timeline_slots = vec![opponent_choose_action(
+                                            last_player,
+                                            app.cumulative_exchanges,
+                                            app.cumulative_player_injury,
+                                            app.cumulative_opponent_injury,
+                                        )];
                                         // Clear the first slot (committed action)
                                         if !app.timeline_slots.is_empty() {
                                             app.timeline_slots.remove(0);
