@@ -3651,9 +3651,12 @@ impl InteractiveState {
             Self::Plan => Self::CommitReveal,
             Self::CommitReveal => Self::Resolve,
             Self::Resolve => Self::Consequence,
-            Self::Consequence => Self::Replan,
+            // Unit-104: YOMI-style combat loop — after each exchange, return to
+            // Observe for the next action, not Replan. MatchResult goes back to
+            // MainMenu so the player can choose to play again.
+            Self::Consequence => Self::Observe,
             Self::Replan => Self::MatchResult,
-            Self::MatchResult => Self::Replay,
+            Self::MatchResult => Self::MainMenu,
             Self::Replay => Self::FightFilm,
             Self::FightFilm => Self::Quit,
             Self::Settings => Self::MainMenu,
@@ -4650,7 +4653,10 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             states_visited: vec![InteractiveState::Boot.as_str().to_string()],
             transitions: Vec::new(),
             timeline_slots: vec!["guard".to_string(); 10],
-            opponent_timeline_slots: opponent_policy_timeline(10),
+            // Unit-104: YOMI loop — opponent generates ONE action per exchange,
+            // not a pre-filled 10-slot timeline. The resolve function only
+            // processes up to min(len(player), len(opponent)) exchanges.
+            opponent_timeline_slots: vec![opponent_policy_timeline(1)[0].clone()],
             timeline_cursor: 0,
             timeline_slot_count: 10,
             combat_contacts: Vec::new(),
@@ -4749,6 +4755,19 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                 // Unit-090: Reveal opponent intent when entering CommitReveal
                                 if app.interactive_state == InteractiveState::Timeline {
                                     app.opponent_intent_revealed = true;
+                                }
+                                // Unit-104: On loop-back to Observe (after Consequence),
+                                // reset opponent intent and consume the committed action
+                                // so the player can plan the next exchange.
+                                if app.interactive_state == InteractiveState::Consequence {
+                                    app.opponent_intent_revealed = false;
+                                    // Generate a fresh opponent action for the next exchange
+                                    app.opponent_timeline_slots = vec![opponent_policy_timeline(1)[0].clone()];
+                                    // Clear the first slot (committed action) and shift remaining
+                                    if !app.timeline_slots.is_empty() {
+                                        app.timeline_slots.remove(0);
+                                    }
+                                    app.timeline_cursor = 0;
                                 }
                                 app.interactive_state = next;
                                 let next_str = next.as_str().to_string();

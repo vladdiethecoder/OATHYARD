@@ -850,7 +850,9 @@ fn real_main() -> Result<(), OathError> {
             let mut opponent_armor: Option<String> = None;
             let mut arena: Option<String> = None;
             let mut roster_only: bool = false;
-            let mut interactive_mode: bool = false;
+            // Unit-104: Default to interactive (player-driven) mode.
+            // Use --auto-play for the old scripted path.
+            let mut interactive_mode: bool = true;
             // Unit-103: capture roster matrix mode
             let mut capture_roster_matrix: Option<PathBuf> = None;
             while let Some(arg) = args.next() {
@@ -920,6 +922,10 @@ fn real_main() -> Result<(), OathError> {
                     }
                     "--interactive" => {
                         interactive_mode = true;
+                    }
+                    "--auto-play" => {
+                        // Unit-104: Explicit opt-in to the old scripted auto-play path
+                        interactive_mode = false;
                     }
                     "--capture-roster-matrix" => {
                         capture_roster_matrix =
@@ -2170,11 +2176,12 @@ launch env:
 
 fn play_usage() -> &'static str {
     "usage:
-  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--interactive] [--artifact-dir <dir>]
+  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--auto-play] [--artifact-dir <dir>]
   oathyard play --capture-roster-matrix <output-dir>
 
-native executable play options:
+native executable play options (default: interactive):
   --capture-roster-matrix <output-dir>  capture all 22 source-approved roster assets through the native renderer/runtime path
+  --auto-play                          automated scripted playthrough (was default before Unit-104)
   --roster-only                        print roster JSON and exit
   --player-fighter <id>                select player fighter
   --opponent-fighter <id>              select opponent fighter
@@ -2183,8 +2190,7 @@ native executable play options:
   --player-armor <id>                  select player armor
   --opponent-armor <id>                select opponent armor
   --arena <id>                         select arena
-  --interactive                        run interactive windowed mode
-  --smoke-frames <n>                   run bounded smoke frames
+  --smoke-frames <n>                   run bounded smoke frames (use with --auto-play)
   --help                               show this help
 
 readiness boundary:
