@@ -3923,6 +3923,8 @@ struct WindowedApp {
     cumulative_player_injury: u32,
     cumulative_opponent_injury: u32,
     cumulative_exchanges: u32,
+    // Unit-105: Replay viewer state
+    replay_turn_index: usize,
 }
 
 mod wgpu_mesh {
@@ -4895,6 +4897,7 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             cumulative_player_injury: 0,
             cumulative_opponent_injury: 0,
             cumulative_exchanges: 0,
+            replay_turn_index: 0,
         });
 
         self.window = Some(window);
@@ -5122,6 +5125,11 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         }
                         winit::keyboard::KeyCode::ArrowLeft | winit::keyboard::KeyCode::KeyA => {
                             logical = "prev".to_string();
+                            // Replay mode: navigate turns
+                            if app.interactive_state == InteractiveState::Replay && app.replay_turn_index > 0 {
+                                app.replay_turn_index -= 1;
+                                logical = format!("replay_turn_{}", app.replay_turn_index);
+                            }
                             // Timeline mode: move cursor left
                             if app.interactive_state == InteractiveState::Timeline
                                 && app.timeline_cursor > 0
@@ -5156,6 +5164,13 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         }
                         winit::keyboard::KeyCode::ArrowRight | winit::keyboard::KeyCode::KeyD => {
                             logical = "next".to_string();
+                            // Replay mode: navigate turns
+                            if app.interactive_state == InteractiveState::Replay
+                                && app.replay_turn_index + 1 < app.combat_contacts.len()
+                            {
+                                app.replay_turn_index += 1;
+                                logical = format!("replay_turn_{}", app.replay_turn_index);
+                            }
                             // Timeline mode: move cursor right
                             if app.interactive_state == InteractiveState::Timeline
                                 && app.timeline_cursor + 1 < app.timeline_slot_count
@@ -6119,15 +6134,35 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let why_line = format!("WHY: {}", result.end_condition);
                 draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER to rematch  |  Q to return to main menu", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to rematch  |  R=Replay  |  Q to return to main menu", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
-            if let Some(ref contact) = app.combat_contacts.first() {
-                let trace_line = format!("T0: {} vs {} -> {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase(), contact.outcome);
-                draw_text(rgba, width, height, &trace_line, 35, 108, 200, 180, 100);
+            let total = app.combat_contacts.len();
+            if total > 0 {
+                let idx = app.replay_turn_index.min(total.saturating_sub(1));
+                if let Some(ref contact) = app.combat_contacts.get(idx) {
+                    let turn_line = format!("TURN {}/{} — {} vs {}", idx + 1, total,
+                        contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
+                    draw_text(rgba, width, height, &turn_line, 35, 108, 255, 220, 120);
+                    let outcome_line = format!("RESULT: {}  INJURY: {}", contact.outcome, contact.injury);
+                    draw_text(rgba, width, height, &outcome_line, 35, 138, 255, 160, 80);
+                    // Contact type marker
+                    let mid_w = (width as i32) / 2;
+                    let mid_h = (height as i32) / 2;
+                    match contact.contact_type.as_str() {
+                        "blocked" | "deflected" => draw_text(rgba, width, height, "BLOCK", mid_w - 20, mid_h, 100, 200, 255),
+                        "clean_hit" | "thrust_penetrates" | "cut_lands_first" => draw_text(rgba, width, height, "HIT", mid_w - 15, mid_h, 255, 100, 50),
+                        "mutual_impalement" | "simultaneous" => draw_text(rgba, width, height, "CLASH", mid_w - 20, mid_h, 255, 220, 60),
+                        "guard_broken" => draw_text(rgba, width, height, "GUARD BREAK", mid_w - 45, mid_h, 255, 140, 30),
+                        "none" | "neutral" | "positioning" => draw_text(rgba, width, height, "NO CONTACT", mid_w - 40, mid_h, 200, 200, 200),
+                        _ => draw_text(rgba, width, height, "CONTACT", mid_w - 30, mid_h, 200, 200, 200),
+                    }
+                }
+            } else {
+                draw_text(rgba, width, height, "No contact data available", 35, 108, 200, 200, 200);
             }
-            draw_text(rgba, width, height, "ENTER for fight film", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "L/R to navigate turns  |  ENTER to return", 35, 168, 200, 200, 200);
         }
         InteractiveState::FightFilm => {
             draw_text(rgba, width, height, "FIGHT FILM", 35, 78, 255, 220, 120);
@@ -6168,8 +6203,8 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Resolve => "ENTER=See Consequence",
         InteractiveState::Consequence => "ENTER=Continue",
         InteractiveState::Replan => "ENTER=Match Result",
-        InteractiveState::MatchResult => "ENTER=Rematch  Q=Main Menu  ESC=Quit",
-        InteractiveState::Replay => "ENTER=Fight Film",
+        InteractiveState::MatchResult => "ENTER=Rematch  R=Replay  Q=Main Menu  ESC=Quit",
+        InteractiveState::Replay => "L/R=Turns  ENTER=Return",
         InteractiveState::FightFilm => "ENTER=Quit  ESC=Quit",
         InteractiveState::Settings => "ENTER=Return  V=Camera  ESC=Return",
         InteractiveState::Quit => "ESC=Close",
