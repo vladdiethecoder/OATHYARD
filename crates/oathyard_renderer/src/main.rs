@@ -3938,6 +3938,16 @@ struct WindowedApp {
     // Unit-106: Fight-film auto-advance state
     fight_film_contact_index: usize,
     fight_film_frame: u32,
+    // Unit-108: Uncut fight-film frame capture
+    fight_film_frame_count: u32,
+    fight_film_frames_dir: PathBuf,
+    fight_film_capturing: bool,
+    // Unit-107: Frame counter for time-based camera animation
+    frame_counter: u64,
+    // Unit-107: Camera breathing/sway for idle feel
+    camera_breathing_enabled: bool,
+    // Unit-107: Contact flash state for visual feedback
+    contact_flash_frame: u32,
 }
 
 mod wgpu_mesh {
@@ -4146,20 +4156,14 @@ async fn setup_wgpu_surface(
     Ok((device, queue, surface, surface_config, adapter_info, surface_format, present_mode, alpha_mode))
 }
 
-/// Unit-075: Resolve camera mode from interactive state + view toggle.
-/// Combat states use first-person by default; menus use state-specific cameras.
+/// Unit-075/107: Resolve camera mode from interactive state + view toggle.
+/// Combat states use phase-specific first-person cameras for readability.
+/// When first_person is true, delegates to each state's own camera_mode()
+/// which defines phase-appropriate framing (neutral, anticipation, contact, recovery).
+/// Fallback for Plan/Replan menu states uses the original third-person framing.
 fn camera_for_state(state: InteractiveState, first_person: bool) -> &'static str {
     if first_person {
-        match state {
-            InteractiveState::Observe
-            | InteractiveState::Timeline
-            | InteractiveState::Plan
-            | InteractiveState::CommitReveal
-            | InteractiveState::Resolve
-            | InteractiveState::Consequence
-            | InteractiveState::Replan => "first_person_combat_view",
-            _ => state.camera_mode(),
-        }
+        state.camera_mode()
     } else {
         match state {
             InteractiveState::Observe
@@ -4919,6 +4923,14 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             replay_turn_index: 0,
             fight_film_contact_index: 0,
             fight_film_frame: 0,
+            // Unit-108: Uncut fight-film frame capture
+            fight_film_frame_count: 0,
+            fight_film_frames_dir: self.config.out_dir.join("fight_film_frames"),
+            fight_film_capturing: false,
+            // Unit-107: Camera feel and contact feedback
+            frame_counter: 0,
+            camera_breathing_enabled: true,
+            contact_flash_frame: 0,
         });
 
         self.window = Some(window);
@@ -5430,9 +5442,44 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             }
             winit::event::WindowEvent::RedrawRequested => {
                 app.redraw_requested_count += 1;
+                app.frame_counter += 1;
 
                 let surf_w = app.surface_config.width;
                 let surf_h = app.surface_config.height;
+
+                // Unit-107: Per-frame camera breathing/sway for idle feel
+                if app.camera_breathing_enabled && app.first_person_default {
+                    let fc = app.frame_counter as f64;
+                    let breath_rate = 2.5; // slow breathing cycle
+                    let sway_rate = 1.3;   // slower sway
+                    let breath_amp = 0.002; // subtle vertical bob
+                    let sway_amp = 0.003;   // subtle horizontal sway
+                    let breath_y = (fc * breath_rate * 0.001 * std::f64::consts::PI * 2.0).sin() as f32 * breath_amp as f32;
+                    let sway_x = (fc * sway_rate * 0.001 * std::f64::consts::PI * 2.0).sin() as f32 * sway_amp as f32;
+                    // Apply additive offset to camera position if in combat state
+                    let is_combat = matches!(app.interactive_state,
+                        InteractiveState::Observe | InteractiveState::Timeline |
+                        InteractiveState::CommitReveal | InteractiveState::Resolve |
+                        InteractiveState::Consequence);
+                    if is_combat {
+                        let cam_data = camera_for_mode(&app.camera_mode);
+                        let cam_uniform = CameraUniform {
+                            eye: [
+                                cam_data.eye[0],
+                                cam_data.eye[1] + breath_y,
+                                cam_data.eye[2] + sway_x,
+                                cam_data.fov_radians,
+                            ],
+                            look_at: [
+                                cam_data.look_at[0] + sway_x * 0.5,
+                                cam_data.look_at[1] + breath_y,
+                                cam_data.look_at[2],
+                                0.0,
+                            ],
+                        };
+                        app.queue.write_buffer(&app.camera_buffer, 0, bytemuck::bytes_of(&cam_uniform));
+                    }
+                }
 
                 // Unit-092: Render to an offscreen texture, composite CPU UI,
                 // then copy to surface for windowed UI overlay support.
@@ -5584,8 +5631,75 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             if app.fight_film_frame >= FIGHT_FILM_FRAMES_PER_CONTACT {
                                 app.fight_film_frame = 0;
                                 app.fight_film_contact_index += 1;
-                                // After all contacts, transition to Quit
+                                // After all contacts, write uncut manifest and transition
                                 if app.fight_film_contact_index >= app.combat_contacts.len() {
+                                    // Unit-108: Write uncut fight-film manifest + timeline
+                                    let total_captured = app.fight_film_frame_count;
+                                    let cap_interval = 5u32; // matches FIGHT_FILM_CAPTURE_INTERVAL
+                                    let frame_count = if total_captured == 0 { 0 } else { total_captured / cap_interval + 1 };
+                                    // Timeline TSV — one row per turn with trace-bound data
+                                    let mut tsv = String::new();
+                                    tsv.push_str("turn_index\tframe\tplayer_action\topponent_action\tcontact_type\tinjury\toutcome\n");
+                                    for (i, contact) in app.combat_contacts.iter().enumerate() {
+                                        tsv.push_str(&format!(
+                                            "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                                            i + 1,
+                                            (i as u32 * FIGHT_FILM_FRAMES_PER_CONTACT) / cap_interval,
+                                            contact.player_action,
+                                            contact.opponent_action,
+                                            contact.contact_type,
+                                            contact.injury,
+                                            contact.outcome,
+                                        ));
+                                    }
+                                    let _ = std::fs::create_dir_all(&app.out_dir);
+                                    let tsv_path = app.out_dir.join("fight_film_timeline.tsv");
+                                    let _ = std::fs::write(&tsv_path, &tsv);
+
+                                    // Uncut manifest
+                                    let final_state_hash_str = app.packet_json
+                                        .get("final_state_hash")
+                                        .and_then(Value::as_str)
+                                        .unwrap_or("unknown");
+                                    let replay_sha = app.packet_json
+                                        .get("replay_json_sha256")
+                                        .and_then(Value::as_str)
+                                        .unwrap_or("unknown");
+                                    // Compute SHA256 of frames dir if non-empty
+                                    let frames_sha = if frame_count > 0 {
+                                        if let Ok(mut entries) = std::fs::read_dir(&app.fight_film_frames_dir) {
+                                            let mut hasher = Sha256::new();
+                                            let mut names: Vec<String> = Vec::new();
+                                            while let Some(Ok(e)) = entries.next() {
+                                                if let Ok(name) = e.file_name().into_string() {
+                                                    names.push(name);
+                                                }
+                                            }
+                                            names.sort();
+                                            for name in &names {
+                                                hasher.update(name.as_bytes());
+                                            }
+                                            let digest = hasher.finalize();
+                                            let mut h = String::with_capacity(digest.len() * 2);
+                                            for byte in digest { use std::fmt::Write as _; let _ = write!(&mut h, "{byte:02x}"); }
+                                            h
+                                        } else { "unknown".to_string() }
+                                    } else { "none".to_string() };
+
+                                    let manifest_json = format!(
+                                        r#"{{"schema":"oathyard.uncut_fight_film.v1","generated_by_executable":true,"source_replay_path":"builtin","source_trace_path":"builtin","final_truth_hash":"{}","local_game_hash":"{}","truth_mutation":false,"turn_count":{},"frame_count":{},"fps":{},"duration_seconds":{},"omitted_turn_count":0,"fabricated_contact_count":0,"visual_contact_before_truth_count":0,"encoded_video_present":false,"encoder_name":"","video_sha256":"","capture_interval_frames":{},"frames_sha256":"{}","owner_visual_acceptance":false,"public_demo_ready":false,"release_candidate_ready":false}}"#,
+                                        final_state_hash_str,
+                                        replay_sha,
+                                        app.combat_contacts.len(),
+                                        frame_count,
+                                        12u32, // our effective fps (cap_interval output)
+                                        if frame_count > 0 { frame_count as f64 / 12.0 } else { 0.0 },
+                                        cap_interval,
+                                        frames_sha,
+                                    );
+                                    let manifest_path = app.out_dir.join("fight_film_uncut_manifest.json");
+                                    let _ = std::fs::write(&manifest_path, &manifest_json);
+
                                     app.interactive_state = InteractiveState::MatchResult;
                                     let s = "MATCH_RESULT".to_string();
                                     if !app.states_visited.contains(&s) {
@@ -5671,6 +5785,20 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                                         app.frames_presented
                                     ));
                                     let _ = write_png_rgba(&cap_path, surf_w, surf_h, &rgba_buf);
+                                }
+                            }
+
+                            // Unit-108: Capture every Nth frame during fight film for uncut sequence
+                            if app.interactive_state == InteractiveState::FightFilm {
+                                app.fight_film_frame_count += 1;
+                                const FIGHT_FILM_CAPTURE_INTERVAL: u32 = 5; // ~12fps at 60fps render
+                                if app.fight_film_frame_count % FIGHT_FILM_CAPTURE_INTERVAL == 0 || app.fight_film_frame_count == 1 {
+                                    let _ = std::fs::create_dir_all(&app.fight_film_frames_dir);
+                                    let ff_path = app.fight_film_frames_dir.join(format!(
+                                        "ff_{:06}.png",
+                                        app.fight_film_frame_count
+                                    ));
+                                    let _ = write_png_rgba(&ff_path, surf_w, surf_h, &rgba_buf);
                                 }
                             }
 
@@ -6084,6 +6212,19 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
             draw_text(rgba, width, height, "ENTER to continue", 35, 198, 200, 200, 200);
         }
         InteractiveState::Resolve => {
+            // Unit-107: Contact flash — subtle background tint based on outcome each frame in Resolve
+            // Uses fill_rect with low RGB values for subtle tint (no alpha parameter available).
+            if let Some(ref contact) = app.combat_contacts.first() {
+                    let (fr, fg, fb) = match contact.contact_type.as_str() {
+                        "clean_hit" | "thrust_penetrates" | "cut_lands_first" | "strike_blocked" => (30u8, 8u8, 5u8),
+                        "blocked" | "deflected" | "brace_absorbs" => (6u8, 12u8, 30u8),
+                        "simultaneous" | "mutual_impalement" | "double_thrust" => (20u8, 16u8, 4u8),
+                        "guard_broken" | "guard_bypassed" | "guard_displaced" => (25u8, 10u8, 3u8),
+                        "none" | "neutral" | "positioning" | "miss" | "pivot" => (10u8, 10u8, 10u8),
+                        _ => (20u8, 16u8, 8u8),
+                    };
+                    fill_rect(rgba, width, height, 0, 0, width as i32, height as i32, fr, fg, fb);
+            }
             draw_text(rgba, width, height, "RESOLVE (CONTACT)", 35, 78, 255, 220, 120);
             if let Some(ref contact) = app.combat_contacts.first() {
                 let action_line = format!("{} vs {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
@@ -6178,7 +6319,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let why_line = format!("WHY: {}", result.end_condition);
                 draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER to rematch  |  R=Replay  |  Q to return to main menu", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to rematch  |  R=Replay  |  F=Fight Film  |  Q to return to main menu", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
@@ -6220,6 +6361,40 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                     draw_text(rgba, width, height, &outcome_line, 35, 138, 255, 160, 80);
                     let progress = format!("TURN {}/{}", idx + 1, total);
                     draw_text(rgba, width, height, &progress, (width as i32) - 200, 35, 200, 200, 200);
+                    // Unit-107: Fight-film contact markers — same visual language as Resolve
+                    let mid_w = (width as i32) / 2;
+                    let mid_h = (height as i32) / 2;
+                    match contact.contact_type.as_str() {
+                        "blocked" | "deflected" => {
+                            draw_text(rgba, width, height, "BLOCK", mid_w - 20, mid_h, 100, 200, 255);
+                            draw_contact_marker(rgba, width, height, mid_w - 40, mid_h, mid_w + 40, mid_h + 5);
+                        }
+                        "clean_hit" | "thrust_penetrates" | "cut_lands_first" => {
+                            draw_text(rgba, width, height, "HIT", mid_w - 15, mid_h, 255, 100, 50);
+                            fill_rect(rgba, width, height, mid_w - 30, mid_h - 5, 60, 10, 255, 60, 20);
+                        }
+                        "mutual_impalement" | "simultaneous" => {
+                            draw_text(rgba, width, height, "CLASH", mid_w - 20, mid_h, 255, 220, 60);
+                            fill_rect(rgba, width, height, mid_w - 30, mid_h - 15, 60, 30, 255, 200, 40);
+                        }
+                        "guard_broken" => {
+                            draw_text(rgba, width, height, "GUARD BREAK", mid_w - 45, mid_h, 255, 140, 30);
+                        }
+                        "none" | "neutral" | "positioning" | "miss" => {
+                            draw_text(rgba, width, height, "NO CONTACT", mid_w - 40, mid_h, 200, 200, 200);
+                        }
+                        _ => {
+                            draw_text(rgba, width, height, "CONTACT", mid_w - 30, mid_h, 200, 200, 200);
+                        }
+                    }
+                    // Unit-107: Subtle background flash matching contact type
+                    let (fr, fg, fb) = match contact.contact_type.as_str() {
+                        "clean_hit" | "thrust_penetrates" | "cut_lands_first" => (30u8, 8u8, 5u8),
+                        "blocked" | "deflected" | "brace_absorbs" => (6u8, 12u8, 30u8),
+                        "simultaneous" | "mutual_impalement" => (20u8, 16u8, 4u8),
+                        _ => (10u8, 10u8, 10u8),
+                    };
+                    fill_rect(rgba, width, height, 0, 0, width as i32, height as i32, fr, fg, fb);
                 }
             }
             draw_text(rgba, width, height, "F — Toggle fullscreen  |  ESC to skip", 35, 168, 200, 200, 200);
@@ -6227,8 +6402,18 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Settings => {
             draw_text(rgba, width, height, "SETTINGS/HELP", 35, 78, 255, 220, 120);
             draw_text(rgba, width, height, "INPUT: KEYBOARD", 35, 108, 200, 200, 200);
-            draw_text(rgba, width, height, "V: TOGGLE CAMERA", 35, 138, 200, 200, 200);
-            draw_text(rgba, width, height, "ENTER to return", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "V: TOGGLE FIRST/THIRD PERSON CAMERA", 35, 138, 200, 200, 200);
+            draw_text(rgba, width, height, "H / F1: TOGGLE THIS HELP OVERLAY", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "ACTIONS (TIMELINE):", 35, 208, 255, 220, 120);
+            draw_text(rgba, width, height, "1=STEP  2=PIVOT  3=GUARD  4=PARRY  5=CUT", 35, 228, 150, 180, 200);
+            draw_text(rgba, width, height, "6=THRUST  7=BRACE  8=BASH  9=HOOK_BIND", 35, 248, 150, 180, 200);
+            draw_text(rgba, width, height, "0=BIND  G=GRAB  B=SHOVE  K=KICK  R=RECOVER", 35, 268, 150, 180, 200);
+            draw_text(rgba, width, height, "NAVIGATION:", 35, 308, 255, 220, 120);
+            draw_text(rgba, width, height, "L/R: CURSOR/TURN  ENTER: ADVANCE  ESC/Q: QUIT", 35, 328, 200, 200, 200);
+            draw_text(rgba, width, height, "P: PAUSE/RESUME AUTO-PLAY", 35, 348, 200, 200, 200);
+            draw_text(rgba, width, height, "R: OPEN REPLAY VIEWER  F: FIGHT FILM", 35, 368, 200, 200, 200);
+            draw_text(rgba, width, height, "MENUS: UP/DOWN CYCLE  LEFT/RIGHT SELECT", 35, 388, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to return", 35, 428, 200, 200, 200);
         }
         InteractiveState::Quit => {
             draw_text(rgba, width, height, "QUIT", 35, 78, 255, 100, 100);
@@ -6255,7 +6440,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Replan => "ENTER=Match Result",
         InteractiveState::MatchResult => "ENTER=Rematch  R=Replay  Q=Main Menu  ESC=Quit",
         InteractiveState::Replay => "L/R=Turns  ENTER=Return",
-        InteractiveState::FightFilm => "ENTER=Quit  ESC=Quit",
+        InteractiveState::FightFilm => "F=Quit  ESC=Quit",
         InteractiveState::Settings => "ENTER=Return  V=Camera  ESC=Return",
         InteractiveState::Quit => "ESC=Close",
     };

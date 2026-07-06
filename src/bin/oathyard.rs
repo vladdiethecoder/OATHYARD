@@ -1397,24 +1397,38 @@ fn launch_play_flow(
         }
 
         // Reset cursor to start for display
-        // Then advance through remaining states
-        let remaining_labels = [
+        // Then advance through remaining states (using specific actions where needed)
+        // After replan, advance to MatchResult
+        for label in &[
             "timeline_to_plan",
             "plan_to_commit_reveal",
             "reveal_to_resolve",
             "resolve_to_consequence",
             "consequence_to_replan",
             "replan_to_match_result",
-            "result_to_replay",
-            "replay_to_fight_film",
-            "fight_film_to_quit",
-        ];
-        for label in &remaining_labels {
+        ] {
             inputs.push(format!(
                 r#"{{"action":"advance","at_frame":{frame},"label":"{label}"}}"#
             ));
             frame += 20;
         }
+        // From MatchResult, use "replay" to jump to Replay viewer (not advance, which goes MainMenu)
+        inputs.push(format!(
+            r#"{{"action":"replay","at_frame":{frame},"label":"result_to_replay"}}"#
+        ));
+        frame += 20;
+        // From Replay, advance goes to FightFilm (Replay.next() = FightFilm)
+        inputs.push(format!(
+            r#"{{"action":"advance","at_frame":{frame},"label":"replay_to_fight_film"}}"#
+        ));
+        frame += 20;
+        // From FightFilm, wait for auto-advance then quit
+        // FightFilm auto-advances through all contacts then returns to MatchResult.
+        // Give it enough frames for the full playback, then quit.
+        frame += 1200; // ~20s for fight film playback at 90 frames/contact
+        inputs.push(format!(
+            r#"{{"action":"quit","at_frame":{frame},"label":"fight_film_to_quit"}}"#
+        ));
         let si_json = format!(
             r#"{{"schema":"oathyard.windowed_scripted_input.v1","inputs":[{}]}}"#,
             inputs.join(",")
