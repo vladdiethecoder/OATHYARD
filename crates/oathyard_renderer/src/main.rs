@@ -4798,6 +4798,26 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         winit::keyboard::KeyCode::Enter | winit::keyboard::KeyCode::Space => {
                             logical = "advance".to_string();
                             if app.interactive_state != InteractiveState::Quit {
+                                // Unit-104: Quick rematch from MatchResult — reset all combat
+                                // state and jump to Observe with the same loadout.
+                                if app.interactive_state == InteractiveState::MatchResult {
+                                    app.cumulative_player_injury = 0;
+                                    app.cumulative_opponent_injury = 0;
+                                    app.cumulative_exchanges = 0;
+                                    app.combat_contacts.clear();
+                                    app.match_result = None;
+                                    app.interactive_state = InteractiveState::Observe;
+                                    let s = "OBSERVE".to_string();
+                                    if !app.states_visited.contains(&s) {
+                                        app.states_visited.push(s.clone());
+                                    }
+                                    app.transitions.push(format!(
+                                        "{} -> {}",
+                                        prev_state.as_str(),
+                                        "OBSERVE (REMATCH)"
+                                    ));
+                                    return;
+                                }
                                 // Unit-104: When confirming arena selection, write roster choice
                                 // and exit so the launcher can restart with the new loadout.
                                 if app.interactive_state == InteractiveState::ArenaSelect {
@@ -5922,7 +5942,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let why_line = format!("WHY: {}", result.end_condition);
                 draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER to return to main menu", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER to rematch  |  Q to return to main menu", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
@@ -5971,7 +5991,7 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Resolve => "ENTER=See Consequence",
         InteractiveState::Consequence => "ENTER=Continue",
         InteractiveState::Replan => "ENTER=Match Result",
-        InteractiveState::MatchResult => "ENTER=Replay  R=Replay  F=FightFilm",
+        InteractiveState::MatchResult => "ENTER=Rematch  Q=Main Menu  ESC=Quit",
         InteractiveState::Replay => "ENTER=Fight Film",
         InteractiveState::FightFilm => "ENTER=Quit  ESC=Quit",
         InteractiveState::Settings => "ENTER=Return  V=Camera  ESC=Return",
