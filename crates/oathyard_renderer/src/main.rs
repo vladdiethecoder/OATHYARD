@@ -2840,6 +2840,44 @@ fn draw_action_cue(rgba: &mut [u8], width: u32, height: u32, cx: i32, cy: i32, a
     }
 }
 
+// Unit-104: Combat impact VFX — dramatic hit/block/whiff visualization.
+// All presentation only; no truth mutation.
+fn draw_hit_impact(rgba: &mut [u8], width: u32, height: u32, cx: i32, cy: i32, is_hit: bool) {
+    if is_hit {
+        // Hit impact — bright radial burst with large flash
+        let colors = [(255, 220, 60), (255, 160, 30), (255, 100, 20)];
+        for (i, &(r, g, b)) in colors.iter().enumerate() {
+            let radius = 60 + (i as i32) * 25;
+            // Draw 12 radial lines at 30-degree intervals
+            for angle_i in 0..12 {
+                let angle = angle_i as f64 * std::f64::consts::PI / 6.0;
+                let x1 = cx + (angle.cos() * radius as f64) as i32;
+                let y1 = cy + (angle.sin() * radius as f64) as i32;
+                let inner_radius = radius - 15;
+                let x0 = cx + (angle.cos() * inner_radius as f64) as i32;
+                let y0 = cy + (angle.sin() * inner_radius as f64) as i32;
+                draw_line(rgba, width, height, x0, y0, x1, y1, r, g, b);
+            }
+        }
+        // Central flash — concentric bright rectangles
+        fill_rect(rgba, width, height, cx - 20, cy - 20, 40, 40, 255, 255, 255);
+        fill_rect(rgba, width, height, cx - 12, cy - 12, 24, 24, 255, 220, 80);
+        fill_rect(rgba, width, height, cx - 5, cy - 5, 10, 10, 255, 180, 40);
+    } else {
+        // Block/whiff — dimmer spark pattern
+        for angle_i in 0..8 {
+            let angle = angle_i as f64 * std::f64::consts::PI / 4.0;
+            let radius = 35.0;
+            let x1 = cx + (angle.cos() * radius) as i32;
+            let y1 = cy + (angle.sin() * radius) as i32;
+            let x0 = cx + (angle.cos() * radius * 0.4) as i32;
+            let y0 = cy + (angle.sin() * radius * 0.4) as i32;
+            draw_line(rgba, width, height, x0, y0, x1, y1, 180, 200, 220);
+        }
+        fill_rect(rgba, width, height, cx - 8, cy - 8, 16, 16, 200, 220, 240);
+    }
+}
+
 // Unit-065: Draw contact marker — line from weapon grip to target.
 fn draw_contact_marker(rgba: &mut [u8], width: u32, height: u32, x0: i32, y0: i32, x1: i32, y1: i32) {
     // Bright red-orange impact line
@@ -3075,9 +3113,13 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             let matchup = cs.get("matchup_explanation").and_then(Value::as_str).unwrap_or("Combat exchange");
             let p_cat = action_category(p_action);
             let o_cat = action_category(o_action);
+            // Unit-104: Dramatic VS reveal — center burst for action reveal
+            let vs_burst_cx = (width as i32) / 2;
+            let vs_burst_cy = (height as i32) / 3;
+            draw_hit_impact(rgba, width, height, vs_burst_cx, vs_burst_cy, true);
             draw_panel(rgba, width, height, 20, 70, 600, 220);
             draw_title_bar(rgba, width, height, 20, 70, 600, "COMMIT / REVEAL");
-            draw_text(rgba, width, height, "=== COMMIT REVEAL ===", 35, 108, 255, 255, 100);
+            draw_text(rgba, width, height, "=== SIMULTANEOUS REVEAL ===", 35, 108, 255, 255, 100);
             let p_line = format!("PLAYER(GOLD): {}", p_action.to_uppercase());
             draw_text(rgba, width, height, &p_line, 35, 138, 255, 220, 60);
             let p_cat_line = format!("  INTENT: {}", p_cat.to_uppercase());
@@ -3100,6 +3142,9 @@ fn composite_ui_overlay(rgba: &mut [u8], width: u32, height: u32, capture_id: &s
             let weapon = cs.get("weapon").and_then(Value::as_str).unwrap_or("longsword");
             let armor = cs.get("armor").and_then(Value::as_str).unwrap_or("mail_hauberk");
             let target = cs.get("target").and_then(Value::as_str).unwrap_or("torso");
+            let is_contact = material.contains("hit") || material.contains("cut") || material.contains("deflect") || material == "unknown";
+            // Unit-104: Draw combat impact VFX at center of frame
+            draw_hit_impact(rgba, width, height, (width as i32) / 2 - 40, (height as i32) / 2 - 60, is_contact);
             draw_panel(rgba, width, height, 20, 70, 550, 180);
             draw_title_bar(rgba, width, height, 20, 70, 550, "RESOLVE (CONTACT)");
             let action_line = format!("PLAYER {} -> OPPONENT {}", p_action.to_uppercase(), o_action.to_uppercase());
