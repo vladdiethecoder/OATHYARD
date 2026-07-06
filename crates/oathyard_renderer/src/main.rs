@@ -3773,7 +3773,7 @@ impl InteractiveState {
             Self::Replan => "recovery_replan_frame",
             Self::MatchResult => "oathyard_arena_candidate_01",
             Self::Replay => "replay_viewer_camera",
-            Self::FightFilm => "fight_film_candidate_shot_01",
+            Self::FightFilm => "oathyard_arena_candidate_01",
             Self::Settings => "settings_accessibility",
             Self::Quit => "boot_main_menu",
         }
@@ -4882,9 +4882,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             states_visited: vec![InteractiveState::Boot.as_str().to_string()],
             transitions: Vec::new(),
             timeline_slots: vec!["guard".to_string(); 10],
-            // Unit-104: YOMI loop — opponent generates ONE action per exchange,
-            // countering the player's last action and adapting to injury state.
-            opponent_timeline_slots: vec![opponent_choose_action(None, 0, 0, 0)],
+            // Unit-108: Fill opponent timeline with 10 actions for multi-exchange fights
+            opponent_timeline_slots: (0..10).map(|i| opponent_choose_action(None, i, 0, 0)).collect(),
             timeline_cursor: 0,
             timeline_slot_count: 10,
             combat_contacts: Vec::new(),
@@ -6223,7 +6222,10 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                         "none" | "neutral" | "positioning" | "miss" | "pivot" => (10u8, 10u8, 10u8),
                         _ => (20u8, 16u8, 8u8),
                     };
-                    fill_rect(rgba, width, height, 0, 0, width as i32, height as i32, fr, fg, fb);
+                    // Unit-108: Thin border bars instead of fullscreen fill for Resolve
+                    let bar_h = 24i32;
+                    fill_rect(rgba, width, height, 0, 0, width as i32, bar_h, fr, fg, fb);
+                    fill_rect(rgba, width, height, 0, (height as i32) - bar_h, width as i32, bar_h, fr, fg, fb);
             }
             draw_text(rgba, width, height, "RESOLVE (CONTACT)", 35, 78, 255, 220, 120);
             if let Some(ref contact) = app.combat_contacts.first() {
@@ -6314,12 +6316,12 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                 let winner_line = format!("*** WINNER: {} ***", result.winner.to_uppercase());
                 draw_text(rgba, width, height, &winner_line, 35, 108, winner_color.0, winner_color.1, winner_color.2);
                 let cumul_line = format!("FINAL — YOU: {} INJURY  |  OPPONENT: {} INJURY  |  {} EXCHANGES",
-                    app.cumulative_player_injury, app.cumulative_opponent_injury, app.cumulative_exchanges);
+                    app.cumulative_player_injury, app.cumulative_opponent_injury, app.combat_contacts.len());
                 draw_text(rgba, width, height, &cumul_line, 35, 138, 200, 200, 200);
                 let why_line = format!("WHY: {}", result.end_condition);
                 draw_text(rgba, width, height, &why_line, 35, 168, 200, 180, 100);
             }
-            draw_text(rgba, width, height, "ENTER to rematch  |  R=Replay  |  F=Fight Film  |  Q to return to main menu", 35, 198, 200, 200, 200);
+            draw_text(rgba, width, height, "ENTER=Rematch  |  R=Replay  |  F=Fight Film  |  Q=Menu  |  ESC=Quit", 35, 198, 200, 200, 200);
         }
         InteractiveState::Replay => {
             draw_text(rgba, width, height, "REPLAY", 35, 78, 255, 220, 120);
@@ -6387,14 +6389,16 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
                             draw_text(rgba, width, height, "CONTACT", mid_w - 30, mid_h, 200, 200, 200);
                         }
                     }
-                    // Unit-107: Subtle background flash matching contact type
+                    // Unit-108: Contact border bars — thin top/bottom bars instead of fullscreen fill
                     let (fr, fg, fb) = match contact.contact_type.as_str() {
                         "clean_hit" | "thrust_penetrates" | "cut_lands_first" => (30u8, 8u8, 5u8),
                         "blocked" | "deflected" | "brace_absorbs" => (6u8, 12u8, 30u8),
                         "simultaneous" | "mutual_impalement" => (20u8, 16u8, 4u8),
                         _ => (10u8, 10u8, 10u8),
                     };
-                    fill_rect(rgba, width, height, 0, 0, width as i32, height as i32, fr, fg, fb);
+                    let bar_h = 24i32;
+                    fill_rect(rgba, width, height, 0, 0, width as i32, bar_h, fr, fg, fb);
+                    fill_rect(rgba, width, height, 0, (height as i32) - bar_h, width as i32, bar_h, fr, fg, fb);
                 }
             }
             draw_text(rgba, width, height, "F — Toggle fullscreen  |  ESC to skip", 35, 168, 200, 200, 200);
@@ -6438,9 +6442,9 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Resolve => "ENTER=See Consequence",
         InteractiveState::Consequence => "ENTER=Continue",
         InteractiveState::Replan => "ENTER=Match Result",
-        InteractiveState::MatchResult => "ENTER=Rematch  R=Replay  Q=Main Menu  ESC=Quit",
+        InteractiveState::MatchResult => "ENTER=Rematch  R=Replay  F=Fight Film  Q=Menu  ESC=Quit",
         InteractiveState::Replay => "L/R=Turns  ENTER=Return",
-        InteractiveState::FightFilm => "F=Quit  ESC=Quit",
+        InteractiveState::FightFilm => "ESC=Quit",
         InteractiveState::Settings => "ENTER=Return  V=Camera  ESC=Return",
         InteractiveState::Quit => "ESC=Close",
     };
