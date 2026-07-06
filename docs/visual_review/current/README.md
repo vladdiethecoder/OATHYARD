@@ -1,14 +1,14 @@
-# OATHYARD Visual Review — Roster Asset Capture Matrix (Unit-103)
+# OATHYARD Visual Review — Native Roster Asset Capture Matrix (Unit-103)
 
 ## What This Is
 
-This directory contains curated visual evidence from the Unit-103 native
-executable roster asset capture matrix. Every roster asset has been rendered
-individually through the native `oathyard play --capture-roster-matrix` path
-using the real wgpu/Vulkan renderer with source-approved Meshy/Rodin assets.
+Curated visual evidence from the Unit-103 native executable roster asset capture matrix. Every source-approved roster asset is rendered individually through:
 
-**This is evidence only.** It does not promote production asset readiness,
-owner visual acceptance, public demo readiness, or release candidate readiness.
+```bash
+./bin/oathyard play --capture-roster-matrix <output-dir>
+```
+
+This is executable-path visual evidence, not a filesystem-only audit and not a static preview image set.
 
 ## Readiness Boundary
 
@@ -20,44 +20,34 @@ owner visual acceptance, public demo readiness, or release candidate readiness.
 
 ## Asset Counts
 
-- **Fighters**: 6 (saltreach_duelist, oathyard_writ, bruiser_oath, chainbreaker, gate_shield, reed_sentinel)
-- **Weapons**: 8 (longsword, arming_sword, ash_spear, bearded_axe, billhook, curved_sword, iron_maul, round_shield)
-- **Armor**: 6 (gambeson, mail_hauberk, bruiser_padded_plate, fencer_light, heavy_plate, lamellar)
-- **Arenas**: 2 (oathyard_verdict_ring, training_yard)
-- **Total**: 22
+- Fighters: 6
+- Weapons: 8
+- Armor: 6
+- Arenas: 2
+- Total: 22
 
-## Capture Method
+## What Changed In This Evidence Path
 
-```bash
-./bin/oathyard play --capture-roster-matrix <output-dir>
-```
+1. Native executable capture mode exists on `oathyard play` and can be run from a packaged executable.
+2. Each asset receives a fresh native PNG screenshot and SHA256.
+3. Each matrix row records geometry consumption, mesh counts, material binding, runtime path, source manifest path, and false readiness flags.
+4. Contact sheets and per-kind contact sheets are generated for reviewer inspection.
+5. Visual scores now include pixel-based metrics derived from actual screenshots: foreground coverage, edge contrast, silhouette variance, and composite readability. These metrics are evidence aids, not owner acceptance.
 
-Each asset was rendered individually through the native wgpu/Vulkan offscreen
-renderer. No SDF placeholders, no static pre-existing images, no proxy geometry.
+## Known Remaining Visual Risks
 
-## Contact Sheets
+- Fighter identities remain visually similar; distinct role silhouettes/accessories are still needed for future units.
+- Some low-poly armor types, especially mail/lamellar, need stronger material texture cues.
+- Grey weapons on grey/tan arena backgrounds still have limited contrast, although framing is now much more readable than the earlier tiny-weapon captures.
+- These issues do not mutate deterministic truth and do not promote readiness.
 
-- `asset_matrix_contact_sheet.png` — all 22 assets
-- `fighters_contact_sheet.png` — 6 fighters
-- `weapons_contact_sheet.png` — 8 weapons
-- `armors_contact_sheet.png` — 6 armor pieces
-- `arenas_contact_sheet.png` — 2 arenas
+## Files
 
-## Per-Asset Thumbnails
-
-Representative screenshots in `thumbnails/` (one per kind).
-
-## Known Visual Issues
-
-- Weapons have low contrast (grey-on-grey) against the arena background
-- Some fighters appear washed out due to flat lighting/material presentation
-- Fog/lighting makes fine detail hard to read at this capture distance
-
-These are presentation quality issues, not capture failures. All 22 assets
-have valid geometry consumption (mesh_geometry_consumed=true) and native
-screenshots with valid SHA256 hashes.
-
-## See Also
-
-- `manifest.json` — full machine-readable matrix
-- `visual_scores.md` — per-asset pass/warn/fail score table
+- `manifest.json` — machine-readable 22-asset matrix
+- `visual_scores.md` — score summary
+- `asset_matrix_contact_sheet.png` — all assets
+- `fighters_contact_sheet.png` — fighters
+- `weapons_contact_sheet.png` — weapons
+- `armors_contact_sheet.png` — armor
+- `arenas_contact_sheet.png` — arenas
+- `thumbnails/` — representative per-asset screenshots

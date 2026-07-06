@@ -855,6 +855,10 @@ fn real_main() -> Result<(), OathError> {
             let mut capture_roster_matrix: Option<PathBuf> = None;
             while let Some(arg) = args.next() {
                 match arg.as_str() {
+                    "--help" | "-h" => {
+                        println!("{}", play_usage());
+                        return Ok(());
+                    }
                     "--out" => {
                         out = Some(PathBuf::from(args.next().ok_or_else(|| {
                             OathError::Parse("--out requires a path".to_string())
@@ -1654,29 +1658,35 @@ fn launch_roster_matrix_capture(matrix_dir: PathBuf) -> Result<(), OathError> {
     let tex_root = PathBuf::from("assets/model_candidates/t_73291be5/textures");
 
     // Kind-specific framing: camera mode, translation, scale, yaw.
-    let framing = |kind: &str| -> (&str, [f32; 3], f32, f32) {
-        match kind {
-            "fighter" => ("fighter_closeup_01", [0.0, 0.0, 0.0], 0.95, 0.0),
-            "weapon" => ("weapon_family_closeup_01", [0.0, 0.40, 0.0], 0.55, 0.4),
-            "armor" => (
-                "armor_loadout_family_closeup_01",
-                [0.0, 0.45, 0.0],
-                0.55,
-                0.0,
-            ),
-            "arena" => (
-                "oathyard_verdict_ring_establishing",
-                [0.0, 0.0, 0.0],
-                1.0,
-                0.0,
-            ),
-            _ => (
-                "oathyard_verdict_ring_establishing",
-                [0.0, 0.0, 0.0],
-                1.0,
-                0.0,
-            ),
-        }
+    // Unit-104: Dramatically improved framing for weapons and armor.
+    // Weapons need much closer cameras and larger scale to be identifiable.
+    // Armor needs closer framing to show material/coverage.
+    let framing = |kind: &str| match kind {
+        "fighter" => (
+            "gameplay_distance_fighter_weapon_01",
+            [0.0, 0.0, 0.0],
+            0.95,
+            0.0,
+        ),
+        "weapon" => ("weapon_family_closeup_06", [0.0, 0.45, 0.0], 1.1, 0.3),
+        "armor" => (
+            "armor_loadout_family_closeup_01",
+            [0.0, 0.50, 0.0],
+            1.2,
+            0.0,
+        ),
+        "arena" => (
+            "oathyard_verdict_ring_establishing",
+            [0.0, 0.0, 0.0],
+            1.0,
+            0.0,
+        ),
+        _ => (
+            "oathyard_verdict_ring_establishing",
+            [0.0, 0.0, 0.0],
+            1.0,
+            0.0,
+        ),
     };
 
     // Build the presentation packet (reused for all captures — truth is not affected).
@@ -1891,13 +1901,7 @@ fn launch_roster_matrix_capture(matrix_dir: PathBuf) -> Result<(), OathError> {
         ROSTER_ARENAS.len()
     );
 
-    let executable_cmd = format!(
-        "{} play --capture-roster-matrix {}",
-        std::env::current_exe()
-            .map(|p| p.display().to_string())
-            .unwrap_or_else(|_| "oathyard".to_string()),
-        matrix_dir.display()
-    );
+    let executable_cmd = "./bin/oathyard play --capture-roster-matrix <output-dir>".to_string();
 
     let matrix_json = format!(
         r#"{{"schema":"oathyard.roster_asset_capture_matrix.v1","generated_by_executable":true,"executable_command":"{}","package_relative_paths_only":true,"truth_mutation":false,"production_asset_ready":false,"owner_visual_accepted":false,"public_demo_ready":false,"release_candidate_ready":false,"asset_count_total":22,"kind_counts":{},"capture_resolution":[1920,1080],"renderer_backend":"oathyard-native-wgpu-production-v1","capture_summary":{{"captured":{},"failed":{}}},"assets":[{}]}}"#,
@@ -2162,4 +2166,27 @@ fn usage() -> &'static str {
 launch env:
   OATHYARD_LAUNCH_OUT=<dir> selects no-args artifact path
   OATHYARD_LAUNCH_SCENARIO=<path> selects no-args 3D combat scenario"
+}
+
+fn play_usage() -> &'static str {
+    "usage:
+  oathyard play [--out <dir>] [--scripted-input <file>] [--smoke-frames N] [--interactive] [--artifact-dir <dir>]
+  oathyard play --capture-roster-matrix <output-dir>
+
+native executable play options:
+  --capture-roster-matrix <output-dir>  capture all 22 source-approved roster assets through the native renderer/runtime path
+  --roster-only                        print roster JSON and exit
+  --player-fighter <id>                select player fighter
+  --opponent-fighter <id>              select opponent fighter
+  --player-weapon <id>                 select player weapon
+  --opponent-weapon <id>               select opponent weapon
+  --player-armor <id>                  select player armor
+  --opponent-armor <id>                select opponent armor
+  --arena <id>                         select arena
+  --interactive                        run interactive windowed mode
+  --smoke-frames <n>                   run bounded smoke frames
+  --help                               show this help
+
+readiness boundary:
+  capture mode is evidence-only; truth_mutation=false; production_asset_ready=false; owner_visual_accepted=false; public_demo_ready=false; release_candidate_ready=false"
 }

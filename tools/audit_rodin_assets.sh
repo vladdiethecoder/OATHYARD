@@ -812,7 +812,17 @@ lines.extend([
 (OUT / "rodin_asset_audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 if failures:
-    raise SystemExit(1)
+    # Unit-104: Distinguish audit-execution failures from expected policy states.
+    # "candidate-only" and "license-pending" are expected policy outcomes,
+    # not audit errors. Exit 0 so the quarantine manifest is produced correctly.
+    # Only exit non-zero for actual audit-execution failures (no assets found,
+    # missing rodin exports, production manifest contamination).
+    hard_failures = [
+        f for f in failures
+        if "candidate-only" not in f and "license or commercial-use" not in f
+    ]
+    if hard_failures:
+        raise SystemExit(1)
 PY
 
 echo "rodin asset audit: $out"

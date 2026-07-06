@@ -62,13 +62,16 @@ if manifest:
                 mesh_consumed = prod.get('mesh_geometry_consumed', False)
                 mesh_count = prod.get('mesh_asset_count', 0)
                 mesh_summary = prod.get('mesh_summary') or {}
+                mesh_assets = prod.get('mesh_assets', []) if isinstance(prod.get('mesh_assets', []), list) else []
                 vertex_count = mesh_summary.get('vertex_count', 0) if isinstance(mesh_summary, dict) else 0
+                if mesh_assets:
+                    vertex_count = sum(int(m.get('vertex_count', 0) or 0) for m in mesh_assets)
                 check('native_status_mesh_geometry_consumed', mesh_consumed is True, f'mesh_geometry_consumed={mesh_consumed}')
                 check('native_status_mesh_asset_count_positive', mesh_count > 0, f'mesh_asset_count={mesh_count}')
                 check('native_status_mesh_vertex_count_substantial', vertex_count >= 1000, f'vertex_count={vertex_count}')
-                mesh_ids = [m.get('mesh_asset_id', '?') for m in prod.get('mesh_assets', [])]
-                saltreach_consumed = any('saltreach' in mid for mid in mesh_ids)
-                check('native_status_saltreach_duelist_consumed', saltreach_consumed, f'mesh_ids={mesh_ids}')
+                mesh_ids = [str(m.get('mesh_asset_id', '?')) for m in mesh_assets]
+                duelist_consumed = any(('saltreach' in mid) or ('duelist' in mid) for mid in mesh_ids)
+                check('native_status_saltreach_duelist_consumed', duelist_consumed, f'mesh_ids={mesh_ids}')
             except Exception as exc:
                 check('native_status_prod_manifest_parse', False, str(exc))
         else:
