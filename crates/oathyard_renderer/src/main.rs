@@ -5768,29 +5768,10 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         InteractiveState::Observe => {
             draw_text(rgba, width, height, "OBSERVE", 35, 78, 255, 220, 120);
             draw_text(rgba, width, height, "ENTER to plan your actions", 35, 108, 200, 200, 200);
-            // Unit-104: Cumulative injury HUD + health bars
-            const INJURY_MAX: u32 = 10;
-            let pct = |v: u32| -> u32 { if v >= INJURY_MAX { 100 } else { v * 100 / INJURY_MAX } };
-            let bar_w = 200i32;
-            let bar_h = 14i32;
-            let bar_y = 50i32;
-            let cx = (width as i32) / 2;
-            // Player health bar (left side)
-            let p_pct = pct(app.cumulative_player_injury);
-            let pb_x = cx - 240;
-            draw_panel(rgba, width, height, pb_x, bar_y, bar_w, bar_h);
-            fill_rect(rgba, width, height, pb_x, bar_y, (bar_w * p_pct as i32 / 100).min(bar_w), bar_h, 255, 80, 40);
-            draw_text(rgba, width, height, "YOU", pb_x, bar_y + bar_h + 2, 255, 220, 60);
-            // Opponent health bar (right side)
-            let o_pct = pct(app.cumulative_opponent_injury);
-            let ob_x = cx + 40;
-            draw_panel(rgba, width, height, ob_x, bar_y, bar_w, bar_h);
-            fill_rect(rgba, width, height, ob_x, bar_y, (bar_w * o_pct as i32 / 100).min(bar_w), bar_h, 255, 80, 40);
-            draw_text(rgba, width, height, "OPP", ob_x, bar_y + bar_h + 2, 255, 80, 40);
-            // Injury text line
+            // Unit-104: Cumulative injury HUD
             let injury_line = format!("INJURY — YOU: {}  |  OPPONENT: {}  |  ROUNDS: {}",
                 app.cumulative_player_injury, app.cumulative_opponent_injury, app.cumulative_exchanges);
-            draw_text(rgba, width, height, &injury_line, (width as i32) - 450, 78, 255, 220, 120);
+            draw_text(rgba, width, height, &injury_line, (width as i32) - 450, 35, 255, 220, 120);
             // Non-color identity markers
             let mid_w = (width as i32) / 2;
             let mid_h = (height as i32) / 2;
@@ -5801,18 +5782,10 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         }
         InteractiveState::Timeline => {
             draw_text(rgba, width, height, "TIMELINE (DECISION PHASE)", 35, 78, 255, 220, 120);
-            // Unit-104: Health bars in timeline
-            const T_INJURY_MAX: u32 = 10;
-            let tpct = |v: u32| -> u32 { if v >= T_INJURY_MAX { 100 } else { v * 100 / T_INJURY_MAX } };
-            let tbw = 160i32; let tbh = 10i32;
-            let tcx = (width as i32) / 2;
-            let tp_x = tcx - 190; let to_x = tcx + 30;
-            draw_panel(rgba, width, height, tp_x, 55, tbw, tbh);
-            fill_rect(rgba, width, height, tp_x, 55, (tbw * tpct(app.cumulative_player_injury) as i32 / 100).min(tbw), tbh, 255, 80, 40);
-            draw_text(rgba, width, height, "YOU", tp_x, 68, 255, 220, 60);
-            draw_panel(rgba, width, height, to_x, 55, tbw, tbh);
-            fill_rect(rgba, width, height, to_x, 55, (tbw * tpct(app.cumulative_opponent_injury) as i32 / 100).min(tbw), tbh, 255, 80, 40);
-            draw_text(rgba, width, height, "OPP", to_x, 68, 255, 80, 40);
+            // Unit-104: Cumulative injury HUD
+            let inj_line = format!("INJURY — YOU: {}  |  OPPONENT: {}",
+                app.cumulative_player_injury, app.cumulative_opponent_injury);
+            draw_text(rgba, width, height, &inj_line, (width as i32) - 450, 35, 255, 220, 120);
             // Show current slot and action
             let slot_line = format!(
                 "SLOT {}/{}: {}",
