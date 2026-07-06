@@ -54,6 +54,92 @@ struct PoseUniform {
     bone_yaw2: [f32; 4],
 }
 
+// Unit-104: MotionBricks — procedural animation interpolation engine.
+// Transitions between poses smoothly over a configurable number of frames.
+struct MotionBrick {
+    prev_pose: PoseUniform,
+    target_pose: PoseUniform,
+    elapsed_frames: u32,
+    duration_frames: u32,
+    clip_name: String,
+}
+
+impl MotionBrick {
+    fn new() -> Self {
+        let neutral = PoseUniform {
+            pose_active: 1.0,
+            pose_time: 0.5,
+            _pad: [0.0; 2],
+            bone_offset_x: [0.0; 4],
+            bone_offset_x2: [0.0; 4],
+            bone_offset_y: [0.0; 4],
+            bone_offset_y2: [0.0; 4],
+            bone_offset_z: [0.0; 4],
+            bone_offset_z2: [0.0; 4],
+            bone_yaw: [0.0; 4],
+            bone_yaw2: [0.0; 4],
+        };
+        MotionBrick {
+            prev_pose: neutral,
+            target_pose: neutral,
+            elapsed_frames: 0,
+            duration_frames: 30, // ~0.5s at 60fps
+            clip_name: String::new(),
+        }
+    }
+
+    fn start_transition(&mut self, target: PoseUniform, new_clip: &str, duration: u32) {
+        self.prev_pose = self.current_pose();
+        self.target_pose = target;
+        self.elapsed_frames = 0;
+        self.duration_frames = duration;
+        self.clip_name = new_clip.to_string();
+    }
+
+    fn advance(&mut self, frames: u32) {
+        self.elapsed_frames = self.elapsed_frames.saturating_add(frames);
+        if self.elapsed_frames >= self.duration_frames {
+            self.elapsed_frames = self.duration_frames;
+        }
+        self.target_pose.pose_time = (self.elapsed_frames as f32) / (self.duration_frames as f32);
+    }
+
+    fn is_complete(&self) -> bool {
+        self.elapsed_frames >= self.duration_frames
+    }
+
+    fn current_pose(&self) -> PoseUniform {
+        let t = if self.duration_frames > 0 {
+            // Smoothstep for ease-in-out
+            let raw = (self.elapsed_frames as f32) / (self.duration_frames as f32);
+            raw * raw * (3.0 - 2.0 * raw)
+        } else {
+            1.0
+        };
+        blend_pose(&self.prev_pose, &self.target_pose, t)
+    }
+}
+
+fn blend_pose(a: &PoseUniform, b: &PoseUniform, t: f32) -> PoseUniform {
+    fn lerp(a: f32, b: f32, t: f32) -> f32 { a + (b - a) * t }
+    fn lerp_arr(a: &[f32; 4], b: &[f32; 4], t: f32) -> [f32; 4] {
+        [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t), lerp(a[3], b[3], t)]
+    }
+    PoseUniform {
+        pose_active: lerp(a.pose_active, b.pose_active, t),
+        pose_time: lerp(a.pose_time, b.pose_time, t),
+        _pad: [0.0; 2],
+        bone_offset_x: lerp_arr(&a.bone_offset_x, &b.bone_offset_x, t),
+        bone_offset_x2: lerp_arr(&a.bone_offset_x2, &b.bone_offset_x2, t),
+        bone_offset_y: lerp_arr(&a.bone_offset_y, &b.bone_offset_y, t),
+        bone_offset_y2: lerp_arr(&a.bone_offset_y2, &b.bone_offset_y2, t),
+        bone_offset_z: lerp_arr(&a.bone_offset_z, &b.bone_offset_z, t),
+        bone_offset_z2: lerp_arr(&a.bone_offset_z2, &b.bone_offset_z2, t),
+        bone_yaw: lerp_arr(&a.bone_yaw, &b.bone_yaw, t),
+        bone_yaw2: lerp_arr(&a.bone_yaw2, &b.bone_yaw2, t),
+    }
+}
+
 fn pose_for_clip(clip_id: &str) -> PoseUniform {
     let mut pose = PoseUniform {
         pose_active: 1.0,
@@ -3689,6 +3775,9 @@ struct WindowedApp {
     // Unit-090: Opponent intent concealment + trace-driven combat state
     opponent_intent_revealed: bool,
     current_slot_display: usize,
+    // Unit-104: MotionBricks procedural animation interpolator
+    motion_brick: MotionBrick,
+    last_clip: String,
 }
 
 mod wgpu_mesh {
@@ -4588,6 +4677,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             roster_arena_idx: 0,
             opponent_intent_revealed: false,
             current_slot_display: 0,
+            motion_brick: MotionBrick::new(),
+            last_clip: String::new(),
         });
 
         self.window = Some(window);
@@ -5085,9 +5176,26 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                             &app.timeline_slots,
                             &app.combat_contacts,
                         );
-                        let new_pose = pose_for_clip(action_clip);
+                        // Unit-104: MotionBricks — smooth animation interpolation
+                        if app.last_clip != action_clip {
+                            let target_pose = pose_for_clip(action_clip);
+                            let duration = match action_clip {
+                                "idle" | "walk" => 15,
+                                "guard_pose" => 10,
+                                "step" | "pivot" => 8,
+                                "cut" | "thrust" | "kick" => 12,
+                                "brace" | "bash" => 10,
+                                "parry" => 8,
+                                "recover" => 15,
+                                _ => 12,
+                            };
+                            app.motion_brick.start_transition(target_pose, action_clip, duration);
+                            app.last_clip = action_clip.to_string();
+                        }
+                        app.motion_brick.advance(1);
+                        let interpolated_pose = app.motion_brick.current_pose();
                         app.queue
-                            .write_buffer(&app.pose_buffer, 0, bytemuck::bytes_of(&new_pose));
+                            .write_buffer(&app.pose_buffer, 0, bytemuck::bytes_of(&interpolated_pose));
 
                         // Unit-092: Copy offscreen to buffer for CPU UI compositing
                         let bytes_per_pixel = 4; // RGBA8 or BGRA8
