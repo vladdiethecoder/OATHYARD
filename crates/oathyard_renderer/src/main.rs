@@ -3933,6 +3933,9 @@ struct WindowedApp {
     cumulative_exchanges: u32,
     // Unit-105: Replay viewer state
     replay_turn_index: usize,
+    // Unit-106: Fight-film auto-advance state
+    fight_film_contact_index: usize,
+    fight_film_frame: u32,
 }
 
 mod wgpu_mesh {
@@ -4906,6 +4909,8 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
             cumulative_opponent_injury: 0,
             cumulative_exchanges: 0,
             replay_turn_index: 0,
+            fight_film_contact_index: 0,
+            fight_film_frame: 0,
         });
 
         self.window = Some(window);
@@ -5560,6 +5565,25 @@ impl winit::application::ApplicationHandler for WindowedAppHandler {
                         app.queue
                             .write_buffer(&app.opponent_pose_buffer, 0, bytemuck::bytes_of(&opp_interpolated));
 
+                        // Unit-106: Fight-film auto-advance through contacts
+                        if app.interactive_state == InteractiveState::FightFilm {
+                            app.fight_film_frame += 1;
+                            const FIGHT_FILM_FRAMES_PER_CONTACT: u32 = 90; // ~1.5s at 60fps
+                            if app.fight_film_frame >= FIGHT_FILM_FRAMES_PER_CONTACT {
+                                app.fight_film_frame = 0;
+                                app.fight_film_contact_index += 1;
+                                // After all contacts, transition to Quit
+                                if app.fight_film_contact_index >= app.combat_contacts.len() {
+                                    app.interactive_state = InteractiveState::MatchResult;
+                                    let s = "MATCH_RESULT".to_string();
+                                    if !app.states_visited.contains(&s) {
+                                        app.states_visited.push(s);
+                                    }
+                                    app.fight_film_contact_index = 0;
+                                }
+                            }
+                        }
+
                         // Unit-092: Copy offscreen to buffer for CPU UI compositing
                         let bytes_per_pixel = 4; // RGBA8 or BGRA8
                         let buffer_size = (surf_w as usize * surf_h as usize * bytes_per_pixel);
@@ -6174,13 +6198,19 @@ fn composite_windowed_ui(rgba: &mut [u8], width: u32, height: u32, app: &Windowe
         }
         InteractiveState::FightFilm => {
             draw_text(rgba, width, height, "FIGHT FILM", 35, 78, 255, 220, 120);
-            if let Some(ref contact) = app.combat_contacts.first() {
-                let key_line = format!("KEY: {} vs {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
-                draw_text(rgba, width, height, &key_line, 35, 108, 255, 220, 120);
-                let why_line = format!("WHY: {}", contact.outcome);
-                draw_text(rgba, width, height, &why_line, 35, 138, 200, 180, 100);
+            let total = app.combat_contacts.len();
+            if total > 0 {
+                let idx = app.fight_film_contact_index.min(total.saturating_sub(1));
+                if let Some(ref contact) = app.combat_contacts.get(idx) {
+                    let turn_line = format!("{} vs {}", contact.player_action.to_uppercase(), contact.opponent_action.to_uppercase());
+                    draw_text(rgba, width, height, &turn_line, 35, 108, 255, 220, 120);
+                    let outcome_line = format!("RESULT: {}", contact.outcome);
+                    draw_text(rgba, width, height, &outcome_line, 35, 138, 255, 160, 80);
+                    let progress = format!("TURN {}/{}", idx + 1, total);
+                    draw_text(rgba, width, height, &progress, (width as i32) - 200, 35, 200, 200, 200);
+                }
             }
-            draw_text(rgba, width, height, "ENTER to quit", 35, 168, 200, 200, 200);
+            draw_text(rgba, width, height, "F — Toggle fullscreen  |  ESC to skip", 35, 168, 200, 200, 200);
         }
         InteractiveState::Settings => {
             draw_text(rgba, width, height, "SETTINGS/HELP", 35, 78, 255, 220, 120);
